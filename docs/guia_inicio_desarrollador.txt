@@ -1,0 +1,167 @@
+===============================================================================
+ GUÍA DE INICIO - ESART
+ Verificación de habilitación de artilleros - Escuela de Artillería
+===============================================================================
+
+REQUISITOS
+  - Git
+  - Python 3.11
+  - PostgreSQL
+  - Node.js (se necesitará después, para Angular)
+
+Todos los comandos se ejecutan en la terminal (CMD o PowerShell).
+
+
+-------------------------------------------------------------------------------
+ 1. CLONAR EL REPOSITORIO
+-------------------------------------------------------------------------------
+
+  git clone https://github.com/wilmermantilla30/esart.git
+  cd esart
+  git checkout desarrollo
+
+  Nota: "git checkout desarrollo" NO crea una rama nueva. Te pone en la rama
+  "desarrollo" compartida, que ya existe en GitHub.
+
+  *** IMPORTANTE ***
+  La rama "desarrollo" es solo para JUNTAR el trabajo terminado de los dos.
+  NO se programa sobre ella. Antes de escribir cualquier código, crea una
+  rama NUEVA para la historia que vas a trabajar (ver sección 6).
+
+
+-------------------------------------------------------------------------------
+ 2. CREAR LA BASE DE DATOS
+-------------------------------------------------------------------------------
+
+  En psql o pgAdmin, como superusuario:
+
+  CREATE USER esart_aplicacion WITH PASSWORD 'una-contrasena-segura';
+  CREATE DATABASE esart_db OWNER esart_aplicacion;
+
+
+-------------------------------------------------------------------------------
+ 3. VARIABLES DE ENTORNO
+-------------------------------------------------------------------------------
+
+  a) Pon el archivo ".env.ejemplo" que te enviaron en la raíz de la carpeta
+     "esart". No está en GitHub a propósito.
+
+  b) Cópialo como ".env":
+
+     copy .env.ejemplo .env
+
+  c) Abre ".env" y reemplaza TODOS los valores de ejemplo. Los comandos para
+     generar la clave del JWT y el hash del admin están en
+     backend/README.md, sección 3.
+
+  IMPORTANTE: tu ".env" es solo tuyo. Nunca se sube a git ni se comparte.
+
+
+-------------------------------------------------------------------------------
+ 4. INSTALAR EL BACKEND
+-------------------------------------------------------------------------------
+
+  cd backend
+  python -m venv .venv
+  .venv\Scripts\activate
+  pip install -r requirements-desarrollo.txt
+
+
+-------------------------------------------------------------------------------
+ 5. COMPROBAR QUE TODO FUNCIONA
+-------------------------------------------------------------------------------
+
+  pytest
+
+    -> Todas las pruebas deben pasar.
+
+  uvicorn aplicacion.principal:aplicacion --reload --port 8081
+
+    -> Al abrir http://127.0.0.1:8081/api/salud debe responder:
+       {"estado": "ok", "base_datos": "ok"}
+
+
+===============================================================================
+ 6. CÓMO TRABAJAR (CADA HISTORIA DEL BACKLOG)
+===============================================================================
+
+  REGLA: UNA RAMA NUEVA POR CADA HISTORIA.
+  NUNCA trabajes directo en "desarrollo" ni en "main".
+
+  Cada historia del Excel (docs/backlog_sprint1_esart.xlsx) se trabaja en su
+  propia rama, creada desde "desarrollo" actualizado. Al terminar una
+  historia, esa rama se une a "desarrollo" por Pull Request y se borra; para
+  la siguiente historia se crea OTRA rama nueva. No se reutiliza la misma
+  rama para varias historias.
+
+  Para saber en qué rama estás antes de programar:
+
+     git branch --show-current
+
+  Si responde "desarrollo" o "main", crea tu rama (paso b) ANTES de hacer
+  cualquier cambio.
+
+  Ramas del proyecto:
+
+    main            -> producción (solo recibe desde desarrollo, por Pull Request)
+    desarrollo      -> integración: aquí se juntan las historias terminadas
+    HU-XX-nombre    -> una rama por historia, la crea quien la trabaja
+
+
+  a) Traer lo último:
+
+     git checkout desarrollo
+     git pull
+
+  b) Crear tu rama con el ID de la historia (ejemplo con HU-03):
+
+     git checkout -b HU-03-migracion-inicial
+
+  c) Guardar avances (las veces que haga falta):
+
+     git add .
+     git commit -m "HU-03: descripcion corta de lo que hiciste"
+
+  d) Subir tu rama:
+
+     git push -u origin HU-03-migracion-inicial
+
+  e) Pedir revisión:
+     En GitHub entra a "Compare & pull request", con destino "desarrollo".
+     El otro dev revisa y hace el merge.
+
+  f) Borrar la rama ya unida y volver al paso (a) para la siguiente historia:
+
+     git checkout desarrollo
+     git pull
+     git branch -d HU-03-migracion-inicial
+
+
+===============================================================================
+ ANTES DE EMPEZAR A PROGRAMAR
+===============================================================================
+
+  1. Leer:
+       - README.md
+       - backend/README.md
+       - docs/contrato_esquema_bd.md
+       - docs/contrato_api.md
+
+  2. Reunión corta para cerrar los puntos abiertos de la sección 10 del
+     contrato de esquema, sobre todo:
+       - el tipo de llave primaria que usa Vulcano
+       - la versión de Angular de Vulcano
+     La primera historia (HU-03, la migración) depende de eso.
+
+  3. Convenciones obligatorias:
+       - Nombres y comentarios en español descriptivo, sin abreviaturas.
+       - Todo el código comentado: qué hace y por qué.
+       - Reutilizar funciones existentes antes de crear nuevas.
+       - requirements.txt solo con caracteres ASCII (sin tildes).
+       - bcrypt directo, sin passlib.
+       - Nunca credenciales, contraseñas, tokens ni cédulas en logs o
+         respuestas de la API.
+       - El .env nunca se sube a git.
+     Detalle completo en README.md.
+
+===============================================================================
