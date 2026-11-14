@@ -41,7 +41,7 @@ esart/
 ## Flujo de trabajo local
 
 1. **PostgreSQL** corriendo con la base `esart_db` (ver backend/README.md).
-2. **Backend** desde `backend/`: `uvicorn aplicacion.principal:aplicacion --reload` → puerto 8000.
+2. **Backend** desde `backend/`: `uvicorn aplicacion.principal:aplicacion --reload --port 8081` → puerto 8081.
 3. **Frontend** desde `frontend/`: `npm start` → puerto 4200, con proxy de `/api` hacia el backend.
 4. El navegador abre <http://localhost:4200>.
 

@@ -15,7 +15,7 @@ al contrato (por Pull Request) y después se programa.
 
 | Momento | Cómo llega el front al navegador | Cómo llega a la API |
 |---|---|---|
-| **Desarrollo** | `ng serve` en <http://localhost:4200> | `proxy.conf.json` redirige `/api` a <http://127.0.0.1:8000>. Para el navegador todo es el mismo origen, así la cookie de sesión funciona sin CORS |
+| **Desarrollo** | `ng serve` en <http://localhost:4200> | `proxy.conf.json` redirige `/api` a <http://127.0.0.1:8081>. Para el navegador todo es el mismo origen, así la cookie de sesión funciona sin CORS |
 | **Producción** | `ng build` genera `dist/`; FastAPI sirve esos archivos (historia HU-21) | Mismo servidor, mismo origen. **No hace falta Node.js en el servidor** |
 
 ---

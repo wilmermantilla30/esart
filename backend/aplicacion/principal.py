@@ -2,7 +2,7 @@
 Punto de entrada de ESART.
 
 Arranque local (desde la carpeta raíz del proyecto):
-    uvicorn aplicacion.principal:aplicacion --reload
+    uvicorn aplicacion.principal:aplicacion --reload --port 8081
 """
 
 import logging
