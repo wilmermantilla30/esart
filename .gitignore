@@ -35,6 +35,9 @@ cargas/
 *.backup
 respaldos/
 
+# --- Archivos temporales de Office (Excel los crea mientras el archivo está abierto) ---
+~$*
+
 # --- Editores y sistema operativo ---
 .vscode/
 .idea/

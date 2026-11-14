@@ -78,11 +78,11 @@ Pegue el hash entre comillas simples: `ADMIN_HASH_CONTRASENA='$2b$12$...'`.
 ### 4. Arrancar (desde `backend/`)
 
 ```powershell
-uvicorn aplicacion.principal:aplicacion --reload
+uvicorn aplicacion.principal:aplicacion --reload --port 8081
 ```
 
-- Salud: <http://127.0.0.1:8000/api/salud> → `{"estado": "ok", "base_datos": "ok"}`
-- Documentación de la API (solo fuera de producción): <http://127.0.0.1:8000/api/documentacion>
+- Salud: <http://127.0.0.1:8081/api/salud> → `{"estado": "ok", "base_datos": "ok"}`
+- Documentación de la API (solo fuera de producción): <http://127.0.0.1:8081/api/documentacion>
 
 ### 5. Pruebas y revisión de estilo (desde `backend/`)
 
