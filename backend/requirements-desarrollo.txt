@@ -1,0 +1,8 @@
+# Dependencias solo para desarrollo y pruebas (no se instalan en produccion).
+# ASCII puro, igual que requirements.txt.
+-r requirements.txt
+
+pytest==8.3.4
+httpx==0.28.1
+# Revision de estilo y errores comunes: ruff check .
+ruff==0.8.4

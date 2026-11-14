@@ -1,0 +1,20 @@
+# Configuracion de herramientas del backend (pruebas y revision de estilo).
+# Las dependencias se instalan con requirements.txt, no desde este archivo.
+
+[tool.pytest.ini_options]
+testpaths = ["pruebas"]
+addopts = "-q -p no:cacheprovider"
+
+[tool.ruff]
+target-version = "py311"
+line-length = 110
+extend-exclude = ["migraciones"]
+
+[tool.ruff.lint]
+# E/F: errores basicos, I: orden de imports, B: errores comunes, S: seguridad, UP: sintaxis moderna
+select = ["E", "F", "I", "B", "S", "UP"]
+# S101: assert es normal en las pruebas; B008: Depends() en parametros es el patron de FastAPI
+ignore = ["B008"]
+
+[tool.ruff.lint.per-file-ignores]
+"pruebas/*" = ["S101", "S105", "S106"]

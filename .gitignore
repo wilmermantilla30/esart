@@ -1,0 +1,42 @@
+# --- Variables de entorno: NUNCA se suben a git ---
+# .env.* cubre también .env.ejemplo: por decisión del equipo tampoco se sube
+# la plantilla; se comparte directamente entre los desarrolladores.
+.env
+.env.*
+
+# =============================================================================
+# BACKEND (Python)
+# =============================================================================
+backend/.venv/
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.ruff_cache/
+.coverage
+htmlcov/
+
+# =============================================================================
+# FRONTEND (Angular)
+# =============================================================================
+frontend/node_modules/
+frontend/dist/
+frontend/.angular/
+node_modules/
+
+# =============================================================================
+# DATOS SENSIBLES: registros, archivos subidos y respaldos
+# (pueden contener datos personales de los artilleros)
+# =============================================================================
+*.log
+registros/
+cargas/
+*.dump
+*.backup
+respaldos/
+
+# --- Editores y sistema operativo ---
+.vscode/
+.idea/
+Thumbs.db
+.DS_Store

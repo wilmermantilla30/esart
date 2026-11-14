@@ -1,0 +1,25 @@
+# Dependencias de produccion de ESART.
+# IMPORTANTE: este archivo debe ser ASCII puro (sin tildes ni enies).
+# pip en Windows lo lee con la codificacion cp1252 y falla con otros caracteres.
+# Hay una prueba automatica (pruebas/test_convenciones.py) que lo verifica.
+
+# Marco web y servidor ASGI
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+
+# Base de datos: ORM asincrono, controlador PostgreSQL y migraciones
+sqlalchemy[asyncio]==2.0.36
+asyncpg==0.30.0
+alembic==1.14.0
+
+# Validacion de datos y lectura de variables de entorno (.env)
+pydantic==2.10.4
+pydantic-settings==2.7.1
+
+# Seguridad: hash de contrasenas (bcrypt directo, SIN passlib) y JWT
+bcrypt==5.0.0
+pyjwt==2.10.1
+
+# Carga de archivos (multipart) e importacion de Excel
+python-multipart==0.0.20
+openpyxl==3.1.5
