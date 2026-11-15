@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 0.1 (borrador para acordar entre Dev 1 y Dev 2)
+**Versión del contrato:** 1.0 — **aprobada** por SS.Mantilla y SV.Valbuena (historia HU-02)
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -335,16 +335,19 @@ siempre **paginados**.
 
 ---
 
-## 10. Puntos abiertos (deben cerrarse antes de la migración inicial)
+## 10. Puntos abiertos y decisiones
+
+Al cerrar HU-02 el contrato se aprobó **tal como está escrito**. Las decisiones de esta tabla
+reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a este archivo.
 
 | # | Punto | Responsable | Estado |
 |---|---|---|---|
 | 1 | Requisitos reales de habilitación (cursos y certificaciones obligatorios) | Escuela / Product owner | Pendiente |
-| 2 | Tipo de PK en Vulcano (UUID vs entero) para garantizar compatibilidad | Dev 2 | Pendiente |
-| 3 | Escala de notas de la Escuela (0–5, 0–100) | Product owner | Pendiente |
-| 4 | Catálogo oficial de grados | Product owner | Pendiente |
-| 5 | Nombres exactos de columnas en Vulcano para estas tablas (si difieren, se ajusta aquí) | Dev 2 | Pendiente |
-| 6 | Quién escribe modelos SQLAlchemy y migraciones Alembic (propuesta: Dev 2 migraciones, Dev 1 modelos, revisión cruzada) | Ambos | Pendiente |
+| 2 | Tipo de PK en Vulcano (UUID vs entero) para garantizar compatibilidad | SV.Valbuena | **Cerrado:** UUID, como define el contrato |
+| 3 | Escala de notas de la Escuela (0–5, 0–100) | Product owner | **Cerrado:** 0.00 – 5.00, como define el contrato |
+| 4 | Catálogo oficial de grados | Product owner | **Cerrado por ahora:** `grado` como texto (`VARCHAR(40)`); un catálogo formal puede venir en otra entrega |
+| 5 | Nombres exactos de columnas en Vulcano para estas tablas (si difieren, se ajusta aquí) | SV.Valbuena | **Cerrado:** se usan los nombres de este contrato |
+| 6 | Quién escribe modelos SQLAlchemy y migraciones Alembic | Ambos | **Cerrado:** SS.Mantilla crea las tablas de seguridad (§7) y la **primera** migración en HU-05; SV.Valbuena crea las demás tablas en HU-03, con su migración encadenada después. Cada uno escribe los modelos de sus tablas; revisión cruzada por Pull Request |
 
 ---
 
@@ -352,3 +355,4 @@ siempre **paginados**.
 | Versión | Fecha | Cambio |
 |---|---|---|
 | 0.1 | 2026-11-14 | Borrador inicial |
+| 1.0 | 2026-11-14 | Aprobado en HU-02. Decisiones del §10 cerradas, salvo los requisitos de habilitación (pendientes de la Escuela) |
