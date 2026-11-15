@@ -1,8 +1,8 @@
 """
 Punto de entrada de ESART.
 
-Arranque local (desde la carpeta raíz del proyecto):
-    uvicorn aplicacion.principal:aplicacion --reload --port 8081
+Arranque local (desde la carpeta backend/):
+    python -m uvicorn aplicacion.principal:aplicacion --reload --port 8081
 """
 
 import logging

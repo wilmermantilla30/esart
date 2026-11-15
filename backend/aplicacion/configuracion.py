@@ -18,6 +18,8 @@ from typing import Literal
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from aplicacion.base_datos.configuracion import validar_url_base_datos
+
 # Longitud mínima de la clave del JWT. HS256 usa una clave de 256 bits;
 # 32 caracteres aleatorios es el mínimo razonable.
 LONGITUD_MINIMA_CLAVE_JWT = 32
@@ -46,6 +48,7 @@ class Configuracion(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        hide_input_in_errors=True,
     )
 
     # --- Generales ---
@@ -96,12 +99,6 @@ class Configuracion(BaseSettings):
                     f"{nombre_variable} todavía tiene el valor de ejemplo de .env.ejemplo. Reemplácelo."
                 )
 
-        if not url_base_datos.startswith("postgresql+asyncpg://"):
-            raise ValueError(
-                "URL_BASE_DATOS debe empezar por 'postgresql+asyncpg://' "
-                "(la aplicación usa el controlador asíncrono asyncpg)."
-            )
-
         if len(clave_jwt) < LONGITUD_MINIMA_CLAVE_JWT:
             raise ValueError(
                 f"JWT_CLAVE_SECRETA debe tener al menos {LONGITUD_MINIMA_CLAVE_JWT} caracteres."
@@ -118,6 +115,8 @@ class Configuracion(BaseSettings):
         # En producción la cookie de sesión solo puede viajar por HTTPS.
         if self.es_produccion and not self.cookie_segura:
             raise ValueError("En producción COOKIE_SEGURA debe ser true.")
+
+        validar_url_base_datos(url_base_datos, self.entorno)
 
         return self
 
