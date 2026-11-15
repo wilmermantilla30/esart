@@ -1,0 +1,10 @@
+{
+  "base": "esart_hu03_pruebas",
+  "revision": "0002",
+  "unidades": 40,
+  "unidades_y_fechas_identicas_al_snapshot": true,
+  "tipos_identicos_al_snapshot": true,
+  "sin_clasificar": 40,
+  "migraciones_sin_cambios": true,
+  "actualizaciones_ejecutadas": 0
+}

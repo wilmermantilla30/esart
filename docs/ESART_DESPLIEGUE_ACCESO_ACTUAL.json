@@ -1,0 +1,18 @@
+{
+  "base": "esart_db",
+  "cuenta": "esart_aplicacion",
+  "uso_esart_ref": false,
+  "uso_esart": false,
+  "puede_asumir_propietario": false,
+  "tabla_unidades": {
+    "propietario": "postgres",
+    "lectura": false,
+    "insercion": false,
+    "actualizacion": false
+  },
+  "fecha_utc": "2026-11-15T18:38:03.314211+00:00",
+  "modo": "solo_lectura",
+  "respaldo_restaurable_verificado": true,
+  "modificaciones_en_principal": 0,
+  "estado": "pendiente_conexion_del_operador_propietario"
+}

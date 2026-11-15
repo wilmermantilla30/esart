@@ -27,11 +27,11 @@ LONGITUD_MINIMA_CLAVE_JWT = 32
 # Forma de un hash bcrypt: $2a$, $2b$ o $2y$, costo de dos dígitos y 53 caracteres.
 PATRON_HASH_BCRYPT = re.compile(r"^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$")
 
-# Ruta del archivo .env: está en la raíz del repositorio (junto a backend/ y frontend/).
+# Ruta operativa única: backend/.env, independiente del directorio de ejecución.
 # Se calcula desde la ubicación de este archivo para que funcione sin importar
 # desde qué carpeta se ejecute uvicorn o pytest.
-# backend/aplicacion/configuracion.py -> parents[0]=aplicacion, [1]=backend, [2]=raíz
-RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[2] / ".env"
+# backend/aplicacion/configuracion.py -> parents[1]=backend.
+RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[1] / ".env"
 
 # Textos de los valores de ejemplo de .env.ejemplo. Si siguen presentes,
 # significa que alguien copió el archivo sin reemplazar los secretos.
@@ -100,9 +100,7 @@ class Configuracion(BaseSettings):
                 )
 
         if len(clave_jwt) < LONGITUD_MINIMA_CLAVE_JWT:
-            raise ValueError(
-                f"JWT_CLAVE_SECRETA debe tener al menos {LONGITUD_MINIMA_CLAVE_JWT} caracteres."
-            )
+            raise ValueError(f"JWT_CLAVE_SECRETA debe tener al menos {LONGITUD_MINIMA_CLAVE_JWT} caracteres.")
 
         # El administrador se configura con el HASH, nunca con la contraseña
         # en texto plano. Si el valor no tiene forma de hash bcrypt, se rechaza.

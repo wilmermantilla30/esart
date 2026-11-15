@@ -7,8 +7,8 @@ from sqlalchemy import pool
 from sqlalchemy.engine import Connection
 from sqlalchemy.ext.asyncio import create_async_engine
 
-from aplicacion import modelos  # noqa: F401: registra los modelos en los metadatos
-from aplicacion.base_datos.base import BaseModelo
+from aplicacion.modelos import historico as modelos  # noqa: F401: registra los modelos en los metadatos
+from aplicacion.modelos.historico.base import BaseModelo
 from aplicacion.base_datos.configuracion import ConfiguracionConexion, obtener_configuracion_conexion
 from aplicacion.nucleo.registro import configurar_registro
 
@@ -47,6 +47,10 @@ def ejecutar_migraciones_sin_conexion() -> None:
 
 
 def ejecutar_con_conexion(conexion: Connection) -> None:
+    from sqlalchemy import text
+
+    if conexion.scalar(text("SELECT current_database()")) == "esart_db":
+        raise RuntimeError("El historial UUID es histórico; no puede administrar esart_db")
     configurar_contexto(connection=conexion)
     with context.begin_transaction():
         context.run_migrations()

@@ -1,0 +1,185 @@
+{
+  "fecha_utc": "2026-11-15T18:13:07.023294+00:00",
+  "modo": "solo_lectura",
+  "identidad": {
+    "base": "esart_db",
+    "usuario": "esart_aplicacion",
+    "version": "18.7"
+  },
+  "tabla": {
+    "oid": 16400,
+    "propietario": "postgres",
+    "uso_esquema": false,
+    "lectura": false,
+    "insercion": false,
+    "actualizacion": false
+  },
+  "registros": null,
+  "estado_conteo": "bloqueado_sin_USAGE_y_SELECT",
+  "fk_entrantes": [
+    {
+      "nombre": "fk_artillero_cargos_unidad_id",
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "nombre": "fk_artillero_disparos_unidad_id",
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "nombre": "fk_egresados_curso_unidad_destino_id",
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_destino_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "nombre": "fk_personal_militar_unidad_actual_id",
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_actual_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "nombre": "fk_reentrenamientos_unidad_id",
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_id) REFERENCES esart_ref.unidades_militares(id)"
+    }
+  ],
+  "dependencias_catalogadas": [
+    {
+      "objeto": "restricción «fk_artillero_cargos_unidad_id» en tabla esart.artillero_cargos",
+      "tipo": "n",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "restricción «fk_artillero_disparos_unidad_id» en tabla esart.artillero_disparos",
+      "tipo": "n",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "restricción «fk_egresados_curso_unidad_destino_id» en tabla esart.egresados_curso",
+      "tipo": "n",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "restricción «fk_personal_militar_unidad_actual_id» en tabla esart.personal_militar",
+      "tipo": "n",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "restricción «fk_reentrenamientos_unidad_id» en tabla esart.reentrenamientos",
+      "tipo": "n",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "restricción «unidades_militares_id_not_null» en tabla esart_ref.unidades_militares",
+      "tipo": "a",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "restricción «unidades_militares_pkey» en tabla esart_ref.unidades_militares",
+      "tipo": "a",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "secuencia esart_ref.unidades_militares_id_seq",
+      "tipo": "i",
+      "columna_referida": 1
+    },
+    {
+      "objeto": "tipo esart_ref.unidades_militares",
+      "tipo": "i",
+      "columna_referida": 0
+    }
+  ],
+  "tablas_dependientes_transitivas": [
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos"
+    }
+  ]
+}

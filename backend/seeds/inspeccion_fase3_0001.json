@@ -1,0 +1,67 @@
+{
+  "fecha_utc": "2026-11-15T04:22:53.631498+00:00",
+  "destino": "esart_hu03_pruebas",
+  "modo": "inspeccionar",
+  "errores": [],
+  "identidad": {
+    "base": "esart_hu03_pruebas",
+    "usuario": "esart_aplicacion",
+    "version": "18.7",
+    "superusuario": false
+  },
+  "inventario": {
+    "roles": [
+      "id",
+      "codigo",
+      "nombre",
+      "activo",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ],
+    "permisos": [
+      "id",
+      "codigo",
+      "descripcion",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ],
+    "unidades_militares": [
+      "id",
+      "codigo",
+      "nombre",
+      "sigla",
+      "unidad_superior_id",
+      "activa",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ]
+  },
+  "resultados": [],
+  "tablas_ajenas_sin_cambios": true,
+  "validacion": {
+    "roles": {
+      "total_tabla": 2,
+      "esperados": 2,
+      "faltantes": [],
+      "diferencias_conservadas": []
+    },
+    "permisos": {
+      "total_tabla": 36,
+      "esperados": 36,
+      "faltantes": [],
+      "diferencias_conservadas": []
+    },
+    "unidades_militares": {
+      "total_tabla": 40,
+      "esperados": 40,
+      "faltantes": [],
+      "diferencias_conservadas": []
+    }
+  },
+  "integridad": {
+    "unidades_huerfanas": 0,
+    "asignaciones_huerfanas": 0
+  },
+  "validaciones_sql_ejecutadas": true,
+  "estado": "inspeccion_sin_inserciones"
+}

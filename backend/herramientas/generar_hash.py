@@ -1,8 +1,9 @@
 
-import bcrypt
 import getpass
 import secrets
 import string
+
+import bcrypt
 
 
 def generar_contrasena(longitud=20):

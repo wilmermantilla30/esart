@@ -1,0 +1,143 @@
+{
+  "fecha_utc": "2026-11-15T04:15:15.163134+00:00",
+  "destino": "esart_hu03_pruebas",
+  "modo": "inspeccionar",
+  "errores": [],
+  "identidad": {
+    "base": "esart_hu03_pruebas",
+    "usuario": "esart_aplicacion",
+    "version": "18.7",
+    "superusuario": false
+  },
+  "inventario": {
+    "roles": [
+      "id",
+      "codigo",
+      "nombre",
+      "activo",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ],
+    "permisos": [
+      "id",
+      "codigo",
+      "descripcion",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ],
+    "unidades_militares": [
+      "id",
+      "codigo",
+      "nombre",
+      "sigla",
+      "unidad_superior_id",
+      "activa",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ]
+  },
+  "resultados": [],
+  "tablas_ajenas_sin_cambios": true,
+  "validacion": {
+    "roles": {
+      "total_tabla": 0,
+      "esperados": 2,
+      "faltantes": [
+        "ADMINISTRADOR",
+        "USUARIO"
+      ],
+      "diferencias_conservadas": []
+    },
+    "permisos": {
+      "total_tabla": 0,
+      "esperados": 36,
+      "faltantes": [
+        "gestionar_sistemas",
+        "ver_sistemas",
+        "estado_ubicacion",
+        "gestionar_operadores",
+        "graficar_blancos",
+        "graficar_rutas",
+        "graficar_plan_operacion",
+        "calculos_balisticos",
+        "configurar_tablas_balisticas",
+        "misiones_fuego",
+        "aprobar_mision",
+        "cancelar_mision",
+        "gestionar_municion",
+        "ver_municion",
+        "gestionar_inventario",
+        "ver_inventario",
+        "ver_mantenimiento",
+        "registrar_mantenimiento",
+        "programar_mantenimiento",
+        "infografia_sistema",
+        "ver_infografia_personal",
+        "historial_sistemas",
+        "exportar_historial",
+        "gestionar_unidades",
+        "modulo_esart",
+        "ver_personal_esart",
+        "gestionar_doctrina",
+        "ver_doctrina",
+        "reportes_enviar_ver",
+        "reportes_solo_enviar",
+        "reportes_solo_ver",
+        "reportes_exportar",
+        "ver_auditoria",
+        "ver_dashboard",
+        "configurar_alertas",
+        "recibir_alertas"
+      ],
+      "diferencias_conservadas": []
+    },
+    "unidades_militares": {
+      "total_tabla": 0,
+      "esperados": 40,
+      "faltantes": [
+        "DIV01",
+        "DIV02",
+        "DIV03",
+        "DIV04",
+        "DIV05",
+        "DIV06",
+        "DIV07",
+        "DIV08",
+        "DIVFE",
+        "DAAVA",
+        "FUTOM",
+        "CEDOC",
+        "BR01",
+        "BR03",
+        "BR04",
+        "BR05",
+        "BR08",
+        "BR09",
+        "BR10",
+        "BR13",
+        "BR18",
+        "BR27",
+        "BR30",
+        "CEMIL",
+        "BAACA1",
+        "BAACA2",
+        "BAACA3",
+        "BAACA4",
+        "BAACA5",
+        "BAACA6",
+        "BAACA8",
+        "BAACA9",
+        "BAACA10",
+        "BAACA13",
+        "BAACA18",
+        "BAACA27",
+        "BAACA30",
+        "BAADA1",
+        "BAADA2",
+        "ESART"
+      ],
+      "diferencias_conservadas": []
+    }
+  },
+  "estado": "inspeccion_sin_inserciones"
+}

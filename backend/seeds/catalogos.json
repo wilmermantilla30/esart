@@ -1,0 +1,452 @@
+{
+  "roles": [
+    {
+      "codigo": "ADMINISTRADOR",
+      "nombre": "Administrador"
+    },
+    {
+      "codigo": "USUARIO",
+      "nombre": "Usuario"
+    }
+  ],
+  "permisos": [
+    {
+      "codigo": "gestionar_sistemas",
+      "descripcion": "Crear, editar y dar de baja sistemas de artilleria."
+    },
+    {
+      "codigo": "ver_sistemas",
+      "descripcion": "Consultar la ficha tecnica de cada sistema."
+    },
+    {
+      "codigo": "estado_ubicacion",
+      "descripcion": "Ver el estado operacional y la posicion geografica de cada sistema en el mapa."
+    },
+    {
+      "codigo": "gestionar_operadores",
+      "descripcion": "Asignar y cambiar los soldados operadores de cada sistema de artilleria."
+    },
+    {
+      "codigo": "graficar_blancos",
+      "descripcion": "Graficar blancos, rangos efectivos de fuego y zonas de impacto sobre el mapa."
+    },
+    {
+      "codigo": "graficar_rutas",
+      "descripcion": "Dibujar y consultar rutas de desplazamiento de sistemas de artilleria."
+    },
+    {
+      "codigo": "graficar_plan_operacion",
+      "descripcion": "Dibujar planes de operacion sobre el mapa con sistemas asignados."
+    },
+    {
+      "codigo": "calculos_balisticos",
+      "descripcion": "Ejecutar calculos de tiro: elevacion, deriva, carga y correcciones."
+    },
+    {
+      "codigo": "configurar_tablas_balisticas",
+      "descripcion": "Gestionar tablas balisticas y parametros de municion por tipo de sistema."
+    },
+    {
+      "codigo": "misiones_fuego",
+      "descripcion": "Crear, ejecutar y consultar misiones de fuego de artilleria."
+    },
+    {
+      "codigo": "aprobar_mision",
+      "descripcion": "Aprobar o rechazar ordenes de fuego (nivel comando)."
+    },
+    {
+      "codigo": "cancelar_mision",
+      "descripcion": "Cancelar una mision de fuego que ya se encuentra en ejecucion."
+    },
+    {
+      "codigo": "gestionar_municion",
+      "descripcion": "Registrar consumo, altas y bajas de municion. Gestionar stock."
+    },
+    {
+      "codigo": "ver_municion",
+      "descripcion": "Consultar existencias de municion y alertas de minimos."
+    },
+    {
+      "codigo": "gestionar_inventario",
+      "descripcion": "Administrar repuestos, insumos y partes de los sistemas."
+    },
+    {
+      "codigo": "ver_inventario",
+      "descripcion": "Consultar el inventario de repuestos e insumos."
+    },
+    {
+      "codigo": "ver_mantenimiento",
+      "descripcion": "Consultar historial de mantenimientos realizados y proximas fechas programadas."
+    },
+    {
+      "codigo": "registrar_mantenimiento",
+      "descripcion": "Cargar la ejecucion de un mantenimiento: fecha, tipo y nivel realizado."
+    },
+    {
+      "codigo": "programar_mantenimiento",
+      "descripcion": "Agendar fechas de proximos mantenimientos preventivos."
+    },
+    {
+      "codigo": "infografia_sistema",
+      "descripcion": "Ver la tarjeta completa del sistema al hacer clic en el mapa: comandante, operadores, municion, disparos, mantenimiento y certificaciones."
+    },
+    {
+      "codigo": "ver_infografia_personal",
+      "descripcion": "Ver unicamente la seccion de personal y certificaciones en la infografia del sistema."
+    },
+    {
+      "codigo": "historial_sistemas",
+      "descripcion": "Consultar historial de movimientos, mantenimientos y disparos realizados."
+    },
+    {
+      "codigo": "exportar_historial",
+      "descripcion": "Descargar el historial de sistemas en formato Excel o PDF."
+    },
+    {
+      "codigo": "gestionar_unidades",
+      "descripcion": "Registrar nuevas unidades militares en el sistema (batallones, baterias, etc.). Util para agregar unidades a las que se asignan sistemas de artilleria."
+    },
+    {
+      "codigo": "modulo_esart",
+      "descripcion": "Acceso total al modulo de la Escuela de Artilleria: cursos, instructores, alumnos, malla curricular y reentrenamientos."
+    },
+    {
+      "codigo": "ver_personal_esart",
+      "descripcion": "Consultar personal y certificaciones de la ESART sin poder modificar."
+    },
+    {
+      "codigo": "gestionar_doctrina",
+      "descripcion": "Subir, editar y desactivar documentos PDF de doctrina artillera (balistica, protocolos, manuales ejercito, doctrina ejercito, manuales sistemas)."
+    },
+    {
+      "codigo": "ver_doctrina",
+      "descripcion": "Consultar y descargar los documentos PDF de doctrina artillera disponibles."
+    },
+    {
+      "codigo": "reportes_enviar_ver",
+      "descripcion": "Acceso completo al modulo de reportes: enviar, recibir y consultar informes."
+    },
+    {
+      "codigo": "reportes_solo_enviar",
+      "descripcion": "Enviar informes unicamente, sin acceso a los recibidos."
+    },
+    {
+      "codigo": "reportes_solo_ver",
+      "descripcion": "Consultar informes recibidos sin poder enviar."
+    },
+    {
+      "codigo": "reportes_exportar",
+      "descripcion": "Generar y descargar reportes en PDF o Excel."
+    },
+    {
+      "codigo": "ver_auditoria",
+      "descripcion": "Consultar el log de actividad: quien hizo que accion y cuando."
+    },
+    {
+      "codigo": "ver_dashboard",
+      "descripcion": "Acceder al panel general con indicadores del teatro de operaciones."
+    },
+    {
+      "codigo": "configurar_alertas",
+      "descripcion": "Definir umbrales de alerta: dias sin mantenimiento, stock minimo, disparos acumulados."
+    },
+    {
+      "codigo": "recibir_alertas",
+      "descripcion": "Recibir notificaciones automaticas cuando se superen los umbrales configurados."
+    }
+  ],
+  "unidades_militares": [
+    {
+      "codigo": "DIV01",
+      "nombre": "Primera División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV02",
+      "nombre": "Segunda División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV03",
+      "nombre": "Tercera División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV04",
+      "nombre": "Cuarta División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV05",
+      "nombre": "Quinta División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV06",
+      "nombre": "Sexta División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV07",
+      "nombre": "Séptima División",
+      "padre": null
+    },
+    {
+      "codigo": "DIV08",
+      "nombre": "Octava División",
+      "padre": null
+    },
+    {
+      "codigo": "DIVFE",
+      "nombre": "División de Fuerzas Especiales",
+      "padre": null
+    },
+    {
+      "codigo": "DAAVA",
+      "nombre": "División de Aviación y Asalto Aéreo",
+      "padre": null
+    },
+    {
+      "codigo": "FUTOM",
+      "nombre": "Fuerza de Tarea Omega",
+      "padre": null
+    },
+    {
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "padre": null
+    },
+    {
+      "codigo": "BR01",
+      "nombre": "Primera Brigada",
+      "padre": "DIV05"
+    },
+    {
+      "codigo": "BR03",
+      "nombre": "Tercera Brigada",
+      "padre": "DIV03"
+    },
+    {
+      "codigo": "BR04",
+      "nombre": "Cuarta Brigada",
+      "padre": "DIV07"
+    },
+    {
+      "codigo": "BR05",
+      "nombre": "Quinta Brigada",
+      "padre": "DIV02"
+    },
+    {
+      "codigo": "BR08",
+      "nombre": "Octava Brigada",
+      "padre": "DIV05"
+    },
+    {
+      "codigo": "BR09",
+      "nombre": "Novena Brigada",
+      "padre": "DIV05"
+    },
+    {
+      "codigo": "BR10",
+      "nombre": "Décima Brigada",
+      "padre": "DIV01"
+    },
+    {
+      "codigo": "BR13",
+      "nombre": "Décimo Tercera Brigada",
+      "padre": "DIV05"
+    },
+    {
+      "codigo": "BR18",
+      "nombre": "Décimo Octava Brigada",
+      "padre": "DIV08"
+    },
+    {
+      "codigo": "BR27",
+      "nombre": "Vigésimo Séptima Brigada",
+      "padre": "DIV06"
+    },
+    {
+      "codigo": "BR30",
+      "nombre": "Trigésima Brigada",
+      "padre": "DIV02"
+    },
+    {
+      "codigo": "CEMIL",
+      "nombre": "Centro de Educación Militar",
+      "padre": "CEDOC"
+    },
+    {
+      "codigo": "BAACA1",
+      "nombre": "Batallón de Artillería de Campaña N°1",
+      "padre": "BR01"
+    },
+    {
+      "codigo": "BAACA2",
+      "nombre": "Batallón de Artillería de Campaña N°2",
+      "padre": "BR10"
+    },
+    {
+      "codigo": "BAACA3",
+      "nombre": "Batallón de Artillería de Campaña N°3",
+      "padre": "BR03"
+    },
+    {
+      "codigo": "BAACA4",
+      "nombre": "Batallón de Artillería de Campaña N°4",
+      "padre": "BR04"
+    },
+    {
+      "codigo": "BAACA5",
+      "nombre": "Batallón de Artillería de Campaña N°5",
+      "padre": "BR05"
+    },
+    {
+      "codigo": "BAACA6",
+      "nombre": "Batallón de Artillería de Campaña N°6",
+      "padre": "BR05"
+    },
+    {
+      "codigo": "BAACA8",
+      "nombre": "Batallón de Artillería de Campaña N°8",
+      "padre": "BR08"
+    },
+    {
+      "codigo": "BAACA9",
+      "nombre": "Batallón de Artillería de Campaña N°9",
+      "padre": "BR09"
+    },
+    {
+      "codigo": "BAACA10",
+      "nombre": "Batallón de Artillería de Campaña N°10",
+      "padre": "BR10"
+    },
+    {
+      "codigo": "BAACA13",
+      "nombre": "Batallón de Artillería de Campaña N°13",
+      "padre": "BR13"
+    },
+    {
+      "codigo": "BAACA18",
+      "nombre": "Batallón de Artillería de Campaña N°18",
+      "padre": "BR18"
+    },
+    {
+      "codigo": "BAACA27",
+      "nombre": "Batallón de Artillería de Campaña N°27",
+      "padre": "BR27"
+    },
+    {
+      "codigo": "BAACA30",
+      "nombre": "Batallón de Artillería de Campaña N°30",
+      "padre": "BR30"
+    },
+    {
+      "codigo": "BAADA1",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+      "padre": "BR10"
+    },
+    {
+      "codigo": "BAADA2",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+      "padre": "BR05"
+    },
+    {
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "padre": "CEMIL"
+    }
+  ],
+  "sin_tabla": {
+    "ESTADOS_OPERACIONALES": [
+      {
+        "codigo": "EN_OPERACION",
+        "nombre": "En Operacion"
+      },
+      {
+        "codigo": "EN_BATALLON",
+        "nombre": "En Batallon"
+      },
+      {
+        "codigo": "PENDIENTE_BAJA",
+        "nombre": "Pendiente de Baja"
+      },
+      {
+        "codigo": "DADO_BAJA",
+        "nombre": "Dado de Baja"
+      }
+    ],
+    "ESTADOS_LOGISTICOS": [
+      {
+        "codigo": "SMI",
+        "nombre": "Sistema en Mantenimiento Imprevisto"
+      },
+      {
+        "codigo": "SMP",
+        "nombre": "Sistema en Mantenimiento Programado"
+      },
+      {
+        "codigo": "SNLA",
+        "nombre": "Sistema No Listo por Abastecimiento"
+      },
+      {
+        "codigo": "SCL",
+        "nombre": "Sistema Completamente Listo"
+      },
+      {
+        "codigo": "SFS",
+        "nombre": "Sistema Fuera de Servicio"
+      },
+      {
+        "codigo": "SPB",
+        "nombre": "Sistema en Proceso de Baja"
+      },
+      {
+        "codigo": "SDB",
+        "nombre": "Sistema Dado de Baja"
+      },
+      {
+        "codigo": "SID",
+        "nombre": "Sistema con Duplicidad de Informacion"
+      }
+    ],
+    "TIPOS_UNIDAD": [
+      {
+        "codigo": "DIV",
+        "nombre": "División"
+      },
+      {
+        "codigo": "BR",
+        "nombre": "Brigada"
+      },
+      {
+        "codigo": "BAACA",
+        "nombre": "Batallón de Artillería"
+      },
+      {
+        "codigo": "BATAR",
+        "nombre": "Batería de Artillería"
+      },
+      {
+        "codigo": "CECFU",
+        "nombre": "Centro de Coordinación de Fuegos"
+      },
+      {
+        "codigo": "CEDOC",
+        "nombre": "Centro de Educación y Doctrina"
+      },
+      {
+        "codigo": "CEM",
+        "nombre": "Centro de Educación Militar"
+      },
+      {
+        "codigo": "BAADA",
+        "nombre": "Batallón de Artillería de Defensa Aérea"
+      },
+      {
+        "codigo": "ESART",
+        "nombre": "Escuela de Artillería"
+      }
+    ]
+  }
+}

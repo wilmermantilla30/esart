@@ -1,0 +1,15 @@
+{
+  "destino": "esart_hu03_pruebas",
+  "errores": [],
+  "resumen": {
+    "propuestas": 39,
+    "por_actualizar": 39,
+    "omitidas": 0,
+    "pendientes": [
+      "FUTOM"
+    ]
+  },
+  "bloqueo_fecha": true,
+  "actualizadas": 0,
+  "estado": "propuesta_sin_actualizaciones"
+}

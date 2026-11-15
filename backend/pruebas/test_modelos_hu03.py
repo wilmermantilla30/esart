@@ -3,8 +3,8 @@
 from sqlalchemy import CheckConstraint
 from sqlalchemy.orm import configure_mappers
 
-from aplicacion.base_datos.base import BaseModelo
-from aplicacion.modelos import PersonalMilitar, Rol, Usuario
+from aplicacion.modelos.historico import PersonalMilitar, Rol, Usuario
+from aplicacion.modelos.historico.base import BaseModelo
 
 TABLAS_ESPERADAS = {
     "unidades_militares",
@@ -34,7 +34,8 @@ TABLAS_ESPERADAS = {
 
 def test_inventario_y_relaciones_sin_ciclos():
     configure_mappers()
-    assert set(BaseModelo.metadata.tables) == TABLAS_ESPERADAS
+    # HU-03 conserva 22 tablas; la propuesta 0002 añade solo tipos_unidad.
+    assert set(BaseModelo.metadata.tables) == TABLAS_ESPERADAS | {"tipos_unidad"}
     assert Usuario.rol.property.mapper.class_ is Rol
     assert PersonalMilitar.unidad_militar.property.mapper.local_table.name == "unidades_militares"
 

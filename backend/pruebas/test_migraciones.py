@@ -7,16 +7,16 @@ from pathlib import Path
 from alembic import command
 from alembic.config import Config
 from alembic.script import ScriptDirectory
-from sqlalchemy import CheckConstraint, Index, MetaData, Table
+from sqlalchemy import CheckConstraint, ForeignKeyConstraint, Index, MetaData, Table
 from sqlalchemy.dialects import postgresql
 from sqlalchemy.sql.elements import conv
 
-from aplicacion.base_datos.base import BaseModelo
+from aplicacion.modelos.historico.base import BaseModelo
 
 
 def test_alembic_carga_historial_y_entorno_sin_conexion():
-    configuracion = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
-    assert ScriptDirectory.from_config(configuracion).get_heads() == ["0001"]
+    configuracion = Config(str(Path(__file__).resolve().parents[1] / "alembic_historico.ini"))
+    assert ScriptDirectory.from_config(configuracion).get_heads() == ["0002"]
     salida = StringIO()
     configuracion.output_buffer = salida
     command.upgrade(configuracion, "head", sql=True)
@@ -31,7 +31,7 @@ def test_alembic_carga_historial_y_entorno_sin_conexion():
 
 
 def test_downgrade_offline_no_elimina_esquemas():
-    configuracion = Config(str(Path(__file__).resolve().parents[1] / "alembic.ini"))
+    configuracion = Config(str(Path(__file__).resolve().parents[1] / "alembic_historico.ini"))
     salida = StringIO()
     configuracion.output_buffer = salida
     command.downgrade(configuracion, "0001:base", sql=True)
@@ -42,8 +42,8 @@ def test_downgrade_offline_no_elimina_esquemas():
     assert "CASCADE" not in sql
 
 
-def test_revision_congelada_coincide_con_modelos(monkeypatch):
-    """Reconstruye el DDL de la revisión sin importar modelos desde la migración."""
+def test_revisiones_congeladas_coinciden_con_modelos(monkeypatch):
+    """Reconstruye 0001 + 0002, conservando la revisión histórica sin cambios."""
     ruta = Path(__file__).resolve().parents[1] / "migraciones/versions/0001_nucleo_inicial.py"
     especificacion = spec_from_file_location("revision_hu03", ruta)
     revision = module_from_spec(especificacion)
@@ -64,6 +64,23 @@ def test_revision_congelada_coincide_con_modelos(monkeypatch):
     monkeypatch.setattr(revision.op, "execute", lambda *_: None)
     monkeypatch.setattr(revision.op, "f", conv)
     revision.upgrade()
+    assert "tipos_unidad" not in metadatos.tables
+    assert "tipo_unidad_id" not in metadatos.tables["unidades_militares"].c
+    ruta_0002 = ruta.with_name("0002_tipos_unidad.py")
+    especificacion_0002 = spec_from_file_location("revision_hu04", ruta_0002)
+    revision_0002 = module_from_spec(especificacion_0002)
+    especificacion_0002.loader.exec_module(revision_0002)
+    monkeypatch.setattr(
+        revision_0002.op, "add_column", lambda tabla, columna: metadatos.tables[tabla].append_column(columna)
+    )
+
+    def crear_fk(nombre, origen, destino, locales, remotas, **opciones):
+        metadatos.tables[origen].append_constraint(
+            ForeignKeyConstraint(locales, [f"{destino}.{c}" for c in remotas], name=nombre, **opciones)
+        )
+
+    monkeypatch.setattr(revision_0002.op, "create_foreign_key", crear_fk)
+    revision_0002.upgrade()
     dialecto = postgresql.dialect()
 
     def firma(tabla):

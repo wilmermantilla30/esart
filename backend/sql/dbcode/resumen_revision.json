@@ -1,0 +1,410 @@
+{
+  "version_manual": "dbcode_hu03_hu04_v1",
+  "sha256_manifiesto": "b039ade13bfe7f3420b19804ae47d2bfa83d7059c005f5adf6b37f1c171b8c89",
+  "tablas_nuevas": [
+    "esart.tipos_unidad",
+    "esart.permisos",
+    "esart.roles_permisos",
+    "esart.intentos_inicio_sesion",
+    "esart.sesiones_usuario",
+    "esart.importaciones_excel",
+    "esart.auditoria_eventos",
+    "esart.tipos_certificacion",
+    "esart.requisitos_habilitacion",
+    "esart.integraciones_control"
+  ],
+  "vista_nueva": "esart.v_unidades_api",
+  "columnas_nuevas": [
+    [
+      "esart_ref",
+      "unidades_militares",
+      "codigo",
+      "VARCHAR(20)"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "nombre",
+      "VARCHAR(200)"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "sigla",
+      "VARCHAR(30)"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "unidad_superior_id",
+      "BIGINT"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "activa",
+      "BOOLEAN"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "fecha_creacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "tipo_unidad_id",
+      "UUID"
+    ],
+    [
+      "esart_ref",
+      "unidades_militares",
+      "uuid_publico",
+      "UUID"
+    ],
+    [
+      "esart",
+      "personal_militar",
+      "primer_nombre",
+      "VARCHAR(60)"
+    ],
+    [
+      "esart",
+      "personal_militar",
+      "segundo_nombre",
+      "VARCHAR(60)"
+    ],
+    [
+      "esart",
+      "personal_militar",
+      "primer_apellido",
+      "VARCHAR(60)"
+    ],
+    [
+      "esart",
+      "personal_militar",
+      "segundo_apellido",
+      "VARCHAR(60)"
+    ],
+    [
+      "esart",
+      "personal_militar",
+      "arma",
+      "VARCHAR(40)"
+    ],
+    [
+      "esart",
+      "personal_militar",
+      "estado_servicio",
+      "VARCHAR(20)"
+    ],
+    [
+      "esart",
+      "hoja_vida_artillero",
+      "especialidad",
+      "VARCHAR(100)"
+    ],
+    [
+      "esart",
+      "hoja_vida_artillero",
+      "fecha_ingreso_arma",
+      "DATE"
+    ],
+    [
+      "esart",
+      "roles",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart_ref",
+      "usuarios",
+      "nombre_completo",
+      "VARCHAR(200)"
+    ],
+    [
+      "esart_ref",
+      "usuarios",
+      "rol_id",
+      "BIGINT"
+    ],
+    [
+      "esart_ref",
+      "usuarios",
+      "intentos_fallidos_consecutivos",
+      "INTEGER"
+    ],
+    [
+      "esart_ref",
+      "usuarios",
+      "bloqueado_hasta",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "tipos_curso",
+      "descripcion",
+      "TEXT"
+    ],
+    [
+      "esart",
+      "tipos_curso",
+      "tipo_sistema",
+      "VARCHAR(50)"
+    ],
+    [
+      "esart",
+      "tipos_curso",
+      "vigencia_meses",
+      "INTEGER"
+    ],
+    [
+      "esart",
+      "tipos_curso",
+      "nota_minima_aprobacion",
+      "NUMERIC(4, 2)"
+    ],
+    [
+      "esart",
+      "tipos_curso",
+      "fecha_creacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "tipos_curso",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "artillero_cursos",
+      "numero_cohorte",
+      "VARCHAR(30)"
+    ],
+    [
+      "esart",
+      "artillero_cursos",
+      "estado",
+      "VARCHAR(20)"
+    ],
+    [
+      "esart",
+      "artillero_cursos",
+      "nota_final",
+      "NUMERIC(4, 2)"
+    ],
+    [
+      "esart",
+      "artillero_cursos",
+      "numero_acta",
+      "VARCHAR(50)"
+    ],
+    [
+      "esart",
+      "artillero_cursos",
+      "importacion_excel_id",
+      "UUID"
+    ],
+    [
+      "esart",
+      "artillero_cursos",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "artillero_certificaciones",
+      "tipo_certificacion_id",
+      "UUID"
+    ],
+    [
+      "esart",
+      "artillero_certificaciones",
+      "numero_certificado",
+      "VARCHAR(50)"
+    ],
+    [
+      "esart",
+      "artillero_certificaciones",
+      "estado",
+      "VARCHAR(20)"
+    ],
+    [
+      "esart",
+      "artillero_certificaciones",
+      "importacion_excel_id",
+      "UUID"
+    ],
+    [
+      "esart",
+      "artillero_certificaciones",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "codigo",
+      "VARCHAR(30)"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "nombre",
+      "VARCHAR(200)"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "tipo_sistema",
+      "VARCHAR(50)"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "calibre_milimetros",
+      "NUMERIC(6, 2)"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "verificacion_habilitada",
+      "BOOLEAN"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "activo",
+      "BOOLEAN"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "fecha_creacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart_ref",
+      "sistemas_artilleria",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "tipos_cargo",
+      "codigo",
+      "VARCHAR(30)"
+    ],
+    [
+      "esart",
+      "tipos_cargo",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "artillero_cargos",
+      "numero_resolucion",
+      "VARCHAR(50)"
+    ],
+    [
+      "esart",
+      "artillero_cargos",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "componentes",
+      "fecha_actualizacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "rol_permisos",
+      "fecha_creacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ],
+    [
+      "esart",
+      "usuario_permisos",
+      "fecha_creacion",
+      "TIMESTAMP WITH TIME ZONE"
+    ]
+  ],
+  "alias_orm_requeridos": {
+    "personal_militar": {
+      "numero_documento": "documento_identidad",
+      "unidad_militar_id": "unidad_actual_id",
+      "fecha_creacion": "creado_en",
+      "fecha_actualizacion": "actualizado_en"
+    },
+    "hoja_vida_artillero": {
+      "personal_militar_id": "artillero_id",
+      "fecha_creacion": "creado_en",
+      "fecha_actualizacion": "actualizado_en"
+    },
+    "usuarios": {
+      "nombre_usuario": "usuario",
+      "hash_contrasena": "contrasena_hash",
+      "fecha_ultimo_acceso": "ultimo_acceso_en",
+      "fecha_creacion": "creado_en",
+      "fecha_actualizacion": "actualizado_en"
+    },
+    "artillero_cursos": {
+      "hoja_vida_artillero_id": "hoja_vida_id",
+      "fecha_creacion": "creado_en"
+    },
+    "artillero_certificaciones": {
+      "hoja_vida_artillero_id": "hoja_vida_id",
+      "fecha_expedicion": "fecha_emision",
+      "fecha_creacion": "creado_en"
+    },
+    "artillero_cargos": {
+      "hoja_vida_artillero_id": "hoja_vida_id",
+      "unidad_militar_id": "unidad_id",
+      "observaciones": "descripcion",
+      "fecha_creacion": "creado_en"
+    },
+    "tipos_unidad": {},
+    "unidades_militares": {},
+    "roles": {
+      "fecha_creacion": "creado_en"
+    },
+    "permisos": {},
+    "roles_permisos": {},
+    "intentos_inicio_sesion": {},
+    "sesiones_usuario": {},
+    "importaciones_excel": {},
+    "auditoria_eventos": {},
+    "tipos_curso": {},
+    "tipos_certificacion": {},
+    "sistemas_artilleria": {},
+    "requisitos_habilitacion": {},
+    "tipos_cargo": {
+      "fecha_creacion": "creado_en"
+    },
+    "componentes": {
+      "fecha_creacion": "creado_en"
+    },
+    "rol_permisos": {
+      "fecha_actualizacion": "actualizado_en"
+    },
+    "usuario_permisos": {
+      "fecha_actualizacion": "actualizado_en"
+    }
+  },
+  "ejecutado_en_postgresql": false,
+  "archivos_sha256": {
+    "01_integrar_esart_db.sql": "8e5d8f31fb654c59326917166930987c9f973738cc6c9fcd239367c99bdddda4",
+    "02_verificar_esart_db.sql": "51af87053a0893b5d64b743c660f5149b2be7c68c75b6e1085424ee2772197d3"
+  }
+}

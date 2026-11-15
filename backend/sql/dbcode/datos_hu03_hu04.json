@@ -1,0 +1,677 @@
+{
+  "roles": [
+    {
+      "codigo": "ADMINISTRADOR",
+      "nombre": "Administrador",
+      "descripcion": "Administra usuarios y mallas de permisos",
+      "activo": true
+    },
+    {
+      "codigo": "USUARIO",
+      "nombre": "Usuario",
+      "descripcion": "Acceso segun permisos asignados",
+      "activo": true
+    }
+  ],
+  "cargos": [
+    {
+      "nombre": "Comandante de pieza",
+      "descripcion": "Oficial o suboficial responsable de la operacion y empleo tactico de una pieza de artilleria.",
+      "cuenta_para_coofu": true,
+      "activo": true
+    },
+    {
+      "nombre": "Comandante de Bateria",
+      "descripcion": "Oficial responsable del mando, control y empleo operacional de una bateria de artilleria.",
+      "cuenta_para_coofu": true,
+      "activo": true
+    },
+    {
+      "nombre": "Armamento Mayor",
+      "descripcion": "Suboficial tecnico responsable del mantenimiento y control del armamento de la unidad.",
+      "cuenta_para_coofu": false,
+      "activo": true
+    },
+    {
+      "nombre": "Tecnico Mantenimiento",
+      "descripcion": "Especialista tecnico en mantenimiento de sistemas y equipos de artilleria.",
+      "cuenta_para_coofu": false,
+      "activo": true
+    },
+    {
+      "nombre": "Coordinador de Fuegos",
+      "descripcion": "Oficial responsable de planear, coordinar y controlar el empleo del fuego de artilleria en apoyo de la maniobra.",
+      "cuenta_para_coofu": true,
+      "activo": true
+    }
+  ],
+  "cursos": [
+    {
+      "codigo": "TECNICA",
+      "nombre": "Tecnico profesional en mantenimiento mecanico aplicado a la operacion de armas de artilleria",
+      "tipo": "EDUCACION_SUPERIOR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 43,
+      "activo": true
+    },
+    {
+      "codigo": "COOFU",
+      "nombre": "Coordinador de Fuegos",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "VIRTUAL",
+      "duracion_semanas": 2,
+      "activo": true
+    },
+    {
+      "codigo": "SACLI",
+      "nombre": "Curso sistemas de artilleria liviana",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 10,
+      "activo": true
+    },
+    {
+      "codigo": "SACME",
+      "nombre": "Curso sistemas de artilleria mediana",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 11,
+      "activo": true
+    },
+    {
+      "codigo": "COSET",
+      "nombre": "Curso control y seguimiento al tiro",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 10,
+      "activo": true
+    },
+    {
+      "codigo": "ADA",
+      "nombre": "Curso de artilleria de defensa aerea",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 8,
+      "activo": true
+    },
+    {
+      "codigo": "OA",
+      "nombre": "Curso observacion adelantada",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 5,
+      "activo": true
+    },
+    {
+      "codigo": "CAPINTE",
+      "nombre": "Curso capacitacion intermedia",
+      "tipo": "EDUCACION_MILITAR",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 12,
+      "activo": true
+    },
+    {
+      "codigo": "COMANDO",
+      "nombre": "Especializacion del arma — curso Comando",
+      "tipo": "ESPECIALIZACION",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 4,
+      "activo": true
+    },
+    {
+      "codigo": "INTERMEDIO",
+      "nombre": "Especializacion del arma — curso Intermedio",
+      "tipo": "ESPECIALIZACION",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 5,
+      "activo": true
+    },
+    {
+      "codigo": "COTAC",
+      "nombre": "Especializacion del arma — curso COTAC",
+      "tipo": "ESPECIALIZACION",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 2,
+      "activo": true
+    },
+    {
+      "codigo": "CAPAVAN",
+      "nombre": "Especializacion del arma — curso CAPAVAN",
+      "tipo": "ESPECIALIZACION",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 2,
+      "activo": true
+    },
+    {
+      "codigo": "ALFEREZ",
+      "nombre": "Especializacion del arma — curso Alfereces",
+      "tipo": "ESPECIALIZACION",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 5,
+      "activo": true
+    },
+    {
+      "codigo": "DRAGONEANTES",
+      "nombre": "Especializacion del arma — curso Dragoneantes",
+      "tipo": "ESPECIALIZACION",
+      "modalidad": "PRESENCIAL",
+      "duracion_semanas": 8,
+      "activo": true
+    }
+  ],
+  "permisos": [
+    {
+      "codigo": "gestionar_sistemas",
+      "descripcion": "Crear, editar y dar de baja sistemas de artilleria."
+    },
+    {
+      "codigo": "ver_sistemas",
+      "descripcion": "Consultar la ficha tecnica de cada sistema."
+    },
+    {
+      "codigo": "estado_ubicacion",
+      "descripcion": "Ver el estado operacional y la posicion geografica de cada sistema en el mapa."
+    },
+    {
+      "codigo": "gestionar_operadores",
+      "descripcion": "Asignar y cambiar los soldados operadores de cada sistema de artilleria."
+    },
+    {
+      "codigo": "graficar_blancos",
+      "descripcion": "Graficar blancos, rangos efectivos de fuego y zonas de impacto sobre el mapa."
+    },
+    {
+      "codigo": "graficar_rutas",
+      "descripcion": "Dibujar y consultar rutas de desplazamiento de sistemas de artilleria."
+    },
+    {
+      "codigo": "graficar_plan_operacion",
+      "descripcion": "Dibujar planes de operacion sobre el mapa con sistemas asignados."
+    },
+    {
+      "codigo": "calculos_balisticos",
+      "descripcion": "Ejecutar calculos de tiro: elevacion, deriva, carga y correcciones."
+    },
+    {
+      "codigo": "configurar_tablas_balisticas",
+      "descripcion": "Gestionar tablas balisticas y parametros de municion por tipo de sistema."
+    },
+    {
+      "codigo": "misiones_fuego",
+      "descripcion": "Crear, ejecutar y consultar misiones de fuego de artilleria."
+    },
+    {
+      "codigo": "aprobar_mision",
+      "descripcion": "Aprobar o rechazar ordenes de fuego (nivel comando)."
+    },
+    {
+      "codigo": "cancelar_mision",
+      "descripcion": "Cancelar una mision de fuego que ya se encuentra en ejecucion."
+    },
+    {
+      "codigo": "gestionar_municion",
+      "descripcion": "Registrar consumo, altas y bajas de municion. Gestionar stock."
+    },
+    {
+      "codigo": "ver_municion",
+      "descripcion": "Consultar existencias de municion y alertas de minimos."
+    },
+    {
+      "codigo": "gestionar_inventario",
+      "descripcion": "Administrar repuestos, insumos y partes de los sistemas."
+    },
+    {
+      "codigo": "ver_inventario",
+      "descripcion": "Consultar el inventario de repuestos e insumos."
+    },
+    {
+      "codigo": "ver_mantenimiento",
+      "descripcion": "Consultar historial de mantenimientos realizados y proximas fechas programadas."
+    },
+    {
+      "codigo": "registrar_mantenimiento",
+      "descripcion": "Cargar la ejecucion de un mantenimiento: fecha, tipo y nivel realizado."
+    },
+    {
+      "codigo": "programar_mantenimiento",
+      "descripcion": "Agendar fechas de proximos mantenimientos preventivos."
+    },
+    {
+      "codigo": "infografia_sistema",
+      "descripcion": "Ver la tarjeta completa del sistema al hacer clic en el mapa: comandante, operadores, municion, disparos, mantenimiento y certificaciones."
+    },
+    {
+      "codigo": "ver_infografia_personal",
+      "descripcion": "Ver unicamente la seccion de personal y certificaciones en la infografia del sistema."
+    },
+    {
+      "codigo": "historial_sistemas",
+      "descripcion": "Consultar historial de movimientos, mantenimientos y disparos realizados."
+    },
+    {
+      "codigo": "exportar_historial",
+      "descripcion": "Descargar el historial de sistemas en formato Excel o PDF."
+    },
+    {
+      "codigo": "gestionar_unidades",
+      "descripcion": "Registrar nuevas unidades militares en el sistema (batallones, baterias, etc.). Util para agregar unidades a las que se asignan sistemas de artilleria."
+    },
+    {
+      "codigo": "modulo_esart",
+      "descripcion": "Acceso total al modulo de la Escuela de Artilleria: cursos, instructores, alumnos, malla curricular y reentrenamientos."
+    },
+    {
+      "codigo": "ver_personal_esart",
+      "descripcion": "Consultar personal y certificaciones de la ESART sin poder modificar."
+    },
+    {
+      "codigo": "gestionar_doctrina",
+      "descripcion": "Subir, editar y desactivar documentos PDF de doctrina artillera (balistica, protocolos, manuales ejercito, doctrina ejercito, manuales sistemas)."
+    },
+    {
+      "codigo": "ver_doctrina",
+      "descripcion": "Consultar y descargar los documentos PDF de doctrina artillera disponibles."
+    },
+    {
+      "codigo": "reportes_enviar_ver",
+      "descripcion": "Acceso completo al modulo de reportes: enviar, recibir y consultar informes."
+    },
+    {
+      "codigo": "reportes_solo_enviar",
+      "descripcion": "Enviar informes unicamente, sin acceso a los recibidos."
+    },
+    {
+      "codigo": "reportes_solo_ver",
+      "descripcion": "Consultar informes recibidos sin poder enviar."
+    },
+    {
+      "codigo": "reportes_exportar",
+      "descripcion": "Generar y descargar reportes en PDF o Excel."
+    },
+    {
+      "codigo": "ver_auditoria",
+      "descripcion": "Consultar el log de actividad: quien hizo que accion y cuando."
+    },
+    {
+      "codigo": "ver_dashboard",
+      "descripcion": "Acceder al panel general con indicadores del teatro de operaciones."
+    },
+    {
+      "codigo": "configurar_alertas",
+      "descripcion": "Definir umbrales de alerta: dias sin mantenimiento, stock minimo, disparos acumulados."
+    },
+    {
+      "codigo": "recibir_alertas",
+      "descripcion": "Recibir notificaciones automaticas cuando se superen los umbrales configurados."
+    }
+  ],
+  "tipos": [
+    {
+      "codigo": "BAACA",
+      "nombre": "Batallón de Artillería",
+      "activo": true
+    },
+    {
+      "codigo": "BAADA",
+      "nombre": "Batallón de Artillería de Defensa Aérea",
+      "activo": true
+    },
+    {
+      "codigo": "BATAR",
+      "nombre": "Batería de Artillería",
+      "activo": true
+    },
+    {
+      "codigo": "BR",
+      "nombre": "Brigada",
+      "activo": true
+    },
+    {
+      "codigo": "CECFU",
+      "nombre": "Centro de Coordinación de Fuegos",
+      "activo": true
+    },
+    {
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "activo": true
+    },
+    {
+      "codigo": "CEM",
+      "nombre": "Centro de Educación Militar",
+      "activo": true
+    },
+    {
+      "codigo": "DIV",
+      "nombre": "División",
+      "activo": true
+    },
+    {
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "activo": true
+    }
+  ],
+  "unidades": [
+    {
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "CEDOC"
+    },
+    {
+      "codigo": "DAAVA",
+      "nombre": "División de Aviación y Asalto Aéreo",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV01",
+      "nombre": "Primera División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV02",
+      "nombre": "Segunda División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV03",
+      "nombre": "Tercera División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV04",
+      "nombre": "Cuarta División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV05",
+      "nombre": "Quinta División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV06",
+      "nombre": "Sexta División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV07",
+      "nombre": "Séptima División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV08",
+      "nombre": "Octava División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIVFE",
+      "nombre": "División de Fuerzas Especiales",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "FUTOM",
+      "nombre": "Fuerza de Tarea Omega",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": null
+    },
+    {
+      "codigo": "BR01",
+      "nombre": "Primera Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR03",
+      "nombre": "Tercera Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV03",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR04",
+      "nombre": "Cuarta Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV07",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR05",
+      "nombre": "Quinta Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV02",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR08",
+      "nombre": "Octava Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR09",
+      "nombre": "Novena Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR10",
+      "nombre": "Décima Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV01",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR13",
+      "nombre": "Décimo Tercera Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR18",
+      "nombre": "Décimo Octava Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV08",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR27",
+      "nombre": "Vigésimo Séptima Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV06",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR30",
+      "nombre": "Trigésima Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV02",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "CEMIL",
+      "nombre": "Centro de Educación Militar",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "CEDOC",
+      "tipo_codigo": "CEM"
+    },
+    {
+      "codigo": "BAACA1",
+      "nombre": "Batallón de Artillería de Campaña N°1",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR01",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA10",
+      "nombre": "Batallón de Artillería de Campaña N°10",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR10",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA13",
+      "nombre": "Batallón de Artillería de Campaña N°13",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR13",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA18",
+      "nombre": "Batallón de Artillería de Campaña N°18",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR18",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA2",
+      "nombre": "Batallón de Artillería de Campaña N°2",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR10",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA27",
+      "nombre": "Batallón de Artillería de Campaña N°27",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR27",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA3",
+      "nombre": "Batallón de Artillería de Campaña N°3",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR03",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA30",
+      "nombre": "Batallón de Artillería de Campaña N°30",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR30",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA4",
+      "nombre": "Batallón de Artillería de Campaña N°4",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR04",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA5",
+      "nombre": "Batallón de Artillería de Campaña N°5",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR05",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA6",
+      "nombre": "Batallón de Artillería de Campaña N°6",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR05",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA8",
+      "nombre": "Batallón de Artillería de Campaña N°8",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR08",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA9",
+      "nombre": "Batallón de Artillería de Campaña N°9",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR09",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAADA1",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR10",
+      "tipo_codigo": "BAADA"
+    },
+    {
+      "codigo": "BAADA2",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR05",
+      "tipo_codigo": "BAADA"
+    },
+    {
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "CEMIL",
+      "tipo_codigo": "ESART"
+    }
+  ]
+}
