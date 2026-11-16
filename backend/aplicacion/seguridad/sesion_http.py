@@ -99,13 +99,15 @@ def segundos_de_inactividad_permitidos() -> int:
     return obtener_configuracion().minutos_inactividad_sesion * SEGUNDOS_POR_MINUTO
 
 
-async def obtener_usuario_actual(
+async def obtener_usuario_en_sesion(
     request: Request,
     respuesta: Response,
     sesion: AsyncSession = Depends(obtener_sesion_base_datos),
 ) -> UsuarioAutenticado:
     """
-    Dependencia: devuelve el usuario de la sesión, o responde 401.
+    Dependencia: devuelve el usuario de la sesión, o responde 401. NO revisa si debe cambiar
+    la contraseña: solo la usan /yo, /cambiar-contrasena y /cerrar-sesion. Las demás rutas
+    usan obtener_usuario_actual.
 
     La identidad sale SOLO del JWT firmado de la cookie y de la fila de
     sesiones_usuario; nunca de datos enviados por el navegador. Cada llamada válida
@@ -122,6 +124,21 @@ async def obtener_usuario_actual(
     usuario = await validar_sesion(sesion, datos_token.usuario_id, datos_token.sesion_id)
     # FastAPI copia esta cabecera a la respuesta final de la ruta que use la dependencia.
     respuesta.headers[NOMBRE_CABECERA_EXPIRA_EN] = str(segundos_de_inactividad_permitidos())
+    return usuario
+
+
+async def obtener_usuario_actual(
+    usuario: UsuarioAutenticado = Depends(obtener_usuario_en_sesion),
+) -> UsuarioAutenticado:
+    """
+    Dependencia de casi todas las rutas: el usuario de la sesión (401 si no hay) y, si su
+    contraseña es temporal, 403 CAMBIO_CONTRASENA_REQUERIDO hasta que la cambie. Así una
+    contraseña puesta por el administrador no sirve para consultar nada.
+    """
+    if usuario.requiere_cambio_contrasena:
+        raise ErrorAplicacion(
+            403, "CAMBIO_CONTRASENA_REQUERIDO", "Debe cambiar su contraseña temporal antes de continuar."
+        )
     return usuario
 
 

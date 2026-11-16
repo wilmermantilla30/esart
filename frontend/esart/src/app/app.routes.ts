@@ -1,8 +1,12 @@
 import { Route, Routes } from '@angular/router';
 
 import { exigirPermiso } from './nucleo/guardas/permiso.guard';
-import { exigirSesion, soloSinSesion } from './nucleo/guardas/sesion.guard';
-import { RUTA_PAGINA_INICIO, RUTA_PAGINA_INICIO_SESION } from './nucleo/rutas-paginas';
+import { exigirSesion, exigirSesionParaCambiarContrasena, soloSinSesion } from './nucleo/guardas/sesion.guard';
+import {
+  RUTA_PAGINA_CAMBIAR_CONTRASENA,
+  RUTA_PAGINA_INICIO,
+  RUTA_PAGINA_INICIO_SESION,
+} from './nucleo/rutas-paginas';
 
 /** Carga diferida de la página provisional de los módulos que aún no tienen pantalla. */
 const cargarEnConstruccion = () =>
@@ -33,6 +37,14 @@ export const routes: Routes = [
     title: 'Iniciar sesión — ESART',
     canActivate: [soloSinSesion],
     loadComponent: () => import('./paginas/inicio-sesion/inicio-sesion').then((m) => m.InicioSesion),
+  },
+  {
+    // Fuera del marco Plataforma: con contraseña temporal no se muestra el menú.
+    path: RUTA_PAGINA_CAMBIAR_CONTRASENA,
+    title: 'Cambiar contraseña — ESART',
+    canActivate: [exigirSesionParaCambiarContrasena],
+    loadComponent: () =>
+      import('./paginas/cambiar-contrasena/cambiar-contrasena').then((m) => m.CambiarContrasena),
   },
   {
     path: '',
@@ -92,12 +104,14 @@ export const routes: Routes = [
           ),
         ],
       },
-      rutaEnConstruccion(
-        'administracion/usuarios',
-        'USUARIOS',
-        'Gestión de usuarios',
-        'Crear, editar y desactivar usuarios del sistema.',
-      ),
+      {
+        path: 'administracion/usuarios',
+        title: 'Gestión de usuarios — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'USUARIOS' },
+        loadComponent: () =>
+          import('./paginas/administracion/gestion-usuarios/gestion-usuarios').then((m) => m.GestionUsuarios),
+      },
       rutaEnConstruccion(
         'administracion/parametros',
         'PARAMETROS_HABILITACION',

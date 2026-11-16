@@ -12,6 +12,7 @@ from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.esquemas.autenticacion import (
     RespuestaInicioSesion,
     RespuestaUsuarioActual,
+    SolicitudCambioContrasena,
     SolicitudInicioSesion,
     UsuarioEnSesion,
 )
@@ -24,10 +25,11 @@ from aplicacion.seguridad.sesion_http import (
     escribir_cookies_sesion,
     obtener_ip_cliente,
     obtener_usuario_actual,
+    obtener_usuario_en_sesion,
     segundos_de_inactividad_permitidos,
     verificar_csrf,
 )
-from aplicacion.servicios import auditoria, estado_bloqueo
+from aplicacion.servicios import administracion_usuarios, auditoria, estado_bloqueo
 from aplicacion.servicios.autenticacion import (
     UsuarioAutenticado,
     cerrar_sesion,
@@ -121,6 +123,7 @@ async def iniciar_sesion_usuario(
             nombre_usuario=resultado.nombre_usuario,
             nombre_completo=resultado.nombre_completo,
             rol=resultado.rol,
+            requiere_cambio_contrasena=resultado.requiere_cambio_contrasena,
         ),
         expira_por_inactividad_segundos=segundos_de_inactividad_permitidos(),
     )
@@ -204,7 +207,8 @@ async def consultar_bloqueo_administrativo(
 
 @enrutador_autenticacion.get("/yo", response_model=RespuestaUsuarioActual)
 async def obtener_datos_usuario_actual(
-    usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
+    # Permite contraseña temporal: el front necesita saber que debe llevarlo a cambiarla.
+    usuario: UsuarioAutenticado = Depends(obtener_usuario_en_sesion),
     sesion: AsyncSession = Depends(obtener_sesion_base_datos),
 ) -> RespuestaUsuarioActual:
     """Datos del usuario en sesión, su menú y sus permisos (el front arma el sidebar con esto)."""
@@ -215,6 +219,7 @@ async def obtener_datos_usuario_actual(
             sesion, usuario.documento_identidad, usuario.nombre_usuario
         ),
         rol=usuario.rol,
+        requiere_cambio_contrasena=usuario.requiere_cambio_contrasena,
         permisos=menu_y_permisos.permisos,
         menu=[asdict(elemento) for elemento in menu_y_permisos.menu],
         expira_por_inactividad_segundos=segundos_de_inactividad_permitidos(),
@@ -226,7 +231,7 @@ async def obtener_datos_usuario_actual(
 )
 async def cerrar_sesion_usuario(
     request: Request,
-    usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
+    usuario: UsuarioAutenticado = Depends(obtener_usuario_en_sesion),
     sesion: AsyncSession = Depends(obtener_sesion_base_datos),
 ) -> Response:
     """Revoca la sesión en el servidor y borra las cookies. 204 sin cuerpo."""
@@ -242,3 +247,26 @@ async def cerrar_sesion_usuario(
     respuesta = Response(status_code=204)
     borrar_cookies_sesion(respuesta)
     return respuesta
+
+
+@enrutador_autenticacion.post(
+    "/cambiar-contrasena", status_code=204, response_class=Response, dependencies=[Depends(verificar_csrf)]
+)
+async def cambiar_contrasena(
+    solicitud: SolicitudCambioContrasena,
+    request: Request,
+    usuario: UsuarioAutenticado = Depends(obtener_usuario_en_sesion),
+    sesion: AsyncSession = Depends(obtener_sesion_base_datos),
+) -> Response:
+    """
+    El usuario en sesión cambia su contraseña (obligatorio si es temporal). Exige la actual.
+    La sesión actual sigue abierta; las demás sesiones del usuario se cierran. 204 sin cuerpo.
+    """
+    await administracion_usuarios.cambiar_contrasena_propia(
+        sesion,
+        usuario=usuario,
+        contrasena_actual=solicitud.contrasena_actual,
+        contrasena_nueva=solicitud.contrasena_nueva,
+        request=request,
+    )
+    return Response(status_code=204)

@@ -6,6 +6,7 @@ import { catchError, throwError } from 'rxjs';
 import {
   MOTIVO_SESION_EXPIRADA,
   PARAMETRO_MOTIVO,
+  RUTA_PAGINA_CAMBIAR_CONTRASENA,
   RUTA_PAGINA_INICIO_SESION,
 } from '../rutas-paginas';
 import { PREFIJO_API } from '../servicios/cliente-api.service';
@@ -17,6 +18,9 @@ import { RUTA_INICIAR_SESION, RUTA_USUARIO_ACTUAL, SesionService } from '../serv
  * - /auth/yo (lo usan las guardas justamente para averiguar si hay sesión).
  */
 const RUTAS_SIN_REDIRECCION = [PREFIJO_API + RUTA_INICIAR_SESION, PREFIJO_API + RUTA_USUARIO_ACTUAL];
+
+/** Código del 403 que da el backend mientras la contraseña sea temporal. */
+export const CODIGO_CAMBIO_CONTRASENA_REQUERIDO = 'CAMBIO_CONTRASENA_REQUERIDO';
 
 /**
  * Si el backend responde 401 a cualquier otra petición, la sesión ya no es válida
@@ -36,6 +40,14 @@ export const sesionExpiradaInterceptor: HttpInterceptorFn = (peticion, siguiente
         void enrutador.navigate(['/', RUTA_PAGINA_INICIO_SESION], {
           queryParams: { [PARAMETRO_MOTIVO]: MOTIVO_SESION_EXPIRADA },
         });
+      }
+      // Contraseña temporal: el backend no responde nada más hasta que se cambie.
+      if (
+        error instanceof HttpErrorResponse &&
+        error.status === 403 &&
+        error.error?.error?.codigo === CODIGO_CAMBIO_CONTRASENA_REQUERIDO
+      ) {
+        void enrutador.navigate(['/', RUTA_PAGINA_CAMBIAR_CONTRASENA]);
       }
       return throwError(() => error);
     }),

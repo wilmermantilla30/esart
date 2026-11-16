@@ -183,7 +183,7 @@ async def guardar_permisos_rol(
             )
 
     if diferencias:
-        await _exigir_administrador_de_malla(sesion)
+        await exigir_administrador_de_malla(sesion)
         await auditoria.registrar_evento(
             sesion,
             auditoria.PERMISOS_ROL_MODIFICADOS,
@@ -387,7 +387,7 @@ async def guardar_permisos_usuario(
         )
 
     if diferencias:
-        await _exigir_administrador_de_malla(sesion)
+        await exigir_administrador_de_malla(sesion)
         await auditoria.registrar_evento(
             sesion,
             auditoria.PERMISOS_USUARIO_MODIFICADOS,
@@ -400,7 +400,7 @@ async def guardar_permisos_usuario(
     return await obtener_permisos_usuario(sesion, usuario_id)
 
 
-async def _exigir_administrador_de_malla(sesion: AsyncSession) -> None:
+async def exigir_administrador_de_malla(sesion: AsyncSession) -> None:
     """
     Antes de confirmar, comprueba que quede al menos un usuario activo que pueda editar la malla.
     Si no, deshace los cambios: el sistema nunca se queda sin quien administre los permisos.

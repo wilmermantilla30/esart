@@ -83,7 +83,46 @@ describe('SesionService', () => {
       .flush({ ...usuarioDePrueba, permisos: ['VERIFICAR_ARTILLERO'], expira_por_inactividad_segundos: 1800 });
 
     expect(resultado).toBe(true);
-    expect(sesion.usuario()).toEqual(usuarioDePrueba);
+    expect(sesion.usuario()).toEqual({ ...usuarioDePrueba, requiere_cambio_contrasena: false });
+  });
+
+  it('con contraseña temporal lo marca y, al cambiarla, la marca se quita', () => {
+    sesion.comprobarSesion().subscribe();
+    backend.expectOne('/api/auth/yo').flush({
+      ...usuarioDePrueba,
+      requiere_cambio_contrasena: true,
+      permisos: [],
+      menu: [],
+      expira_por_inactividad_segundos: 1800,
+    });
+    expect(sesion.requiereCambioContrasena()).toBe(true);
+
+    sesion.cambiarContrasena('Temporal2026x', 'NuevaClave2026').subscribe();
+    const peticion = backend.expectOne('/api/auth/cambiar-contrasena');
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toEqual({ contrasena_actual: 'Temporal2026x', contrasena_nueva: 'NuevaClave2026' });
+    peticion.flush(null, { status: 204, statusText: 'No Content' });
+    expect(sesion.requiereCambioContrasena()).toBe(false);
+  });
+
+  it('puede() lee las operaciones del menú, también en las pestañas', () => {
+    sesion.comprobarSesion().subscribe();
+    backend.expectOne('/api/auth/yo').flush({
+      ...usuarioDePrueba,
+      permisos: ['USUARIOS', 'PERSONAL_MILITAR', 'PERSONAL_VERIFICAR'],
+      menu: [
+        { codigo: 'USUARIOS', nombre: 'Usuarios', ruta: '/administracion/usuarios', operaciones: ['leer', 'crear'], hijos: [] },
+        {
+          codigo: 'PERSONAL_MILITAR', nombre: 'Personal', ruta: '/personal', operaciones: ['leer'],
+          hijos: [{ codigo: 'PERSONAL_VERIFICAR', nombre: 'Verificar', ruta: '/personal/verificar', operaciones: ['leer'], hijos: [] }],
+        },
+      ],
+      expira_por_inactividad_segundos: 1800,
+    });
+    expect(sesion.puede('USUARIOS', 'crear')).toBe(true);
+    expect(sesion.puede('USUARIOS', 'actualizar')).toBe(false);
+    expect(sesion.puede('PERSONAL_VERIFICAR', 'leer')).toBe(true);
+    expect(sesion.puede('AUDITORIA', 'leer')).toBe(false);
   });
 
   it('comprobarSesion responde false (sin lanzar error) si no hay sesión', () => {

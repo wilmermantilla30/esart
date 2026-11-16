@@ -29,6 +29,8 @@ class UsuarioEnSesion(BaseModel):
     nombre_usuario: str
     nombre_completo: str
     rol: str
+    # True: la contraseña es temporal y el front lleva a "Cambiar contraseña" antes que a nada.
+    requiere_cambio_contrasena: bool = False
 
 
 class RespuestaInicioSesion(BaseModel):
@@ -36,6 +38,15 @@ class RespuestaInicioSesion(BaseModel):
 
     usuario: UsuarioEnSesion
     expira_por_inactividad_segundos: int
+
+
+class SolicitudCambioContrasena(BaseModel):
+    """Cuerpo de POST /api/auth/cambiar-contrasena. Las reglas de la nueva las valida el servicio."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    contrasena_actual: str = Field(min_length=1, max_length=LONGITUD_MAXIMA_CONTRASENA_BYTES)
+    contrasena_nueva: str = Field(min_length=1, max_length=LONGITUD_MAXIMA_CONTRASENA_BYTES)
 
 
 class ElementoMenu(BaseModel):

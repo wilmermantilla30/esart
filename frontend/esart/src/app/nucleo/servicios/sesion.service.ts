@@ -8,6 +8,7 @@ import {
   EstadoBloqueoPublico,
   RespuestaInicioSesion,
   RespuestaUsuarioActual,
+  SolicitudCambioContrasena,
   SolicitudInicioSesion,
   UsuarioEnSesion,
 } from '../modelos/sesion';
@@ -18,6 +19,7 @@ export const RUTA_INICIAR_SESION = '/auth/login';
 export const RUTA_USUARIO_ACTUAL = '/auth/yo';
 export const RUTA_CERRAR_SESION = '/auth/cerrar-sesion';
 export const RUTA_CAPTCHA = '/auth/captcha';
+export const RUTA_CAMBIAR_CONTRASENA = '/auth/cambiar-contrasena';
 
 /**
  * Estado de la sesión en el navegador.
@@ -38,6 +40,9 @@ export class SesionService {
   readonly usuario = this.usuarioActual.asReadonly();
   readonly haySesion = computed(() => this.usuarioActual() !== null);
 
+  /** La contraseña actual es temporal: hasta cambiarla, el backend no deja usar nada más. */
+  readonly requiereCambioContrasena = computed(() => this.usuarioActual()?.requiere_cambio_contrasena === true);
+
   /** Menú del usuario (sidebar y pestañas), o null si todavía no se ha cargado. */
   readonly menu = this.menuActual.asReadonly();
 
@@ -47,6 +52,40 @@ export class SesionService {
    */
   tienePermiso(codigoComponente: string): boolean {
     return this.permisosActuales().has(codigoComponente);
+  }
+
+  /**
+   * Indica si en un componente el usuario puede hacer una operación ('crear', 'leer',
+   * 'actualizar', 'eliminar'), según el menú de /api/auth/yo. Solo para mostrar u ocultar
+   * botones: el backend vuelve a verificar la operación en cada petición.
+   */
+  puede(codigoComponente: string, operacion: string): boolean {
+    const buscar = (elementos: ElementoMenu[]): ElementoMenu | undefined => {
+      for (const elemento of elementos) {
+        const encontrado = elemento.codigo === codigoComponente ? elemento : buscar(elemento.hijos ?? []);
+        if (encontrado) {
+          return encontrado;
+        }
+      }
+      return undefined;
+    };
+    return buscar(this.menuActual() ?? [])?.operaciones.includes(operacion) ?? false;
+  }
+
+  /**
+   * Cambia la contraseña del usuario en sesión (exige la actual). Si era temporal, desde
+   * ese momento puede usar el sistema. Las reglas de la nueva las valida también el backend.
+   */
+  cambiarContrasena(contrasenaActual: string, contrasenaNueva: string): Observable<void> {
+    const solicitud: SolicitudCambioContrasena = {
+      contrasena_actual: contrasenaActual,
+      contrasena_nueva: contrasenaNueva,
+    };
+    return this.clienteApi.enviar<void>(RUTA_CAMBIAR_CONTRASENA, solicitud).pipe(
+      tap(() =>
+        this.usuarioActual.update((usuario) => (usuario ? { ...usuario, requiere_cambio_contrasena: false } : usuario)),
+      ),
+    );
   }
 
   consultarBloqueo(): Observable<EstadoBloqueoPublico> {
@@ -105,6 +144,7 @@ export class SesionService {
           nombre_usuario: respuesta.nombre_usuario,
           nombre_completo: respuesta.nombre_completo,
           rol: respuesta.rol,
+          requiere_cambio_contrasena: respuesta.requiere_cambio_contrasena === true,
         });
         this.menuActual.set(respuesta.menu ?? []);
         this.permisosActuales.set(new Set(respuesta.permisos ?? []));

@@ -1,13 +1,16 @@
 """
-Administración de usuarios por consola (HU-10), mientras llega el panel web (segunda entrega).
+Administración de usuarios por consola (HU-10). Lo mismo se hace desde la web, en
+Administración > Gestión de usuarios; la consola sirve cuando no hay nadie que pueda entrar.
 
 Uso, desde backend/:
     python -m herramientas.administrar_usuarios listar [--buscar texto]
     python -m herramientas.administrar_usuarios crear --usuario nombre.apellido --rol USUARIO
-        [--cedula 1234567890]
+        --cedula 1234567890
     python -m herramientas.administrar_usuarios desbloquear --usuario nombre.apellido
     python -m herramientas.administrar_usuarios desbloquear-ip --ip 10.1.2.3
 
+- La cédula es obligatoria: el militar debe estar en Personal militar.
+- La contraseña es temporal: el usuario debe cambiarla la primera vez que entre.
 - La contraseña se pide con entrada OCULTA dos veces (nunca como argumento: quedaría en el
   historial de la terminal). Si no hay terminal, se rechaza.
 - Usa la conexión de la API (.env, cuenta esart_aplicacion) y queda en la auditoría como
@@ -47,7 +50,7 @@ def construir_argumentos() -> argparse.ArgumentParser:
     crear = comandos.add_parser("crear", help="Crea un usuario con un rol (la contraseña se pide oculta).")
     crear.add_argument("--usuario", required=True, help="Nombre de usuario, por ejemplo jperez.esart")
     crear.add_argument("--rol", required=True, choices=ROLES)
-    crear.add_argument("--cedula", help="Cédula del militar (opcional): muestra su grado y nombre al entrar.")
+    crear.add_argument("--cedula", required=True, help="Cédula del militar (debe estar en Personal militar).")
 
     desbloquear = comandos.add_parser(
         "desbloquear", help="Quita el bloqueo por intentos fallidos de una cuenta."
@@ -75,7 +78,7 @@ def imprimir_usuarios(usuarios: list[servicio.EstadoUsuario]) -> None:
 
 
 async def ejecutar(argumentos: argparse.Namespace) -> None:
-    operador = operador_del_sistema()
+    actor = servicio.Actor.consola(operador_del_sistema())
     async with obtener_fabrica_sesiones()() as sesion:
         if argumentos.comando == "listar":
             imprimir_usuarios(await servicio.listar_usuarios(sesion, argumentos.buscar))
@@ -96,18 +99,21 @@ async def ejecutar(argumentos: argparse.Namespace) -> None:
                 codigo_rol=argumentos.rol,
                 contrasena=contrasena,
                 documento_identidad=argumentos.cedula,
-                operador=operador,
+                actor=actor,
             )
-            print(f"Usuario '{argumentos.usuario}' creado (id {usuario_id}) con rol {argumentos.rol}.")
+            print(
+                f"Usuario '{argumentos.usuario}' creado (id {usuario_id}) con rol {argumentos.rol}. "
+                "Deberá cambiar la contraseña al entrar."
+            )
 
         elif argumentos.comando == "desbloquear":
             estado = await servicio.desbloquear_usuario(
-                sesion, nombre_usuario=argumentos.usuario, operador=operador
+                sesion, nombre_usuario=argumentos.usuario, actor=actor
             )
             print(f"Usuario '{estado.usuario}' desbloqueado. Intentos fallidos: {estado.intentos_fallidos}.")
 
         elif argumentos.comando == "desbloquear-ip":
-            anteriores = await servicio.desbloquear_ip(sesion, ip=argumentos.ip, operador=operador)
+            anteriores = await servicio.desbloquear_ip(sesion, ip=argumentos.ip, actor=actor)
             print(f"IP {argumentos.ip}: contador puesto en cero (tenía {anteriores} intento(s)).")
 
 

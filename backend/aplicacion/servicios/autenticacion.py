@@ -52,6 +52,8 @@ class UsuarioAutenticado:
     rol: str
     documento_identidad: str | None
     sesion_id: uuid.UUID
+    # La contraseña es temporal (la puso un administrador): debe cambiarla antes de usar el sistema.
+    requiere_cambio_contrasena: bool = False
 
 
 @dataclass(frozen=True)
@@ -63,6 +65,7 @@ class ResultadoInicioSesion:
     nombre_completo: str
     rol: str
     token_sesion: str
+    requiere_cambio_contrasena: bool = False
 
 
 def _error_credenciales_invalidas() -> ErrorAplicacion:
@@ -180,6 +183,7 @@ async def iniciar_sesion(
         nombre_completo=nombre_completo,
         rol=rol,
         token_sesion=token,
+        requiere_cambio_contrasena=usuario.requiere_cambio_contrasena,
     )
 
 
@@ -224,6 +228,7 @@ async def validar_sesion(sesion: AsyncSession, usuario_id: int, sesion_id: uuid.
         rol=rol,
         documento_identidad=usuario.documento_identidad,
         sesion_id=sesion_usuario.id,
+        requiere_cambio_contrasena=usuario.requiere_cambio_contrasena,
     )
 
 

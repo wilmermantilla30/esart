@@ -1,4 +1,4 @@
-"""Esquemas de /api/administracion: malla de permisos y consulta de auditoría."""
+"""Esquemas de /api/administracion: malla de permisos, gestión de usuarios y consulta de auditoría."""
 
 from datetime import datetime
 from typing import Literal
@@ -112,3 +112,50 @@ class PaginaAuditoria(BaseModel):
     tamano_pagina: int
     total_elementos: int
     total_paginas: int
+
+
+# --- Gestión de usuarios (HU-10) ------------------------------------------------------------
+
+
+class UsuarioGestion(BaseModel):
+    """Fila de la tabla de Gestión de usuarios. Nunca incluye el hash de la contraseña."""
+
+    id: int
+    usuario: str
+    rol: str | None
+    activo: bool
+    bloqueado: bool
+    bloqueado_hasta: datetime | None
+    intentos_fallidos: int
+    documento_identidad: str | None
+    nombre_completo: str | None
+    requiere_cambio_contrasena: bool
+    ultimo_acceso_en: datetime | None
+
+
+class MilitarParaUsuario(BaseModel):
+    """Resultado de buscar una cédula en Personal militar al crear un usuario."""
+
+    documento_identidad: str
+    grado: str
+    nombres: str
+    apellidos: str
+    unidad: str | None
+    activo: bool
+    usuario_existente: str | None
+    nombre_usuario_sugerido: str
+
+
+class SolicitudCrearUsuario(BaseModel):
+    """La contraseña es temporal: el usuario la cambia al entrar. Las reglas las valida el servicio."""
+
+    model_config = ConfigDict(extra="forbid")
+    documento_identidad: str = Field(min_length=5, max_length=15)
+    nombre_usuario: str = Field(min_length=3, max_length=80)
+    rol: Literal["USUARIO", "ADMINISTRADOR"]
+    contrasena_temporal: str = Field(min_length=1, max_length=72)
+
+
+class SolicitudRestablecerContrasena(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    contrasena_temporal: str = Field(min_length=1, max_length=72)

@@ -56,6 +56,14 @@ export interface UsuarioEnSesion {
   nombre_completo: string;
   /** Código del rol: 'ADMINISTRADOR' o 'USUARIO'. */
   rol: string;
+  /** true: la contraseña es temporal (la puso un administrador) y debe cambiarla antes de seguir. */
+  requiere_cambio_contrasena?: boolean;
+}
+
+/** Cuerpo de POST /api/auth/cambiar-contrasena. */
+export interface SolicitudCambioContrasena {
+  contrasena_actual: string;
+  contrasena_nueva: string;
 }
 
 /** Respuesta 200 de POST /api/auth/login. */

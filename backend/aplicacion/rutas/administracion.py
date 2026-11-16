@@ -2,9 +2,12 @@
 Rutas de administración: /api/administracion.
 
 - Malla de permisos (componente PERMISOS): leer exige 'leer'; guardar exige 'actualizar' y CSRF.
+- Gestión de usuarios (componente USUARIOS): leer, crear y actualizar (activar, desactivar,
+  desbloquear, restablecer contraseña). Todo con CSRF y auditado.
 - Auditoría (componente AUDITORIA): solo lectura, para todos (la tabla es inmutable).
 """
 
+from dataclasses import asdict
 from datetime import date, timedelta
 from typing import Annotated
 
@@ -15,17 +18,22 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.esquemas.administracion import (
     EventoAuditoria,
+    MilitarParaUsuario,
     PaginaAuditoria,
     RespuestaPermisosRol,
     RespuestaPermisosUsuario,
     ResumenRol,
+    SolicitudCrearUsuario,
     SolicitudPermisosRol,
     SolicitudPermisosUsuario,
+    SolicitudRestablecerContrasena,
+    UsuarioGestion,
     UsuarioMalla,
 )
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual, verificar_csrf
-from aplicacion.servicios import malla_permisos
+from aplicacion.servicios import administracion_usuarios, malla_permisos
+from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 from aplicacion.servicios.habilitacion import total_paginas
 
@@ -36,6 +44,13 @@ UsuarioActual = Annotated[UsuarioAutenticado, Depends(obtener_usuario_actual)]
 
 puede_leer_malla = requerir_permiso_componente("PERMISOS", OperacionCRUD.READ, obtener_id_usuario_actual)
 puede_editar_malla = requerir_permiso_componente("PERMISOS", OperacionCRUD.UPDATE, obtener_id_usuario_actual)
+puede_leer_usuarios = requerir_permiso_componente("USUARIOS", OperacionCRUD.READ, obtener_id_usuario_actual)
+puede_crear_usuarios = requerir_permiso_componente(
+    "USUARIOS", OperacionCRUD.CREATE, obtener_id_usuario_actual
+)
+puede_editar_usuarios = requerir_permiso_componente(
+    "USUARIOS", OperacionCRUD.UPDATE, obtener_id_usuario_actual
+)
 puede_leer_auditoria = requerir_permiso_componente("AUDITORIA", OperacionCRUD.READ, obtener_id_usuario_actual)
 
 TAMANO_PAGINA_POR_DEFECTO = 50
@@ -105,6 +120,116 @@ async def guardar_permisos_usuario(
     return await malla_permisos.guardar_permisos_usuario(
         sesion, usuario_id, solicitud.cambios, actor, request
     )
+
+
+# --- Gestión de usuarios -------------------------------------------------------------------
+
+
+@enrutador_administracion.get(
+    "/usuarios", response_model=list[UsuarioGestion], dependencies=[Depends(puede_leer_usuarios)]
+)
+async def listar_usuarios_gestion(
+    sesion: Sesion, texto: str | None = Query(default=None, max_length=80)
+) -> list[UsuarioGestion]:
+    """Usuarios con rol, militar asociado y estado. 'texto' busca en el usuario o la cédula."""
+    return [UsuarioGestion(**asdict(u)) for u in await administracion_usuarios.listar_usuarios(sesion, texto)]
+
+
+@enrutador_administracion.get(
+    "/usuarios/militar/{documento_identidad}",
+    response_model=MilitarParaUsuario,
+    dependencies=[Depends(puede_crear_usuarios)],
+)
+async def buscar_militar_para_usuario(documento_identidad: str, sesion: Sesion) -> MilitarParaUsuario:
+    """Paso 1 de "Nuevo usuario": el militar de esa cédula y el nombre de usuario sugerido."""
+    militar = await administracion_usuarios.buscar_militar_para_usuario(sesion, documento_identidad)
+    return MilitarParaUsuario(**asdict(militar))
+
+
+@enrutador_administracion.post(
+    "/usuarios",
+    status_code=201,
+    response_model=UsuarioGestion,
+    dependencies=[Depends(verificar_csrf), Depends(puede_crear_usuarios)],
+)
+async def crear_usuario(
+    solicitud: SolicitudCrearUsuario, request: Request, sesion: Sesion, actor: UsuarioActual
+) -> UsuarioGestion:
+    usuario_id = await administracion_usuarios.crear_usuario(
+        sesion,
+        nombre_usuario=solicitud.nombre_usuario,
+        codigo_rol=solicitud.rol,
+        contrasena=solicitud.contrasena_temporal,
+        documento_identidad=solicitud.documento_identidad,
+        actor=Actor.web(actor, request),
+    )
+    return UsuarioGestion(**asdict(await administracion_usuarios.obtener_estado_usuario(sesion, usuario_id)))
+
+
+@enrutador_administracion.post(
+    "/usuarios/{usuario_id}/activar",
+    response_model=UsuarioGestion,
+    dependencies=[Depends(verificar_csrf), Depends(puede_editar_usuarios)],
+)
+async def activar_usuario(
+    usuario_id: int, request: Request, sesion: Sesion, actor: UsuarioActual
+) -> UsuarioGestion:
+    estado = await administracion_usuarios.cambiar_estado_activo(
+        sesion, usuario_id=usuario_id, activo=True, actor=Actor.web(actor, request)
+    )
+    return UsuarioGestion(**asdict(estado))
+
+
+@enrutador_administracion.post(
+    "/usuarios/{usuario_id}/desactivar",
+    response_model=UsuarioGestion,
+    dependencies=[Depends(verificar_csrf), Depends(puede_editar_usuarios)],
+)
+async def desactivar_usuario(
+    usuario_id: int, request: Request, sesion: Sesion, actor: UsuarioActual
+) -> UsuarioGestion:
+    """Cierra sus sesiones abiertas. Nadie se desactiva a sí mismo ni deja la malla sin administrador."""
+    estado = await administracion_usuarios.cambiar_estado_activo(
+        sesion, usuario_id=usuario_id, activo=False, actor=Actor.web(actor, request)
+    )
+    return UsuarioGestion(**asdict(estado))
+
+
+@enrutador_administracion.post(
+    "/usuarios/{usuario_id}/desbloquear",
+    response_model=UsuarioGestion,
+    dependencies=[Depends(verificar_csrf), Depends(puede_editar_usuarios)],
+)
+async def desbloquear_usuario(
+    usuario_id: int, request: Request, sesion: Sesion, actor: UsuarioActual
+) -> UsuarioGestion:
+    actual = await administracion_usuarios.obtener_estado_usuario(sesion, usuario_id)
+    estado = await administracion_usuarios.desbloquear_usuario(
+        sesion, nombre_usuario=actual.usuario, actor=Actor.web(actor, request)
+    )
+    return UsuarioGestion(**asdict(estado))
+
+
+@enrutador_administracion.post(
+    "/usuarios/{usuario_id}/restablecer-contrasena",
+    response_model=UsuarioGestion,
+    dependencies=[Depends(verificar_csrf), Depends(puede_editar_usuarios)],
+)
+async def restablecer_contrasena(
+    usuario_id: int,
+    solicitud: SolicitudRestablecerContrasena,
+    request: Request,
+    sesion: Sesion,
+    actor: UsuarioActual,
+) -> UsuarioGestion:
+    """Pone una contraseña temporal: el usuario deberá cambiarla al entrar. Cierra sus sesiones."""
+    estado = await administracion_usuarios.restablecer_contrasena(
+        sesion,
+        usuario_id=usuario_id,
+        contrasena_temporal=solicitud.contrasena_temporal,
+        actor=Actor.web(actor, request),
+    )
+    return UsuarioGestion(**asdict(estado))
 
 
 # --- Auditoría ---------------------------------------------------------------------------
