@@ -73,8 +73,9 @@ Los tipos de curso se cargan del seed oficial (`seed_catalogos_academicos.sql`) 
 
 ## Administración de usuarios por consola (HU-10)
 
-Mientras llega el panel web (segunda entrega). Usa la conexión del `.env` y cada acción queda
-en la auditoría como `consola`, con el usuario del sistema operativo que la ejecutó.
+Lo mismo se hace en la web (Administración > Gestión de usuarios); la consola sirve cuando nadie
+puede entrar. Usa la conexión del `.env` y cada acción queda en la auditoría como `consola`, con el
+usuario del sistema operativo que la ejecutó.
 
 ```powershell
 .venv/Scripts/python.exe -m herramientas.administrar_usuarios listar
@@ -85,6 +86,8 @@ en la auditoría como `consola`, con el usuario del sistema operativo que la eje
 
 - `crear` pide la contraseña **oculta** dos veces (mínimo 10 caracteres, letras y números) y
   nunca la acepta como argumento. Con rol `ADMINISTRADOR` pide confirmación.
-- `--cedula` es opcional: enlaza el usuario con su ficha de `personal_militar` (grado y nombre).
+- `--cedula` es **obligatoria**: el militar debe existir y estar activo en `personal_militar`.
+- La contraseña es **temporal**: el usuario debe cambiarla la primera vez que entre (migración
+  `p0009_gestion_usuarios`: permisos de la API sobre esas columnas y acciones de auditoría nuevas).
 - `desbloquear` pone en cero los intentos y quita el bloqueo de 3 horas; `desbloquear-ip` pone en
   cero el contador de una IP.

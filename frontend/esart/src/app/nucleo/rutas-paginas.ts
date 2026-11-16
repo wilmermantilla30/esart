@@ -5,6 +5,8 @@
 export const RUTA_PAGINA_INICIO_SESION = 'inicio-sesion';
 /** Página de entrada tras el login: el Panel principal (componente DASHBOARD). */
 export const RUTA_PAGINA_INICIO = 'dashboard';
+/** Página para cambiar la contraseña (obligatoria si la que se tiene es temporal). */
+export const RUTA_PAGINA_CAMBIAR_CONTRASENA = 'cambiar-contrasena';
 
 /** Parámetro con la página a la que se vuelve después de iniciar sesión. */
 export const PARAMETRO_VOLVER_A = 'volver';

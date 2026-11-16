@@ -167,6 +167,7 @@ async def test_login_correcto_crea_sesion_y_entrega_cookies(cliente_api, sesion_
             "nombre_usuario": usuario.usuario,
             "nombre_completo": "MY Juan Carlos Pérez Gómez",
             "rol": "USUARIO",
+            "requiere_cambio_contrasena": False,
         },
         "expira_por_inactividad_segundos": obtener_configuracion().minutos_inactividad_sesion * 60,
     }

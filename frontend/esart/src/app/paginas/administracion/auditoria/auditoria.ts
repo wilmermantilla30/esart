@@ -20,6 +20,10 @@ export const NOMBRES_ACCION: Readonly<Record<string, string>> = {
   PERMISOS_ROL_MODIFICADOS: 'Permisos de rol modificados',
   PERMISOS_USUARIO_MODIFICADOS: 'Permisos de usuario modificados',
   USUARIO_CREADO: 'Usuario creado',
+  USUARIO_ACTIVADO: 'Usuario activado',
+  USUARIO_DESACTIVADO: 'Usuario desactivado',
+  CONTRASENA_RESTABLECIDA: 'Contraseña restablecida',
+  CONTRASENA_CAMBIADA: 'Contraseña cambiada',
   IMPORTACION_EXCEL: 'Importación de Excel',
 };
 

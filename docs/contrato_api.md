@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.9 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.10 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -104,10 +104,15 @@ Sin autenticación. Genera un captcha nuevo de un solo uso (vence en 5 minutos).
 **200:**
 ```json
 {
-  "usuario": { "nombre_usuario": "comandante.esart", "nombre_completo": "…", "rol": "USUARIO" },
+  "usuario": { "nombre_usuario": "comandante.esart", "nombre_completo": "…", "rol": "USUARIO",
+               "requiere_cambio_contrasena": false },
   "expira_por_inactividad_segundos": 1800
 }
 ```
+`requiere_cambio_contrasena: true` = la contraseña es temporal (la puso un administrador). Mientras
+lo sea, toda ruta responde **403** `CAMBIO_CONTRASENA_REQUERIDO`, salvo `/auth/yo`,
+`/auth/cambiar-contrasena` y `/auth/cerrar-sesion`; el front lleva a "Cambiar contraseña".
+
 Errores posibles: `CREDENCIALES_INVALIDAS`, `CAPTCHA_REQUERIDO`, `CAPTCHA_INVALIDO`, `USUARIO_BLOQUEADO`, `DEMASIADOS_INTENTOS`.
 
 ### `GET /api/auth/yo`
@@ -117,6 +122,7 @@ Datos del usuario en sesión. El front lo llama al cargar cada página para **ar
   "nombre_usuario": "comandante.esart",
   "nombre_completo": "…",
   "rol": "USUARIO",
+  "requiere_cambio_contrasena": false,
   "permisos": ["DASHBOARD", "PERSONAL_MILITAR", "PERSONAL_VERIFICAR", "PERSONAL_HABILITADOS", "VER_DOCUMENTO_COMPLETO"],
   "menu": [
     { "codigo": "DASHBOARD", "nombre": "Panel principal", "ruta": "/dashboard", "operaciones": ["leer"], "hijos": [] },
@@ -135,6 +141,12 @@ Las respuestas autenticadas traen `X-Sesion-Expira-En` (HU-08).
 
 ### `POST /api/auth/cerrar-sesion`
 Revoca la sesión y borra la cookie. **204** sin cuerpo.
+
+### `POST /api/auth/cambiar-contrasena`
+CSRF. `{ "contrasena_actual": "…", "contrasena_nueva": "…" }` → **204**. La nueva: mínimo 10
+caracteres, letras y números, máximo 72 bytes y distinta de la actual. Quita la marca de contraseña
+temporal y cierra las **otras** sesiones del usuario. Errores **422**: `CONTRASENA_ACTUAL_INCORRECTA`,
+`DATOS_INVALIDOS`. Queda auditado (`CONTRASENA_CAMBIADA`, también los intentos rechazados).
 
 ---
 
@@ -257,7 +269,7 @@ Historial paginado: `{ "importacion_id", "fecha", "nombre_usuario", "nombre_arch
 
 ---
 
-## 5b. Administración (malla de permisos y auditoría)
+## 5b. Administración (malla de permisos, gestión de usuarios y auditoría)
 
 Malla (componente `PERMISOS`: leer para consultar, actualizar + CSRF para guardar):
 - `GET /api/administracion/permisos/roles` → `[{ "codigo", "nombre", "editable" }]` (ADMINISTRADOR: `editable=false`).
@@ -267,6 +279,23 @@ Malla (componente `PERMISOS`: leer para consultar, actualizar + CSRF para guarda
 - `GET|PUT /api/administracion/permisos/usuarios/{id}` → por módulo: `rol` (lo que da su rol), `modo` (`HEREDAR` / `CONCEDER` / `QUITAR`), `excepcion`, `efectivo`.
   `PUT` recibe `{ "cambios": [{ "componente", "modo", "crear", "leer", "actualizar", "eliminar" }] }`.
   Errores 409: `USUARIO_NO_EDITABLE` (es administrador), `AUTOBLOQUEO` (quitarse la malla a sí mismo), `SIN_ADMINISTRADOR_DE_MALLA`.
+
+Gestión de usuarios (componente `USUARIOS`; todo `POST` con CSRF y auditado). Todo usuario corresponde
+a un militar de `personal_militar` (la cédula es obligatoria; solo el administrador inicial del `.env`
+no la tiene) y la contraseña que pone el administrador es **temporal**:
+- `GET /api/administracion/usuarios?texto=` (leer) → `[{ "id", "usuario", "rol", "activo", "bloqueado", "bloqueado_hasta",
+  "intentos_fallidos", "documento_identidad", "nombre_completo", "requiere_cambio_contrasena", "ultimo_acceso_en" }]`.
+  `texto` busca en el usuario o la cédula.
+- `GET /api/administracion/usuarios/militar/{cedula}` (crear) → `{ "documento_identidad", "grado", "nombres", "apellidos",
+  "unidad", "activo", "usuario_existente", "nombre_usuario_sugerido" }`. **404** si la cédula no está en Personal militar.
+  Sugerencia: inicial del primer nombre + primer apellido, sin tildes, + `.esart` (con número si ya existe).
+- `POST /api/administracion/usuarios` (crear) `{ "documento_identidad", "nombre_usuario", "rol": "USUARIO|ADMINISTRADOR",
+  "contrasena_temporal" }` → **201** con la fila. **409** `USUARIO_EXISTENTE` (nombre repetido o militar con usuario);
+  **422** militar inexistente o inactivo, contraseña débil.
+- `POST /api/administracion/usuarios/{id}/activar` · `/desactivar` · `/desbloquear` (actualizar) → la fila.
+  Desactivar cierra sus sesiones; **409** `AUTOBLOQUEO` (a sí mismo) o `SIN_ADMINISTRADOR_DE_MALLA`.
+- `POST /api/administracion/usuarios/{id}/restablecer-contrasena` (actualizar) `{ "contrasena_temporal" }` → la fila:
+  queda temporal, sin bloqueo y con sus sesiones cerradas. **409** `AUTOBLOQUEO` para la propia (use §2).
 
 Auditoría (componente `AUDITORIA`, solo lectura):
 - `GET /api/administracion/auditoria?accion=&usuario=&documento=&desde=AAAA-MM-DD&hasta=AAAA-MM-DD` → paginado (§1.3) con
@@ -305,3 +334,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.7 | 2026-11-16 | `/api/auth/yo` devuelve `permisos` (códigos de componente) y `menu` (sidebar y pestañas) según la malla (HU-09). Cabecera `X-Sesion-Expira-En` implementada (HU-08) |
 | 0.8 | 2026-11-16 | §3 implementado con la regla acordada (activo + SACLI/SACME aprobado o reentrenamiento vigente 12 meses, alerta 60 días): criterios OBLIGATORIO/ALTERNATIVO, `motivos`, `alerta`, `reentrenamientos`; listado `/habilitacion` con filtro `estado`; `/resumen` |
 | 0.9 | 2026-11-16 | §5b: rutas de administración (malla de permisos por rol y por usuario, consulta de auditoría) |
+| 0.10 | 2026-11-16 | HU-10 web: §5b gestión de usuarios (cédula obligatoria, contraseña temporal, activar/desactivar, desbloquear, restablecer); §2 `requiere_cambio_contrasena`, `POST /auth/cambiar-contrasena` y 403 `CAMBIO_CONTRASENA_REQUERIDO` |
