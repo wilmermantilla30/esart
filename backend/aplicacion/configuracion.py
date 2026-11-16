@@ -64,6 +64,10 @@ class Configuracion(BaseSettings):
     # --- Sesión ---
     jwt_clave_secreta: SecretStr
     minutos_inactividad_sesion: int = Field(default=30, ge=1, le=480)
+    limite_intentos_ip: int = Field(default=30, ge=1, le=1000)
+    ventana_intentos_ip_segundos: int = Field(default=900, ge=60, le=86400)
+    limite_generacion_captcha_ip: int = Field(default=20, ge=1, le=100)
+    ventana_generacion_captcha_segundos: int = Field(default=300, ge=60, le=3600)
     cookie_segura: bool = True
 
     # --- Administrador inicial ---

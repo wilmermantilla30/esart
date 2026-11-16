@@ -1,0 +1,18 @@
+{
+  "estado": "pruebas_aprobadas",
+  "puerto_aislado": 58110,
+  "principal_modificada": false,
+  "resultado": "..............                                                           [100%]\n14 passed in 22.22s\n",
+  "offline_python": {
+    "aprobadas": 171,
+    "omitidas": 29
+  },
+  "angular": {
+    "aprobadas": 38,
+    "archivos": 8,
+    "compilacion": "correcta"
+  },
+  "ruff": "sin_errores",
+  "cluster_detenido": true,
+  "evidencia_local": "backend\\respaldos\\hu06_cc733f73f48c4bceb45dd86d6b683eaa\\resultado.json"
+}

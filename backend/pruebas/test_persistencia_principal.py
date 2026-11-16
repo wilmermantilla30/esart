@@ -24,11 +24,19 @@ COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", 
 
 def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
     referencia = json.loads((RAIZ / "migraciones_principal/estructura_p0001.json").read_text())
-    assert set(BaseModelo.metadata.tables) - TABLAS_P0002 == {
-        t["esquema"] + "." + t["tabla"] for t in referencia["tablas"]
-    }
+    assert set(BaseModelo.metadata.tables) - TABLAS_P0002 - {
+        "esart.limites_inicio_ip",
+        "esart.estados_acceso_anonimos",
+        "esart.auditoria_acceso",
+        "esart.desafios_captcha",
+    } == {t["esquema"] + "." + t["tabla"] for t in referencia["tablas"]}
     for tabla in BaseModelo.metadata.tables.values():
-        if tabla.fullname in TABLAS_P0002:
+        if tabla.fullname in TABLAS_P0002 | {
+            "esart.limites_inicio_ip",
+            "esart.estados_acceso_anonimos",
+            "esart.auditoria_acceso",
+            "esart.desafios_captcha",
+        }:
             continue
         columnas = [
             c for c in referencia["columnas"] if c["esquema"] == tabla.schema and c["tabla"] == tabla.name
@@ -64,7 +72,7 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0002_seguridad_sesiones"]
+    assert script.get_heads() == ["p0004_captcha_local"]
     assert script.get_revision("p0002_seguridad_sesiones").down_revision == "p0001_real"
     assert script.get_revision("p0001_real").down_revision == "p0000_instalacion_inicial"
     assert script.get_revision("p0000_instalacion_inicial").down_revision is None

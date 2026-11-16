@@ -18,6 +18,33 @@ describe('SesionService', () => {
 
   afterEach(() => backend.verify());
 
+  it('solicita CAPTCHA antes del login con usuario normalizado y sin Authorization', () => {
+    sesion.obtenerCaptcha('  cuenta.local  ', 'a'.repeat(43)).subscribe();
+    const solicitud = backend.expectOne('/api/auth/captcha');
+    expect(solicitud.request.method).toBe('GET');
+    expect(solicitud.request.headers.get('X-ESART-Usuario')).toBe('cuenta.local');
+    expect(solicitud.request.headers.get('X-ESART-Captcha-Anterior')).toBe('a'.repeat(43));
+    expect(solicitud.request.headers.has('Authorization')).toBe(false);
+    expect(sesion.haySesion()).toBe(false);
+    solicitud.flush({ captcha_id: 'b'.repeat(43), imagen_png_base64: 'iVBORw0KGgo=',
+      expira_en: '2026-11-16T12:05:00Z', longitud: 6 });
+  });
+
+  it('no solicita una imagen si falta el usuario del intento', () => {
+    const error = vi.fn();
+    sesion.obtenerCaptcha('  ').subscribe({ error });
+    expect(error).toHaveBeenCalledWith(expect.objectContaining({ status: 422 }));
+    backend.expectNone('/api/auth/captcha');
+  });
+
+  it('envía el desafío CAPTCHA del servidor sin contadores ni tiempos del cliente', () => {
+    sesion.iniciarSesion('cuenta.local', 'clave-local', { id: 'reto', respuesta: 'respuesta' }).subscribe();
+    const solicitud = backend.expectOne('/api/auth/login');
+    expect(solicitud.request.body).toEqual({ nombre_usuario: 'cuenta.local', contrasena: 'clave-local',
+      captcha_id: 'reto', captcha_respuesta: 'respuesta' });
+    solicitud.flush({ usuario: usuarioDePrueba, expira_por_inactividad_segundos: 1800 });
+  });
+
   it('envía el login al contrato y guarda solo los datos públicos del usuario', () => {
     let usuarioRecibido: unknown;
     sesion.iniciarSesion('  comandante.esart ', 'Clave-1').subscribe((usuario) => (usuarioRecibido = usuario));

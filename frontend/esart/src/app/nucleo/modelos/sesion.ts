@@ -7,9 +7,47 @@
 export interface SolicitudInicioSesion {
   nombre_usuario: string;
   contrasena: string;
-  /** El captcha se exige a partir del 3.er fallo (HU-07); mientras tanto va en null. */
+  /** Obligatorio desde el cuarto intento; desafío emitido y validado por el servidor en la siguiente HU. */
   captcha_id: string | null;
   captcha_respuesta: string | null;
+}
+
+/** Desafío opaco: nunca contiene su respuesta correcta. */
+export interface CaptchaLocal {
+  captcha_id: string;
+  imagen_png_base64: string;
+  expira_en: string;
+  longitud: number;
+}
+
+export interface RespuestaCaptcha {
+  id: string;
+  respuesta: string;
+}
+
+/** Datos de bloqueo. Solo el servidor decide qué detalles autoriza. */
+export interface DetalleBloqueo {
+  intento_actual?: {
+    alcance: 'ENVIO_ACTUAL';
+    envios_registrados: 1;
+    fecha: string;
+    direccion_ip_observada: string | null;
+    observacion_ip: string;
+  } | null;
+  bloqueado_hasta?: string | null;
+  ahora_servidor?: string;
+  segundos_restantes?: number;
+  detalles_autorizados?: boolean;
+  intentos_fallidos_consecutivos?: number | null;
+  direccion_ip?: string | null;
+  ip_observacion?: string | null;
+  ip_es_loopback?: boolean | null;
+  ip_terminal_verificada?: boolean;
+}
+
+export interface EstadoBloqueoPublico extends DetalleBloqueo {
+  bloqueado: boolean;
+  usuario_intentado?: string;
 }
 
 /** Datos públicos del usuario en sesión. Nunca incluye el token: ese viaja en la cookie httpOnly. */

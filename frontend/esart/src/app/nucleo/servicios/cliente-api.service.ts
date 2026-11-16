@@ -17,8 +17,8 @@ export class ClienteApiService {
   private readonly http = inject(HttpClient);
 
   /** GET a una ruta de la API, por ejemplo obtener('/auth/yo'). */
-  obtener<T>(ruta: string): Observable<T> {
-    return this.http.get<T>(PREFIJO_API + ruta);
+  obtener<T>(ruta: string, cabeceras: Record<string, string> = {}): Observable<T> {
+    return this.http.get<T>(PREFIJO_API + ruta, { headers: cabeceras });
   }
 
   /** POST con cuerpo JSON a una ruta de la API. */
