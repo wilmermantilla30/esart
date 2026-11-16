@@ -1,0 +1,485 @@
+{
+  "conexion": {
+    "base": "esart_db",
+    "cuenta": "esart_aplicacion"
+  },
+  "columnas": [
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "id",
+      "tipo": "bigint",
+      "opcional": false,
+      "identidad": "d",
+      "defecto": null
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "usuario",
+      "tipo": "character varying(80)",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "contrasena_hash",
+      "tipo": "text",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "documento_identidad",
+      "tipo": "character varying(50)",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "activo",
+      "tipo": "boolean",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "true"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "requiere_cambio_contrasena",
+      "tipo": "boolean",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "false"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "actualizado_en",
+      "tipo": "timestamp with time zone",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "ultimo_acceso_en",
+      "tipo": "timestamp with time zone",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "intentos_fallidos_consecutivos",
+      "tipo": "integer",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "0"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "columna": "bloqueado_hasta",
+      "tipo": "timestamp with time zone",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.roles",
+      "columna": "id",
+      "tipo": "bigint",
+      "opcional": false,
+      "identidad": "d",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.roles",
+      "columna": "codigo",
+      "tipo": "character varying(30)",
+      "opcional": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.roles",
+      "columna": "nombre",
+      "tipo": "character varying(100)",
+      "opcional": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.roles",
+      "columna": "descripcion",
+      "tipo": "text",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.roles",
+      "columna": "activo",
+      "tipo": "boolean",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "true"
+    },
+    {
+      "tabla": "esart.roles",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "opcional": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "columna": "rol_id",
+      "tipo": "bigint",
+      "opcional": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "columna": "asignado_en",
+      "tipo": "timestamp with time zone",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "columna": "asignado_por_id",
+      "tipo": "bigint",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "id",
+      "tipo": "uuid",
+      "opcional": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "opcional": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "fecha_inicio",
+      "tipo": "timestamp with time zone",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "fecha_ultima_actividad",
+      "tipo": "timestamp with time zone",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "direccion_ip",
+      "tipo": "inet",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "agente_usuario",
+      "tipo": "character varying(300)",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "revocada",
+      "tipo": "boolean",
+      "opcional": false,
+      "identidad": "",
+      "defecto": "false"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "columna": "fecha_revocacion",
+      "tipo": "timestamp with time zone",
+      "opcional": true,
+      "identidad": "",
+      "defecto": null
+    }
+  ],
+  "restricciones": [
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_id_not_null",
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_activo_not_null",
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_requiere_cambio_contrasena_not_null",
+      "definicion": "NOT NULL requiere_cambio_contrasena"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_creado_en_not_null",
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_actualizado_en_not_null",
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "ck_esart_usuario_hash_no_vacio",
+      "definicion": "CHECK (((contrasena_hash IS NULL) OR (length(TRIM(BOTH FROM contrasena_hash)) > 0)))"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "usuarios_intentos_fallidos_consecutivos_not_null",
+      "definicion": "NOT NULL intentos_fallidos_consecutivos"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "nombre": "ck_usuarios_ck_esart_usuario_intentos_no_negativos",
+      "definicion": "CHECK ((intentos_fallidos_consecutivos >= 0))"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_nombre_not_null",
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "ck_esart_roles_codigo",
+      "definicion": "CHECK (((codigo)::text = ANY ((ARRAY['ADMINISTRADOR'::character varying, 'USUARIO'::character varying])::text[])))"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_id_not_null",
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_codigo_not_null",
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_activo_not_null",
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_creado_en_not_null",
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "esart.roles",
+      "nombre": "roles_codigo_key",
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_usuario_id_not_null",
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_rol_id_not_null",
+      "definicion": "NOT NULL rol_id"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_asignado_en_not_null",
+      "definicion": "NOT NULL asignado_en"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_pkey",
+      "definicion": "PRIMARY KEY (usuario_id, rol_id)"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_usuario_id_fkey",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_rol_id_fkey",
+      "definicion": "FOREIGN KEY (rol_id) REFERENCES esart.roles(id) ON DELETE RESTRICT"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "nombre": "usuario_roles_asignado_por_id_fkey",
+      "definicion": "FOREIGN KEY (asignado_por_id) REFERENCES esart_ref.usuarios(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "ck_sesiones_usuario_ck_sesiones_usuario_revocacion",
+      "definicion": "CHECK (((revocada AND (fecha_revocacion IS NOT NULL)) OR ((NOT revocada) AND (fecha_revocacion IS NULL))))"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "sesiones_usuario_id_not_null",
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "sesiones_usuario_usuario_id_not_null",
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "sesiones_usuario_fecha_inicio_not_null",
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "sesiones_usuario_fecha_ultima_actividad_not_null",
+      "definicion": "NOT NULL fecha_ultima_actividad"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "sesiones_usuario_revocada_not_null",
+      "definicion": "NOT NULL revocada"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "sesiones_usuario_pkey",
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "nombre": "fk_sesiones_usuario_usuario_id",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id) ON DELETE CASCADE"
+    }
+  ],
+  "indices": [
+    {
+      "tabla": "esart_ref.usuarios",
+      "definicion": "CREATE UNIQUE INDEX usuarios_pkey ON esart_ref.usuarios USING btree (id)"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "definicion": "CREATE UNIQUE INDEX uq_esart_usuario_nombre_ci ON esart_ref.usuarios USING btree (lower((usuario)::text)) WHERE (usuario IS NOT NULL)"
+    },
+    {
+      "tabla": "esart_ref.usuarios",
+      "definicion": "CREATE UNIQUE INDEX uq_esart_usuario_documento ON esart_ref.usuarios USING btree (documento_identidad) WHERE (documento_identidad IS NOT NULL)"
+    },
+    {
+      "tabla": "esart.roles",
+      "definicion": "CREATE UNIQUE INDEX roles_pkey ON esart.roles USING btree (id)"
+    },
+    {
+      "tabla": "esart.roles",
+      "definicion": "CREATE UNIQUE INDEX roles_codigo_key ON esart.roles USING btree (codigo)"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "definicion": "CREATE UNIQUE INDEX usuario_roles_pkey ON esart.usuario_roles USING btree (usuario_id, rol_id)"
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "definicion": "CREATE INDEX ix_esart_usuario_roles_rol ON esart.usuario_roles USING btree (rol_id)"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "definicion": "CREATE UNIQUE INDEX sesiones_usuario_pkey ON esart.sesiones_usuario USING btree (id)"
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "definicion": "CREATE INDEX ix_sesiones_usuario_usuario_id ON esart.sesiones_usuario USING btree (usuario_id)"
+    }
+  ],
+  "permisos": [
+    {
+      "tabla": "esart_ref.usuarios",
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false
+    },
+    {
+      "tabla": "esart.roles",
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false
+    },
+    {
+      "tabla": "esart.usuario_roles",
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false
+    },
+    {
+      "tabla": "esart.sesiones_usuario",
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": true
+    }
+  ],
+  "usuarios_total": 1,
+  "roles": [
+    {
+      "id": 1,
+      "codigo": "ADMINISTRADOR",
+      "nombre": "Administrador",
+      "activo": true
+    },
+    {
+      "id": 2,
+      "codigo": "USUARIO",
+      "nombre": "Usuario",
+      "activo": true
+    }
+  ],
+  "administradores_asignados": 1,
+  "configuracion_valida": true,
+  "usuario_propuesto": "admin.esart",
+  "usuario_propuesto_existe": true
+}

@@ -7,9 +7,10 @@ Lógica de inicio de sesión, sesión actual y administrador inicial, sobre el m
 - Nombre visible: el del militar en esart.personal_militar (por documento_identidad).
 
 Las rutas no verifican contraseñas ni consultan usuarios: llaman a este servicio.
-El contador de intentos, el captcha y el bloqueo (HU-06 y HU-07) se agregarán aquí.
+El control persistente 3/7/3h se delega a seguridad_login; el generador CAPTCHA corresponde a HU siguiente.
 """
 
+import asyncio
 import logging
 import uuid
 from dataclasses import dataclass
@@ -22,8 +23,10 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.modelos import PersonalMilitar, Rol, SesionUsuario, Usuario, UsuarioRoles
 from aplicacion.nucleo.errores import ErrorAplicacion
+from aplicacion.seguridad.captcha import VerificadorCaptcha
 from aplicacion.seguridad.contrasenas import gastar_tiempo_de_verificacion, verificar_contrasena
 from aplicacion.seguridad.tokens import crear_token_sesion
+from aplicacion.servicios import seguridad_login
 
 registrador = logging.getLogger(__name__)
 
@@ -123,6 +126,9 @@ async def iniciar_sesion(
     contrasena: str,
     direccion_ip: str | None,
     agente_usuario: str | None,
+    captcha_id: str | None = None,
+    captcha_respuesta: str | None = None,
+    verificador_captcha: VerificadorCaptcha | None = None,
 ) -> ResultadoInicioSesion:
     """
     Verifica las credenciales y, si son correctas, abre una sesión.
@@ -130,19 +136,22 @@ async def iniciar_sesion(
     Crea la fila de sesiones_usuario (su id es el 'jti' del JWT), actualiza el último
     acceso y devuelve el token firmado. Ante cualquier fallo lanza el mismo 401 genérico.
     """
-    usuario = await buscar_usuario_por_nombre(sesion, nombre_usuario)
+    contexto = await seguridad_login.preparar(
+        sesion, nombre_usuario, direccion_ip, captcha_id, captcha_respuesta, verificador_captcha
+    )
+    usuario = contexto.usuario
 
     if usuario is None or not usuario.contrasena_hash:
         # Se gasta el mismo tiempo que una verificación real (ver contrasenas.py).
-        gastar_tiempo_de_verificacion()
-        raise _error_credenciales_invalidas()
+        await asyncio.to_thread(gastar_tiempo_de_verificacion)
+        await seguridad_login.rechazar(sesion, contexto, "CREDENCIALES_INVALIDAS")
 
     # La contraseña se verifica SIEMPRE antes de mirar si el usuario está activo o tiene
     # rol: si se revisara antes, la diferencia de tiempo revelaría esas cuentas.
-    contrasena_correcta = verificar_contrasena(contrasena, usuario.contrasena_hash)
+    contrasena_correcta = await asyncio.to_thread(verificar_contrasena, contrasena, usuario.contrasena_hash)
     rol = await obtener_codigo_rol(sesion, usuario.id) if contrasena_correcta else None
     if not contrasena_correcta or not usuario.activo or rol is None:
-        raise _error_credenciales_invalidas()
+        await seguridad_login.rechazar(sesion, contexto, "CREDENCIALES_INVALIDAS")
 
     ahora = datetime.now(UTC)
     sesion_usuario = SesionUsuario(
@@ -156,7 +165,11 @@ async def iniciar_sesion(
     )
     sesion.add(sesion_usuario)
     usuario.ultimo_acceso_en = ahora
+    usuario.intentos_fallidos_consecutivos = 0
+    usuario.bloqueado_hasta = None
     nombre_completo = await obtener_nombre_completo(sesion, usuario.documento_identidad, usuario.usuario)
+    await seguridad_login.registrar(sesion, contexto, exito=True, motivo=None, evento="LOGIN_EXITOSO")
+    token = crear_token_sesion(usuario.id, sesion_usuario.id)
     await sesion.commit()
 
     registrador.info("Inicio de sesión exitoso del usuario_id=%s", usuario.id)
@@ -164,7 +177,7 @@ async def iniciar_sesion(
         nombre_usuario=usuario.usuario,
         nombre_completo=nombre_completo,
         rol=rol,
-        token_sesion=crear_token_sesion(usuario.id, sesion_usuario.id),
+        token_sesion=token,
     )
 
 
@@ -189,6 +202,8 @@ async def validar_sesion(sesion: AsyncSession, usuario_id: int, sesion_id: uuid.
 
     ahora = datetime.now(UTC)
     limite_inactividad = timedelta(minutes=obtener_configuracion().minutos_inactividad_sesion)
+    if usuario.bloqueado_hasta is not None and ahora < usuario.bloqueado_hasta:
+        raise ErrorAplicacion(401, "NO_AUTENTICADO", "Debe iniciar sesión.")
     if ahora - sesion_usuario.fecha_ultima_actividad > limite_inactividad:
         sesion_usuario.revocada = True
         sesion_usuario.fecha_revocacion = ahora

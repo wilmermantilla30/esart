@@ -1,0 +1,224 @@
+
+<!-- Fondo oscuro y desenfocado -->
+<div
+  class="fixed inset-0 z-[9999] flex items-center
+         justify-center bg-slate-950/55 backdrop-blur-sm p-4"
+>
+  <!-- Ventana -->
+  <div
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="captcha-titulo"
+    class="w-full max-w-[540px] overflow-hidden
+           rounded-xl border border-sky-200
+           bg-white shadow-2xl shadow-slate-950/30"
+  >
+
+    <!-- Encabezado -->
+    <div
+      class="flex items-center justify-between
+             bg-gradient-to-r from-sky-200 to-sky-400
+             px-5 py-3 text-slate-800"
+    >
+      <div class="flex items-center gap-2">
+        <span class="text-lg">♢</span>
+        <h2
+          id="captcha-titulo"
+          class="text-sm font-bold tracking-wide leading-tight"
+        >
+          Verificación de Seguridad — CAPTCHA Militar
+          <span class="block">ESART</span>
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        (click)="cerrar()"
+        class="rounded px-2 py-1 hover:bg-white/30"
+        aria-label="Cerrar CAPTCHA"
+      >
+        ✕
+      </button>
+    </div>
+
+    <!-- Contenido -->
+    <div class="space-y-4 p-5">
+
+      <!-- Identificación institucional -->
+      <div
+        class="flex items-center gap-3 rounded-lg
+               border border-sky-100 bg-sky-50 p-3"
+      >
+        <img
+          src="/imagenes/escudo-esart.png"
+          alt="Escudo ESART"
+          class="h-12 w-10 object-contain"
+        />
+
+        <div>
+          <p
+            class="text-xs font-extrabold uppercase
+                   tracking-wide text-sky-600"
+          >
+            Centro de Telemática y Ciberdefensa
+          </p>
+
+          <p class="mt-1 text-xs leading-relaxed text-slate-600">
+            Confirme que no es un sistema automatizado
+            para acceder a la red interna.
+          </p>
+        </div>
+      </div>
+
+      <!-- Panel del código -->
+      <div
+        class="rounded-xl border border-slate-200
+               bg-slate-100 p-4"
+      >
+        <div class="mb-3 flex items-center justify-between">
+          <span
+            class="text-[10px] font-bold uppercase
+                   tracking-wider text-slate-500"
+          >
+            Código de verificación
+          </span>
+
+          <span
+            class="rounded-full border border-emerald-200
+                   bg-emerald-50 px-2 py-1
+                   text-[10px] font-semibold text-emerald-700"
+          >
+            ● Verificación local
+          </span>
+        </div>
+
+        <!-- Código visual -->
+        <div
+          class="relative flex min-h-16 items-center
+                 justify-between overflow-hidden
+                 rounded-md border border-slate-300
+                 bg-white px-5"
+        >
+          <div
+            class="absolute inset-0 opacity-25"
+            style="background-image: radial-gradient(#64748b 0.8px, transparent 0.8px); background-size: 5px 5px;"
+          ></div>
+
+          @if (imagen()) {
+            <img [src]="imagen()" width="312" height="96" class="relative z-10 max-w-full h-auto"
+              alt="Código de verificación de seis caracteres" />
+          }
+          @if (cargando()) { <p role="status" class="relative z-10 text-xs">Cargando código…</p> }
+
+          <button
+            type="button"
+            (click)="generarCodigo()"
+            [disabled]="cargando() || procesando()"
+            class="relative z-10 rounded-md px-2 py-1
+                   text-xl text-slate-500 hover:bg-slate-100"
+            aria-label="Generar otro código"
+          >
+            ↻
+          </button>
+        </div>
+
+        <!-- Campo de respuesta -->
+        <label
+          for="codigo-captcha"
+          class="mb-2 mt-4 block text-[11px]
+                 font-bold text-slate-600"
+        >
+          Escriba los caracteres visualizados arriba
+        </label>
+
+        <input
+          id="codigo-captcha"
+          type="text"
+          maxlength="6"
+          autocomplete="off"
+          spellcheck="false"
+          [ngModel]="codigoIngresado()"
+          (ngModelChange)="actualizarCodigo($event)"
+          placeholder="INGRESE LOS 6 CARACTERES"
+          [disabled]="cargando() || procesando() || !imagen()"
+          aria-describedby="captcha-ayuda"
+          class="w-full rounded-md border border-slate-200
+                 bg-white px-4 py-3 text-center
+                 font-mono text-sm uppercase tracking-widest
+                 text-slate-800 outline-none
+                 focus:border-sky-500 focus:ring-2
+                 focus:ring-sky-500/20"
+        />
+
+        <p id="captcha-ayuda" class="mt-2 text-center text-[10px] text-slate-500">
+          No distingue mayúsculas y minúsculas. El código vence en cinco minutos y solo admite un envío.
+        </p>
+        <details class="mt-2 text-xs text-slate-600">
+          <summary>No puedo interpretar la imagen</summary>
+          <p>Solicite una verificación accesible al soporte institucional. No comparta su contraseña.
+            Regenerar la imagen puede no resolver esta necesidad.</p>
+        </details>
+
+        @if (error()) {
+          <p
+            role="alert"
+            class="mt-2 text-center text-xs font-medium text-red-600"
+          >
+            {{ error() }}
+          </p>
+        }
+      </div>
+
+      <!-- Certificación -->
+      <label
+        class="flex cursor-pointer items-start gap-3
+               border-t border-slate-100 pt-4"
+      >
+        <input
+          type="checkbox"
+          [ngModel]="certificado()"
+          (ngModelChange)="alternarCertificado($event)"
+          class="mt-0.5 h-4 w-4 accent-sky-500"
+        />
+
+        <span class="text-xs leading-relaxed text-slate-600">
+          Certifico bajo juramento militar que opero esta terminal
+          en cumplimiento de orden de servicio y funciones
+          reglamentarias.
+        </span>
+      </label>
+
+    </div>
+
+    <!-- Botones inferiores -->
+    <div
+      class="flex items-center justify-between
+             border-t border-slate-200 bg-slate-50 px-5 py-3"
+    >
+      <button
+        type="button"
+        (click)="cerrar()"
+        class="rounded-md border border-slate-200
+               bg-white px-5 py-2 text-xs font-semibold
+               text-slate-600 hover:bg-slate-100"
+      >
+        Cancelar
+      </button>
+
+      <button
+        type="button"
+        (click)="validar()"
+        [disabled]="procesando() || cargando() || !certificado() || !imagen()"
+        class="rounded-md bg-sky-500 px-5 py-2
+               text-xs font-bold text-white
+               shadow-sm transition-colors
+               hover:bg-sky-600
+               disabled:cursor-not-allowed
+               disabled:opacity-50"
+      >
+        Validar e Ingresar ✓
+      </button>
+    </div>
+
+  </div>
+</div>

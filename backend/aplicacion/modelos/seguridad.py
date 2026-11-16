@@ -65,6 +65,8 @@ class IntentoInicioSesion(BaseModelo):
         sa.Column("exitoso", sa.Boolean(), nullable=False),
         sa.Column("motivo_fallo", sa.String(40), nullable=True),
         sa.Column("fecha", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("captcha_requerido", sa.Boolean(), server_default=sa.text("false"), nullable=False),
+        sa.Column("captcha_validado", sa.Boolean(), nullable=True),
         sa.PrimaryKeyConstraint("id", name=conv("intentos_inicio_sesion_pkey")),
         sa.ForeignKeyConstraint(
             ["usuario_id"],
@@ -80,3 +82,65 @@ class IntentoInicioSesion(BaseModelo):
 
 # lazy="raise": obliga a cargar el usuario de forma explícita (selectinload) en código async.
 SesionUsuario.usuario = relationship(Usuario, foreign_keys=[SesionUsuario.usuario_id], lazy="raise")
+
+
+class LimiteInicioIP(BaseModelo):
+    """Ventana fija persistente, clave HMAC; sin confiar en cabeceras del navegador."""
+
+    __tablename__ = "limites_inicio_ip"
+    __table_args__ = (sa.CheckConstraint("intentos >= 0", name="intentos_ip_positivos"), {"schema": "esart"})
+    clave = sa.Column(sa.String(64), primary_key=True)
+    inicio = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    intentos = sa.Column(sa.Integer(), nullable=False)
+
+
+class EstadoAccesoAnonimo(BaseModelo):
+    """Misma política pública para nombres inexistentes; nunca almacena su texto."""
+
+    __tablename__ = "estados_acceso_anonimos"
+    __table_args__ = (
+        sa.CheckConstraint("intentos_fallidos_consecutivos >= 0", name="fallos_anonimos"),
+        {"schema": "esart"},
+    )
+    clave = sa.Column(sa.String(64), primary_key=True)
+    intentos_fallidos_consecutivos = sa.Column(sa.Integer(), nullable=False, server_default=sa.text("0"))
+    bloqueado_hasta = sa.Column(sa.DateTime(timezone=True), nullable=True)
+
+
+class AuditoriaAcceso(BaseModelo):
+    """Eventos tipados anexados junto con el intento, sin texto libre ni credenciales."""
+
+    __tablename__ = "auditoria_acceso"
+    __table_args__ = (
+        sa.CheckConstraint(
+            "intento_id IS NOT NULL OR captcha_id IS NOT NULL OR origen_hmac IS NOT NULL",
+            name="auditoria_referencia",
+        ),
+        {"schema": "esart"},
+    )
+    id = sa.Column(sa.BigInteger(), sa.Identity(always=True), primary_key=True)
+    intento_id = sa.Column(sa.BigInteger(), sa.ForeignKey("esart.intentos_inicio_sesion.id"), nullable=True)
+    captcha_id = sa.Column(
+        sa.String(43), sa.ForeignKey("esart.desafios_captcha.id", name="fk_auditoria_captcha"), nullable=True
+    )
+    origen_hmac = sa.Column(sa.String(64), nullable=True)
+    evento = sa.Column(sa.String(32), nullable=False)
+    fecha = sa.Column(sa.DateTime(timezone=True), nullable=False)
+
+
+class DesafioCaptcha(BaseModelo):
+    """TTL lógico, HMAC con secreto de servidor y consumo transaccional entre trabajadores."""
+
+    __tablename__ = "desafios_captcha"
+    __table_args__ = (
+        sa.CheckConstraint("expira_en > creado_en", name="captcha_plazo"),
+        sa.CheckConstraint("consumido_en IS NULL OR consumido_en >= creado_en", name="captcha_consumo"),
+        sa.Index("ix_desafios_captcha_expira", "expira_en"),
+        {"schema": "esart"},
+    )
+    id = sa.Column(sa.String(43), primary_key=True)
+    contexto = sa.Column(sa.String(64), nullable=False)
+    respuesta_hmac = sa.Column(sa.String(64), nullable=False)
+    creado_en = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    expira_en = sa.Column(sa.DateTime(timezone=True), nullable=False)
+    consumido_en = sa.Column(sa.DateTime(timezone=True), nullable=True)

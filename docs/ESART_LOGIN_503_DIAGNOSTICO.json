@@ -1,0 +1,106 @@
+{
+  "modo": "READ ONLY",
+  "modificaciones": 0,
+  "conexion": {
+    "base": "esart_db",
+    "cuenta": "esart_aplicacion"
+  },
+  "objetos": {
+    "esart_ref.usuarios": {
+      "existe": true,
+      "select": true
+    },
+    "esart.roles": {
+      "existe": true,
+      "select": true
+    },
+    "esart.usuario_roles": {
+      "existe": true,
+      "select": true
+    },
+    "esart.sesiones_usuario": {
+      "existe": true,
+      "select": true
+    },
+    "esart.intentos_inicio_sesion": {
+      "existe": true,
+      "select": true
+    },
+    "esart.limites_inicio_ip": {
+      "existe": false
+    },
+    "esart.estados_acceso_anonimos": {
+      "existe": false
+    },
+    "esart.auditoria_acceso": {
+      "existe": false
+    },
+    "esart.alembic_version": {
+      "existe": true,
+      "select": false
+    }
+  },
+  "columnas": [
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "id",
+      "tipo": "bigint"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "nombre_usuario_intentado",
+      "tipo": "character varying(80)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "usuario_id",
+      "tipo": "bigint"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "direccion_ip",
+      "tipo": "inet"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "exitoso",
+      "tipo": "boolean"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "motivo_fallo",
+      "tipo": "character varying(40)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "columna": "fecha",
+      "tipo": "timestamp with time zone"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "intentos_fallidos_consecutivos",
+      "tipo": "integer"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "bloqueado_hasta",
+      "tipo": "timestamp with time zone"
+    }
+  ],
+  "guardia_lista": false,
+  "revision_fisica": "No consultable con esart_aplicacion; no inferida del head local",
+  "error_reproducido": {
+    "http": 503,
+    "codigo": "SEGURIDAD_NO_DISPONIBLE",
+    "mensaje": "Inicio de sesión temporalmente no disponible."
+  }
+}

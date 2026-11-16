@@ -1,25 +1,40 @@
-# Dependencias de produccion de ESART.
-# IMPORTANTE: este archivo debe ser ASCII puro (sin tildes ni enies).
-# pip en Windows lo lee con la codificacion cp1252 y falla con otros caracteres.
-# Hay una prueba automatica (pruebas/test_convenciones.py) que lo verifica.
-
-# Marco web y servidor ASGI
-fastapi==0.115.6
-uvicorn[standard]==0.34.0
-
-# Base de datos: ORM asincrono, controlador PostgreSQL y migraciones
-sqlalchemy[asyncio]==2.0.36
-asyncpg==0.30.0
 alembic==1.14.0
-
-# Validacion de datos y lectura de variables de entorno (.env)
+annotated-types==0.8.0
+anyio==4.16.0
+asyncpg==0.30.0
+bcrypt==5.0.0
+certifi==2026.10.23
+click==8.5.1
+colorama==0.4.6
+et_xmlfile==2.0.0
+fastapi==0.115.6
+greenlet==3.5.6
+h11==0.16.0
+httpcore==1.0.9
+httptools==0.9.0
+httpx==0.28.1
+idna==3.20
+iniconfig==2.3.1
+Mako==1.4.3
+MarkupSafe==3.0.4
+openpyxl==3.1.5
+packaging==26.3
+pillow==13.0.0
+pluggy==1.7.0
 pydantic==2.10.4
 pydantic-settings==2.7.1
-
-# Seguridad: hash de contrasenas (bcrypt directo, SIN passlib) y JWT
-bcrypt==5.0.0
-pyjwt==2.10.1
-
-# Carga de archivos (multipart) e importacion de Excel
+pydantic_core==2.27.2
+Pygments==2.21.0
+PyJWT==2.10.1
+pytest==9.2.0
+pytest-asyncio==1.5.0
+python-dotenv==1.2.4
 python-multipart==0.0.20
-openpyxl==3.1.5
+PyYAML==6.0.3
+ruff==0.17.5
+SQLAlchemy==2.0.36
+starlette==0.41.3
+typing_extensions==4.16.0
+uvicorn==0.34.0
+watchfiles==1.3.0
+websockets==17.4

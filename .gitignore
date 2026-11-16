@@ -51,3 +51,9 @@ Thumbs.db
 /.mcp.json
 
 .pytest_cache/
+.pytest_tmp/
+
+backend/.pytest_tmp/
+.venv/
+**/.env
+**/.env.*
