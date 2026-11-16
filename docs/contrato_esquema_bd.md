@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.1 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras la migración `0001` (HU-03)
+**Versión del contrato:** 1.3 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -250,7 +250,8 @@ Si falla cualquiera, es **NO APTO** y se devuelve cada motivo, por ejemplo:
 ## 7. Seguridad
 
 ### 7.1 `roles`, `permisos`, `roles_permisos`
-- `roles`: `id`, `codigo` (único: `ADMINISTRADOR`, `COMANDANTE`, `CONSULTA`), `nombre`, `activo`.
+- `roles`: `id`, `codigo` (único: `ADMINISTRADOR`, `USUARIO`; CHECK `ck_esart_roles_codigo`), `nombre`, `activo`.
+  Lo que cada rol puede hacer lo definen sus permisos, no el código del rol.
 - `permisos`: `id`, `codigo` (único), `descripcion`. Permisos iniciales:
   `VERIFICAR_ARTILLERO`, `VER_DOCUMENTO_COMPLETO`, `LISTAR_HABILITACION`, `IMPORTAR_EXCEL`,
   `GESTIONAR_USUARIOS`, `CONSULTAR_AUDITORIA`.
@@ -347,8 +348,8 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 3 | Escala de notas de la Escuela (0–5, 0–100) | Product owner | **Cerrado:** 0.00 – 5.00, como define el contrato |
 | 4 | Catálogo oficial de grados | Product owner | **Cerrado por ahora:** `grado` como texto (`VARCHAR(40)`); un catálogo formal puede venir en otra entrega |
 | 5 | Nombres exactos de columnas en Vulcano para estas tablas (si difieren, se ajusta aquí) | SV.Valbuena | **Cerrado:** se usan los nombres de este contrato |
-| 6 | Quién escribe modelos SQLAlchemy y migraciones Alembic | Ambos | **Cerrado (actualizado en v1.1):** la migración `0001` de HU-03 (SV.Valbuena, PR #5) ya crea **todas** las tablas, incluidas las de seguridad (§7). HU-05 (SS.Mantilla) no crea tablas ni migración: usa los modelos existentes de `modelos/nucleo.py`. Cualquier cambio de columnas se hace con una migración nueva encadenada a `0001`, nunca editando `0001`; revisión cruzada por Pull Request |
-| 7 | Códigos de rol: este contrato define `ADMINISTRADOR`, `COMANDANTE`, `CONSULTA`, pero el CHECK de `roles.codigo` en `0001` solo admite `ADMINISTRADOR`, `USUARIO` | SS.Mantilla y SV.Valbuena | **Pendiente:** definir antes de crear el administrador inicial en HU-05. Si se adopta el contrato, se corrige con una migración `0002` |
+| 6 | Quién escribe modelos SQLAlchemy y migraciones Alembic | Ambos | **Cerrado (actualizado en v1.3):** el modelo vigente es el de HU-04 (`modelos/persistencia.py`, BIGINT, esquemas `esart`/`esart_ref`). Alembic principal: `p0000` (instalación desde cero) → `p0001_real` (validación) → `p0002` (sesiones, intentos y bloqueo, HU-05). Todo cambio de estructura va en una revisión nueva; revisión cruzada por Pull Request |
+| 7 | Códigos de rol: el contrato definía `ADMINISTRADOR`, `COMANDANTE`, `CONSULTA`; la base solo admite `ADMINISTRADOR`, `USUARIO` | SS.Mantilla y SV.Valbuena | **Cerrado (opción B, 2026-11-15):** se conservan `ADMINISTRADOR` y `USUARIO` de la base; se corrige el contrato (§7.1) |
 | 8 | Tablas de permisos CRUD por componente (`componentes`, `rol_permisos`, `usuario_permisos`) agregadas en `0001`, que no estaban en este contrato. Conviven con `roles_permisos` (permisos por código, §7.1) | SV.Valbuena | **Pendiente:** documentarlas aquí y decidir si la API usa permisos por código, por componente o ambos |
 
 ---
@@ -359,3 +360,5 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 0.1 | 2026-11-14 | Borrador inicial |
 | 1.0 | 2026-11-14 | Aprobado en HU-02. Decisiones del §10 cerradas, salvo los requisitos de habilitación (pendientes de la Escuela) |
 | 1.1 | 2026-11-14 | §10: la migración `0001` (HU-03) incluye las tablas de seguridad; HU-05 ya no crea migración. Nuevos puntos 7 (códigos de rol) y 8 (permisos por componente) |
+| 1.2 | 2026-11-15 | Punto 7 cerrado: códigos de rol `ADMINISTRADOR` y `USUARIO` (§7.1) |
+| 1.3 | 2026-11-15 | Modelo vigente de HU-04 y cadena Alembic p0000→p0001→p0002 (§10 punto 6). Login: usuario por `esart_ref.usuarios.usuario`; rol informado ADMINISTRADOR si lo tiene, si no USUARIO; nombre visible desde `personal_militar` |

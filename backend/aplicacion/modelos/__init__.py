@@ -45,8 +45,11 @@ from .persistencia import (
     UsuarioPermiso,
     UsuarioRoles,
 )
+from .seguridad import IntentoInicioSesion, SesionUsuario
 
 __all__ = [
+    "IntentoInicioSesion",
+    "SesionUsuario",
     "AlertasAcademicas",
     "AlertasCertificacion",
     "AlumnosActivos",
@@ -95,8 +98,6 @@ __all__ = [
 MODELOS_PENDIENTES = {
     "Permiso": "permisos",
     "RolPermisoCodigo": "roles_permisos",
-    "IntentoInicioSesion": "intentos_inicio_sesion",
-    "SesionUsuario": "sesiones_usuario",
     "ImportacionExcel": "importaciones_excel",
     "AuditoriaEvento": "auditoria_eventos",
     "TipoCertificacion": "tipos_certificacion",

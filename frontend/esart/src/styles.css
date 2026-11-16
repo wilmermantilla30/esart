@@ -1,1 +1,121 @@
-/* You can add global styles to this file, and also import other style files */
+/*
+ * Estilos globales de ESART.
+ *
+ * Tailwind se compila con el proyecto (sin CDN). Los tokens de @theme son los del
+ * sistema de diseño institucional de Stitch, con los mismos nombres, para que las
+ * clases de las plantillas (bg-azul-institucional, text-label-md, ...) funcionen igual.
+ * Las fuentes y los íconos se cargan desde node_modules (ver angular.json).
+ */
+@import "tailwindcss";
+@plugin "@tailwindcss/forms";
+
+@theme {
+  /* --- Colores institucionales --- */
+  --color-azul-institucional: #20a9d3;
+  --color-azul-claro: #70cbe7;
+  --color-azul-hielo: #eaf7fc;
+  --color-azul-pizarra: #172638;
+  --color-negro-institucional: #111111;
+  --color-gris-claro: #f1f5f9;
+  --color-gris-bordes: #e2e8f0;
+
+  /* --- Colores de estado (APTO / NO APTO / advertencia / información) --- */
+  --color-success: #15803d;
+  --color-on-success: #ffffff;
+  --color-warning: #d97706;
+  --color-on-warning: #2a2a2a;
+  --color-error: #dc2626;
+  --color-on-error: #ffffff;
+  --color-info: #0284c7;
+  --color-on-info: #131313;
+
+  /* --- Radios --- */
+  --radius-xs: 4px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+
+  /* --- Espaciados con nombre --- */
+  --spacing-gutter-xs: 4px;
+  --spacing-gutter-sm: 8px;
+  --spacing-gutter-md: 16px;
+  --spacing-gutter-lg: 24px;
+  --spacing-gutter-xl: 32px;
+  --spacing-section: 48px;
+  --spacing-page-margin: 24px;
+
+  /* --- Tipografías --- */
+  --font-display: "Jost", sans-serif;
+  --font-headline: "Jost", sans-serif;
+  --font-title: "Jost", sans-serif;
+  --font-body: "Radio Canada Big", sans-serif;
+  --font-label: "Radio Canada Big", sans-serif;
+  --font-code: "Red Hat Mono", monospace;
+
+  /* --- Escala tipográfica --- */
+  --text-display-lg: 40px;
+  --text-display-lg--line-height: 48px;
+  --text-display-lg--letter-spacing: -0.5px;
+  --text-display-lg--font-weight: 700;
+  --text-display-md: 32px;
+  --text-display-md--line-height: 40px;
+  --text-display-md--font-weight: 700;
+  --text-headline-lg: 28px;
+  --text-headline-lg--line-height: 36px;
+  --text-headline-lg--font-weight: 700;
+  --text-headline-md: 22px;
+  --text-headline-md--line-height: 28px;
+  --text-headline-md--font-weight: 600;
+  --text-headline-sm: 18px;
+  --text-headline-sm--line-height: 24px;
+  --text-headline-sm--font-weight: 600;
+  --text-title-lg: 16px;
+  --text-title-lg--line-height: 22px;
+  --text-title-lg--font-weight: 600;
+  --text-title-md: 15px;
+  --text-title-md--line-height: 20px;
+  --text-title-md--font-weight: 600;
+  --text-body-lg: 16px;
+  --text-body-lg--line-height: 24px;
+  --text-body-md: 14px;
+  --text-body-md--line-height: 20px;
+  --text-body-sm: 12px;
+  --text-body-sm--line-height: 16px;
+  --text-label-lg: 14px;
+  --text-label-lg--line-height: 20px;
+  --text-label-lg--font-weight: 600;
+  --text-label-md: 12px;
+  --text-label-md--line-height: 16px;
+  --text-label-md--letter-spacing: 0.25px;
+  --text-label-md--font-weight: 600;
+  --text-label-sm: 11px;
+  --text-label-sm--line-height: 14px;
+  --text-label-sm--letter-spacing: 0.5px;
+  --text-label-sm--font-weight: 600;
+  --text-code-md: 13px;
+  --text-code-md--line-height: 18px;
+  --text-code-md--font-weight: 500;
+
+  /* --- Transiciones --- */
+  --ease-state-change: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Los íconos ocupan exactamente su tamaño y no desbordan (igual que en la plantilla). */
+.material-symbols-outlined {
+  width: 1em;
+  height: 1em;
+  overflow: hidden;
+  vertical-align: middle;
+  box-sizing: content-box;
+}
+
+/* Respeta a quien pide menos movimiento en su sistema operativo. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}

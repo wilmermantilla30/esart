@@ -17,14 +17,24 @@ from aplicacion.modelos import MODELOS_PENDIENTES, TipoUnidad, UnidadMilitar, Us
 RAIZ = Path(__file__).parents[1]
 
 
+# Lo que la revisión p0002_seguridad_sesiones agrega sobre la fotografía p0001.
+TABLAS_P0002 = {"esart.sesiones_usuario", "esart.intentos_inicio_sesion"}
+COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
+
+
 def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
     referencia = json.loads((RAIZ / "migraciones_principal/estructura_p0001.json").read_text())
-    assert set(BaseModelo.metadata.tables) == {t["esquema"] + "." + t["tabla"] for t in referencia["tablas"]}
+    assert set(BaseModelo.metadata.tables) - TABLAS_P0002 == {
+        t["esquema"] + "." + t["tabla"] for t in referencia["tablas"]
+    }
     for tabla in BaseModelo.metadata.tables.values():
+        if tabla.fullname in TABLAS_P0002:
+            continue
         columnas = [
             c for c in referencia["columnas"] if c["esquema"] == tabla.schema and c["tabla"] == tabla.name
         ]
-        assert set(tabla.c.keys()) == {c["columna"] for c in columnas}
+        agregadas = COLUMNAS_P0002.get((tabla.schema, tabla.name), set())
+        assert set(tabla.c.keys()) - agregadas == {c["columna"] for c in columnas}
         for c in columnas:
             mapped = tabla.c[c["columna"]]
             assert mapped.nullable == c["permite_null"]
@@ -33,7 +43,7 @@ def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
             assert (mapped.server_default is None) == (
                 c["defecto"] is None and not c["identidad"].endswith("d'")
             )
-    assert len(MODELOS_PENDIENTES) == 8
+    assert len(MODELOS_PENDIENTES) == 6
     assert "esart.permisos" not in BaseModelo.metadata.tables
 
 
@@ -54,8 +64,10 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0001_real"]
-    assert script.get_revision("p0001_real").down_revision is None
+    assert script.get_heads() == ["p0002_seguridad_sesiones"]
+    assert script.get_revision("p0002_seguridad_sesiones").down_revision == "p0001_real"
+    assert script.get_revision("p0001_real").down_revision == "p0000_instalacion_inicial"
+    assert script.get_revision("p0000_instalacion_inicial").down_revision is None
     historico = ScriptDirectory.from_config(Config(str(RAIZ / "alembic_historico.ini")))
     assert historico.get_heads() == ["0002"]
 
