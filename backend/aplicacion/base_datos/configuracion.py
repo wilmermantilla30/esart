@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 from sqlalchemy.engine import make_url
 from sqlalchemy.exc import ArgumentError
 
-RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[3] / ".env"
+RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[2] / ".env"
 
 
 def validar_url_base_datos(valor: str, entorno: str) -> None:
@@ -56,3 +56,8 @@ class ConfiguracionConexion(BaseSettings):
 def obtener_configuracion_conexion() -> ConfiguracionConexion:
     """Lee la misma URL y archivo raíz que la API."""
     return ConfiguracionConexion()
+
+
+def opciones_tls_local(url: str) -> dict:
+    """PostgreSQL local sin TLS; no rebajar conexiones a servidores remotos."""
+    return {"ssl": False} if make_url(url).host in {"127.0.0.1", "localhost", "::1"} else {}

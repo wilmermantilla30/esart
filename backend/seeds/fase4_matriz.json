@@ -1,0 +1,368 @@
+{
+  "destino": "esart_hu03_pruebas",
+  "revision": "0002",
+  "estado": "pendiente_aprobacion; solo propuesta",
+  "snapshot_sha256": "6f3832eb86137ce00e1aaf0ccb06eadc9804419a42c946f30e33ff1b2cedd791",
+  "filas": [
+    {
+      "unidad_id": "436d2ead-7833-4eb8-ac9b-7dacf2ed2ee0",
+      "codigo": "BAACA1",
+      "nombre": "Batallón de Artillería de Campaña N°1",
+      "superior_codigo": "BR01",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "4714cbcb-37bb-457b-b76f-becff7b304b5",
+      "codigo": "BAACA10",
+      "nombre": "Batallón de Artillería de Campaña N°10",
+      "superior_codigo": "BR10",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "16449069-6ba3-4d94-ad3f-f3cd29d551e5",
+      "codigo": "BAACA13",
+      "nombre": "Batallón de Artillería de Campaña N°13",
+      "superior_codigo": "BR13",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "36f8269a-1a1c-4b6c-9aea-d8e44596b0c0",
+      "codigo": "BAACA18",
+      "nombre": "Batallón de Artillería de Campaña N°18",
+      "superior_codigo": "BR18",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "2015bcc8-c365-4dc8-b062-f13332e3c7a3",
+      "codigo": "BAACA2",
+      "nombre": "Batallón de Artillería de Campaña N°2",
+      "superior_codigo": "BR10",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "9e489c5f-e273-4621-94cc-737bd553f761",
+      "codigo": "BAACA27",
+      "nombre": "Batallón de Artillería de Campaña N°27",
+      "superior_codigo": "BR27",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "8e14ef42-9caf-4f97-bda3-8169d5af2d76",
+      "codigo": "BAACA3",
+      "nombre": "Batallón de Artillería de Campaña N°3",
+      "superior_codigo": "BR03",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "23f6e2d9-878b-4295-a41c-a34bdd062498",
+      "codigo": "BAACA30",
+      "nombre": "Batallón de Artillería de Campaña N°30",
+      "superior_codigo": "BR30",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "66d87618-d2ff-44ce-b3e1-2169f3b91659",
+      "codigo": "BAACA4",
+      "nombre": "Batallón de Artillería de Campaña N°4",
+      "superior_codigo": "BR04",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "d6c98975-dd20-4fcb-861e-427be801ea9a",
+      "codigo": "BAACA5",
+      "nombre": "Batallón de Artillería de Campaña N°5",
+      "superior_codigo": "BR05",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "59b7036d-63e6-4e68-80e8-2a1ae5f26878",
+      "codigo": "BAACA6",
+      "nombre": "Batallón de Artillería de Campaña N°6",
+      "superior_codigo": "BR05",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "4d60740b-be42-42ab-b75c-4e7404c607af",
+      "codigo": "BAACA8",
+      "nombre": "Batallón de Artillería de Campaña N°8",
+      "superior_codigo": "BR08",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "c90ba0ef-c6ed-4377-94eb-bc930111fa9a",
+      "codigo": "BAACA9",
+      "nombre": "Batallón de Artillería de Campaña N°9",
+      "superior_codigo": "BR09",
+      "tipo_propuesto": "BAACA",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica un Batallon de Artilleria de Campana y depende de una Brigada; BAACA es el tipo disponible de Batallon de Artilleria."
+    },
+    {
+      "unidad_id": "e8eb52ab-ecb3-429d-81e5-fc3cb9125cdc",
+      "codigo": "BAADA1",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+      "superior_codigo": "BR10",
+      "tipo_propuesto": "BAADA",
+      "estado": "propuesta",
+      "justificacion": "Codigo y nombre identifican un Batallon de Artilleria de Defensa Aerea; depende de una Brigada."
+    },
+    {
+      "unidad_id": "a060b899-78e9-42c2-8bf7-2f5d73b6d2cb",
+      "codigo": "BAADA2",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+      "superior_codigo": "BR05",
+      "tipo_propuesto": "BAADA",
+      "estado": "propuesta",
+      "justificacion": "Codigo y nombre identifican un Batallon de Artilleria de Defensa Aerea; depende de una Brigada."
+    },
+    {
+      "unidad_id": "646a26b2-7604-4cda-8b25-b597f449a44c",
+      "codigo": "BR01",
+      "nombre": "Primera Brigada",
+      "superior_codigo": "DIV05",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "6b999048-84fe-440c-920f-2a071bb3c292",
+      "codigo": "BR03",
+      "nombre": "Tercera Brigada",
+      "superior_codigo": "DIV03",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "9316d833-1b44-43c6-8334-be763bf1490c",
+      "codigo": "BR04",
+      "nombre": "Cuarta Brigada",
+      "superior_codigo": "DIV07",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8",
+      "codigo": "BR05",
+      "nombre": "Quinta Brigada",
+      "superior_codigo": "DIV02",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "ecb57edc-09a9-4c39-8240-a62328e0e2cf",
+      "codigo": "BR08",
+      "nombre": "Octava Brigada",
+      "superior_codigo": "DIV05",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "59be8c03-6cde-435b-a96b-4a5da2ef4059",
+      "codigo": "BR09",
+      "nombre": "Novena Brigada",
+      "superior_codigo": "DIV05",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "ad80aca1-4680-42b5-a584-556f13925e96",
+      "codigo": "BR10",
+      "nombre": "Décima Brigada",
+      "superior_codigo": "DIV01",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "e7660c15-1096-49a4-b683-3369ecf56149",
+      "codigo": "BR13",
+      "nombre": "Décimo Tercera Brigada",
+      "superior_codigo": "DIV05",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "a913edff-8d61-49e6-a526-82bd5bf57442",
+      "codigo": "BR18",
+      "nombre": "Décimo Octava Brigada",
+      "superior_codigo": "DIV08",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "68b449e8-c769-4e3d-bf95-684f42ed246c",
+      "codigo": "BR27",
+      "nombre": "Vigésimo Séptima Brigada",
+      "superior_codigo": "DIV06",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "29b41607-f315-40b3-959e-3efe7f869547",
+      "codigo": "BR30",
+      "nombre": "Trigésima Brigada",
+      "superior_codigo": "DIV02",
+      "tipo_propuesto": "BR",
+      "estado": "propuesta",
+      "justificacion": "El nombre identifica una Brigada y su superior registrado es una Division."
+    },
+    {
+      "unidad_id": "af79e876-4bf3-4511-9db9-42dd2cce20cb",
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "superior_codigo": null,
+      "tipo_propuesto": "CEDOC",
+      "estado": "propuesta",
+      "justificacion": "Codigo y nombre coinciden con Centro de Educacion y Doctrina; es raiz jerarquica."
+    },
+    {
+      "unidad_id": "89dabbad-48b8-497c-b738-be5e73887d6d",
+      "codigo": "CEMIL",
+      "nombre": "Centro de Educación Militar",
+      "superior_codigo": "CEDOC",
+      "tipo_propuesto": "CEM",
+      "estado": "propuesta",
+      "justificacion": "El nombre coincide con Centro de Educacion Militar y depende de CEDOC. CEMIL es el codigo de la unidad; CEM, el del tipo."
+    },
+    {
+      "unidad_id": "bb2bb1ee-d783-4291-809e-b0b7d0c6c333",
+      "codigo": "DAAVA",
+      "nombre": "División de Aviación y Asalto Aéreo",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "97a6eaa8-129f-4cf1-a63e-ac958d6329a3",
+      "codigo": "DIV01",
+      "nombre": "Primera División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "d58588fc-41fd-42a1-8700-6ecee2e4df76",
+      "codigo": "DIV02",
+      "nombre": "Segunda División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "a2f8d4cc-5487-4840-a002-72ad9eb2501b",
+      "codigo": "DIV03",
+      "nombre": "Tercera División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "55b02e51-65c1-4fe9-9d22-d8a10612c5e8",
+      "codigo": "DIV04",
+      "nombre": "Cuarta División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "4f33788b-472c-41ed-816c-53725a97bb3a",
+      "codigo": "DIV05",
+      "nombre": "Quinta División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "5ac32b2e-d803-47b2-9aae-ffc682332aa4",
+      "codigo": "DIV06",
+      "nombre": "Sexta División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "4e228fab-9f24-4ed1-a054-69bf2e462dc2",
+      "codigo": "DIV07",
+      "nombre": "Séptima División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "e5c773a1-aa22-477d-a993-d883fdfc5aa0",
+      "codigo": "DIV08",
+      "nombre": "Octava División",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "511aa4eb-c2ca-41a2-ae0b-1970185ca451",
+      "codigo": "DIVFE",
+      "nombre": "División de Fuerzas Especiales",
+      "superior_codigo": null,
+      "tipo_propuesto": "DIV",
+      "estado": "propuesta",
+      "justificacion": "El nombre registrado identifica expresamente una Division; es una raiz jerarquica."
+    },
+    {
+      "unidad_id": "3ae74fa4-0eab-43db-94c1-de89e656c2e1",
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "superior_codigo": "CEMIL",
+      "tipo_propuesto": "ESART",
+      "estado": "propuesta",
+      "justificacion": "Codigo y nombre coinciden con Escuela de Artilleria y depende del Centro de Educacion Militar."
+    },
+    {
+      "unidad_id": "5c491bf2-fdcd-46e4-86d7-7a5fbbf1c858",
+      "codigo": "FUTOM",
+      "nombre": "Fuerza de Tarea Omega",
+      "superior_codigo": null,
+      "tipo_propuesto": null,
+      "estado": "pendiente",
+      "justificacion": "Fuerza de Tarea Omega no corresponde literalmente a ninguno de los nueve tipos. Ser raiz no acredita tipo DIV; se requiere decision institucional."
+    }
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "destino": "esart_hu03_pruebas",
+  "fecha_utc": "2026-11-15T04:50:37.419197+00:00",
+  "errores": [],
+  "matriz_sha256": "0604808f4576d92f25d48fcf05cc2baf459b1b73d2c398e402d555db58b21f83",
+  "snapshot_sha256": "6f3832eb86137ce00e1aaf0ccb06eadc9804419a42c946f30e33ff1b2cedd791",
+  "modo": "simular",
+  "permiso_fecha_trigger": true,
+  "resumen": {
+    "propuestas": 39,
+    "por_actualizar": 39,
+    "omitidas": 0,
+    "pendientes": [
+      "FUTOM"
+    ]
+  },
+  "huella_unidades_antes": "a4126f5d5f1c6d6c0ecd749f481f28cd7feb8dcd2b7f1370e3a04517cd7d5719",
+  "huella_tipos": "0bba88d24c5e395cd7855c604328e5f4e463f274bc7b89bfc1c3177980436352",
+  "bloqueo_fecha": false,
+  "tablas_ajenas_sin_cambios": true,
+  "huella_unidades_resultado": "a0ba7b994a975620585271513c8c0f2229bce8159895cb998d9b79a1f670f4d5",
+  "fechas_modificadas": 39,
+  "rollback_verificado": true,
+  "actualizadas": 0,
+  "simuladas": 39,
+  "estado": "simulado_con_rollback"
+}

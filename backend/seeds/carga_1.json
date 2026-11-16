@@ -1,0 +1,86 @@
+{
+  "destino": "esart_hu03_pruebas",
+  "errores": [],
+  "identidad": {
+    "base": "esart_hu03_pruebas",
+    "usuario": "esart_aplicacion",
+    "version": "18.7",
+    "superusuario": false
+  },
+  "inventario": {
+    "roles": [
+      "id",
+      "codigo",
+      "nombre",
+      "activo",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ],
+    "permisos": [
+      "id",
+      "codigo",
+      "descripcion",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ],
+    "unidades_militares": [
+      "id",
+      "codigo",
+      "nombre",
+      "sigla",
+      "unidad_superior_id",
+      "activa",
+      "fecha_creacion",
+      "fecha_actualizacion"
+    ]
+  },
+  "resultados": [
+    {
+      "tabla": "roles",
+      "insertados": 2,
+      "omitidos": 0,
+      "errores": 0,
+      "confirmado": true
+    },
+    {
+      "tabla": "permisos",
+      "insertados": 36,
+      "omitidos": 0,
+      "errores": 0,
+      "confirmado": true
+    },
+    {
+      "tabla": "unidades_militares",
+      "insertados": 40,
+      "omitidos": 0,
+      "errores": 0,
+      "confirmado": true
+    }
+  ],
+  "tablas_ajenas_sin_cambios": true,
+  "validacion": {
+    "roles": {
+      "total_tabla": 2,
+      "esperados": 2,
+      "faltantes": [],
+      "diferencias_conservadas": []
+    },
+    "permisos": {
+      "total_tabla": 36,
+      "esperados": 36,
+      "faltantes": [],
+      "diferencias_conservadas": []
+    },
+    "unidades_militares": {
+      "total_tabla": 40,
+      "esperados": 40,
+      "faltantes": [],
+      "diferencias_conservadas": []
+    }
+  },
+  "integridad": {
+    "unidades_huerfanas": 0,
+    "asignaciones_huerfanas": 0
+  },
+  "estado": "validado"
+}

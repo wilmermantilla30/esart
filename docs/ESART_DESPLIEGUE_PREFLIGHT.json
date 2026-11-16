@@ -1,0 +1,27 @@
+{
+  "fecha_utc": "2026-11-15T18:20:55.883548+00:00",
+  "base": "esart_db",
+  "modo": "solo_lectura",
+  "tablas_existentes": 42,
+  "tablas_sin_lectura": 42,
+  "revision_alembic": null,
+  "roles_de_respaldo": [
+    {
+      "nombre": "pg_read_all_data",
+      "superusuario": false,
+      "permite_set_role": false
+    },
+    {
+      "nombre": "postgres",
+      "superusuario": true,
+      "permite_set_role": false
+    }
+  ],
+  "backup_valido_disponible": false,
+  "archivos_dump_previos_bytes": {
+    "esart_db_completo.dump": 0,
+    "esart_db_solo_estructura.dump": 0
+  },
+  "modificaciones_en_bd": 0,
+  "despliegue": "bloqueado_antes_de_modificaciones"
+}

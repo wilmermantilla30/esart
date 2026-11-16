@@ -66,4 +66,5 @@ async def test_codigo_api_adicional_es_obligatorio():
     with pytest.raises(ErrorAplicacion) as error:
         await dependencia(usuario_id=uuid4(), sesion=sesion)
     assert error.value.estado_http == 403
-    assert sesion.scalar.await_count == 2
+    # No consultar una tabla granular inexistente ni inferir concesiones CRUD.
+    assert sesion.scalar.await_count == 1

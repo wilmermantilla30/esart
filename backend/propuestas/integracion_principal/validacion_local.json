@@ -1,0 +1,11 @@
+{
+  "validacion": "local_sin_ejecutar_SQL",
+  "unidades": 40,
+  "tipos": 9,
+  "clasificadas": 39,
+  "FUTOM": "NULL",
+  "padres_antes_que_hijos": true,
+  "sin_ids_de_pruebas": true,
+  "migraciones_0001_0002_intactas": true,
+  "sql_sin_sentencias_drop_truncate_delete": true
+}

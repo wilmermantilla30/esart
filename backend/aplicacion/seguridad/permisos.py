@@ -2,14 +2,13 @@
 
 from collections.abc import Callable
 from enum import StrEnum
-from uuid import UUID
 
 from fastapi import Depends
 from sqlalchemy import and_, false, func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
-from aplicacion.modelos import Componente, Permiso, Rol, RolPermiso, RolPermisoCodigo, Usuario, UsuarioPermiso
+from aplicacion.modelos import Componente, Rol, RolPermiso, Usuario, UsuarioPermiso, UsuarioRoles
 from aplicacion.nucleo.errores import ErrorAplicacion
 
 
@@ -22,59 +21,45 @@ class OperacionCRUD(StrEnum):
 
 async def tiene_permiso_componente(
     sesion: AsyncSession,
-    usuario_id: UUID,
+    usuario_id: int,
     componente: str,
     operacion: OperacionCRUD,
 ) -> bool:
     """La excepción del usuario sustituye la fila del rol; ausencia significa denegar."""
     operacion = OperacionCRUD(operacion)
-    acceso = func.coalesce(UsuarioPermiso.puede_acceder, RolPermiso.puede_acceder, false())
-    accion = func.coalesce(
-        getattr(UsuarioPermiso, operacion.value),
-        getattr(RolPermiso, operacion.value),
-        false(),
+    permiso_rol = (
+        select(func.bool_or(and_(RolPermiso.puede_acceder, getattr(RolPermiso, operacion.value))))
+        .join(UsuarioRoles, UsuarioRoles.rol_id == RolPermiso.rol_id)
+        .join(Rol, Rol.id == UsuarioRoles.rol_id)
+        .where(
+            UsuarioRoles.usuario_id == usuario_id,
+            Rol.activo.is_(True),
+            RolPermiso.componente_id == Componente.id,
+        )
+        .correlate(Componente)
+        .scalar_subquery()
+    )
+    excepcion = (
+        select(and_(UsuarioPermiso.puede_acceder, getattr(UsuarioPermiso, operacion.value)))
+        .where(UsuarioPermiso.usuario_id == usuario_id, UsuarioPermiso.componente_id == Componente.id)
+        .correlate(Componente)
+        .scalar_subquery()
     )
     consulta = (
-        select(and_(acceso, accion))
+        select(func.coalesce(excepcion, permiso_rol, false()))
         .select_from(Usuario)
-        .join(Rol, Rol.id == Usuario.rol_id)
         .join(Componente, Componente.codigo == componente)
-        .outerjoin(
-            RolPermiso,
-            and_(
-                RolPermiso.rol_id == Usuario.rol_id,
-                RolPermiso.componente_id == Componente.id,
-                Rol.activo.is_(True),
-            ),
-        )
-        .outerjoin(
-            UsuarioPermiso,
-            and_(
-                UsuarioPermiso.usuario_id == Usuario.id,
-                UsuarioPermiso.componente_id == Componente.id,
-            ),
-        )
         .where(Usuario.id == usuario_id, Usuario.activo.is_(True), Componente.activo.is_(True))
     )
     return bool(await sesion.scalar(consulta))
 
 
-async def tiene_permiso_codigo(sesion: AsyncSession, usuario_id: UUID, codigo: str) -> bool:
-    """Conserva los permisos por código que exige el contrato de API."""
-    consulta = (
-        select(Permiso.id)
-        .join(RolPermisoCodigo, RolPermisoCodigo.permiso_id == Permiso.id)
-        .join(Rol, Rol.id == RolPermisoCodigo.rol_id)
-        .join(Usuario, Usuario.rol_id == Rol.id)
-        .where(
-            Usuario.id == usuario_id,
-            Usuario.activo.is_(True),
-            Rol.activo.is_(True),
-            Permiso.codigo == codigo,
-        )
-        .limit(1)
-    )
-    return (await sesion.scalar(consulta)) is not None
+async def tiene_permiso_codigo(sesion: AsyncSession, usuario_id: int, codigo: str) -> bool:
+    """Denegar hasta conciliar el catálogo granular ausente en la base principal.
+
+    No convertir códigos granulares en concesiones CRUD por inferencia.
+    """
+    return False
 
 
 def requerir_permiso_componente(
@@ -93,9 +78,9 @@ def requerir_permiso_componente(
     operacion = OperacionCRUD(operacion)
 
     async def verificar(
-        usuario_id: UUID = Depends(obtener_identidad),
+        usuario_id: int = Depends(obtener_identidad),
         sesion: AsyncSession = Depends(obtener_sesion_base_datos),
-    ) -> UUID:
+    ) -> int:
         permitido = await tiene_permiso_componente(sesion, usuario_id, componente, operacion)
         if permitido and codigo_permiso is not None:
             permitido = await tiene_permiso_codigo(sesion, usuario_id, codigo_permiso)

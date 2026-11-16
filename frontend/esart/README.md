@@ -1,59 +1,14 @@
-# Esart
+# Aplicación Angular ESART
 
-This project was generated using [Angular CLI](https://github.com/angular/angular-cli) version 22.2.7.
+Angular 22.2.x con TypeScript 6.0.x; Angular CLI del proyecto y lockfile incluidos. No se requiere instalar globalmente una CLI diferente. Usar npm ci para reproducir dependencias.
 
-## Development server
-
-To start a local development server, run:
-
-```bash
-ng serve
+```powershell
+npm ci
+npm start
+npm run build
+npm test -- --watch=false
 ```
 
-Once the server is running, open your browser and navigate to `http://localhost:4200/`. The application will automatically reload whenever you modify any of the source files.
+Pantalla /unidades, servicio relativo /api/catalogos/unidades, proxy local a 127.0.0.1:8081. Build en dist/esart. Los BIGINT llegan como cadenas y se conservan sin Number/parseInt.
 
-## Code scaffolding
-
-Angular CLI includes powerful code scaffolding tools. To generate a new component, run:
-
-```bash
-ng generate component component-name
-```
-
-For a complete list of available schematics (such as `components`, `directives`, or `pipes`), run:
-
-```bash
-ng generate --help
-```
-
-## Building
-
-To build the project run:
-
-```bash
-ng build
-```
-
-This will compile your project and store the build artifacts in the `dist/` directory. By default, the production build optimizes your application for performance and speed.
-
-## Running unit tests
-
-To execute unit tests with the [Vitest](https://vitest.dev/) test runner, use the following command:
-
-```bash
-ng test
-```
-
-## Running end-to-end tests
-
-For end-to-end (e2e) testing, run:
-
-```bash
-ng e2e
-```
-
-Angular CLI does not come with an end-to-end testing framework by default. You can choose one that suits your needs.
-
-## Additional Resources
-
-For more information on using the Angular CLI, including detailed command references, visit the [Angular CLI Overview and Command Reference](https://angular.dev/tools/cli) page.
+El inicio de sesión y la visualización autenticada no están completados. Las pruebas de transporte usan HttpTestingController; no consultan PostgreSQL. Ver [guía del frontend](../README.md), [configuración general](../../README.md) y [estado técnico](../../docs/ESART_ESTADO_DESARROLLO.md).

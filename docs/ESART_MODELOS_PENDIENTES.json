@@ -1,0 +1,10 @@
+{
+  "Permiso": "permisos",
+  "RolPermisoCodigo": "roles_permisos",
+  "IntentoInicioSesion": "intentos_inicio_sesion",
+  "SesionUsuario": "sesiones_usuario",
+  "ImportacionExcel": "importaciones_excel",
+  "AuditoriaEvento": "auditoria_eventos",
+  "TipoCertificacion": "tipos_certificacion",
+  "RequisitoHabilitacion": "requisitos_habilitacion"
+}

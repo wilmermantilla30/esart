@@ -49,3 +49,5 @@ Thumbs.db
 /.mcp.json
 
 /.mcp.json
+
+.pytest_cache/

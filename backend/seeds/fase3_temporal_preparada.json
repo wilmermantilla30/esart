@@ -1,0 +1,24 @@
+{
+  "fecha_utc": "2026-11-15T04:38:06.356793+00:00",
+  "fase": "preparar_temporal",
+  "errores": [],
+  "destino": "esart_hu04_fase3_temporal",
+  "migraciones": [
+    {
+      "base": "esart_hu04_fase3_temporal",
+      "usuario": "esart_aplicacion",
+      "propietario": "esart_aplicacion",
+      "version": 18,
+      "superusuario": false,
+      "revision": null,
+      "revision_final": "0001"
+    }
+  ],
+  "datos_prueba": {
+    "roles": 2,
+    "permisos": 36,
+    "unidades": 40
+  },
+  "revision_final": "0001",
+  "estado": "confirmado"
+}

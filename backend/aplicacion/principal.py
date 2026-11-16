@@ -17,6 +17,7 @@ from aplicacion.configuracion import obtener_configuracion
 from aplicacion.nucleo.errores import registrar_manejadores_errores
 from aplicacion.nucleo.registro import configurar_registro
 from aplicacion.rutas.salud import enrutador_salud
+from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
 
 registrador = logging.getLogger(__name__)
 
@@ -63,6 +64,7 @@ def crear_aplicacion() -> FastAPI:
 
     registrar_manejadores_errores(aplicacion)
     aplicacion.include_router(enrutador_salud, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_catalogos, prefix=PREFIJO_API)
 
     return aplicacion
 

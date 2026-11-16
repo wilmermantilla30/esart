@@ -1,0 +1,42 @@
+{
+  "fecha_utc": "2026-11-15T04:38:24.868886+00:00",
+  "fase": "aplicar",
+  "errores": [],
+  "destino": "esart_hu03_pruebas",
+  "migraciones": [
+    {
+      "base": "esart_hu03_pruebas",
+      "usuario": "esart_aplicacion",
+      "propietario": "esart_aplicacion",
+      "version": 18,
+      "superusuario": false,
+      "revision": "0001",
+      "revision_final": "0002"
+    }
+  ],
+  "cargas": [
+    {
+      "tabla": "tipos_unidad",
+      "insertados": 9,
+      "omitidos": 0,
+      "diferencias_conservadas": []
+    },
+    {
+      "tabla": "tipos_unidad",
+      "insertados": 0,
+      "omitidos": 9,
+      "diferencias_conservadas": []
+    }
+  ],
+  "validacion": {
+    "tipos": 9,
+    "unidades": 40,
+    "huerfanas": 0,
+    "ciclos": 0,
+    "fk_opcional": true
+  },
+  "unidades_sin_cambios": true,
+  "tablas_ajenas_sin_cambios": true,
+  "revision_final": "0002",
+  "estado": "confirmado"
+}
