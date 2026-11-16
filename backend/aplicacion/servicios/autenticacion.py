@@ -58,6 +58,7 @@ class UsuarioAutenticado:
 class ResultadoInicioSesion:
     """Lo que la ruta necesita para responder a un login exitoso."""
 
+    usuario_id: int
     nombre_usuario: str
     nombre_completo: str
     rol: str
@@ -174,6 +175,7 @@ async def iniciar_sesion(
 
     registrador.info("Inicio de sesión exitoso del usuario_id=%s", usuario.id)
     return ResultadoInicioSesion(
+        usuario_id=usuario.id,
         nombre_usuario=usuario.usuario,
         nombre_completo=nombre_completo,
         rol=rol,

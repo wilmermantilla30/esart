@@ -36,11 +36,12 @@ requiere_postgresql = pytest.mark.skipif(
 
 CONTRASENA_CORRECTA = "Clave-Integracion-2026"
 HASH_CONTRASENA_CORRECTA = generar_hash_contrasena(CONTRASENA_CORRECTA)
+# Error genérico de HU-06 tras UN fallo: todavía sin captcha ni restricción.
 ERROR_CREDENCIALES = {
     "error": {
         "codigo": "CREDENCIALES_INVALIDAS",
-        "mensaje": "Usuario o contraseña incorrectos.",
-        "detalle": None,
+        "mensaje": "No fue posible iniciar sesión. Compruebe los datos o inténtelo más tarde.",
+        "detalle": {"captcha_requerido": False, "acceso_temporalmente_restringido": False},
     }
 }
 
@@ -65,6 +66,8 @@ async def test_yo_sin_sesion_valida_responde_401(cliente_api, cookie):
     respuesta = await cliente_api.get("/api/auth/yo")
     assert respuesta.status_code == 401
     assert respuesta.json()["error"]["codigo"] == "NO_AUTENTICADO"
+    # Sin sesión válida no se informa ningún tiempo de expiración.
+    assert "X-Sesion-Expira-En" not in respuesta.headers
 
 
 async def test_cerrar_sesion_sin_cabecera_csrf_responde_403(cliente_api):
@@ -227,7 +230,12 @@ async def test_yo_devuelve_el_usuario_y_renueva_la_actividad(cliente_api, sesion
     assert respuesta.status_code == 200
     assert respuesta.json()["nombre_usuario"] == usuario.usuario
     assert respuesta.json()["rol"] == "USUARIO"
-    assert respuesta.json()["permisos"] == []
+    # La malla de p0005 da a USUARIO acceso de consulta (detalle en test_menu_permisos_hu09.py).
+    assert "PERSONAL_VERIFICAR" in respuesta.json()["permisos"]
+    # HU-08: cada respuesta autenticada informa cuánto le queda a la sesión (contrato §1.4).
+    assert respuesta.headers["X-Sesion-Expira-En"] == str(
+        obtener_configuracion().minutos_inactividad_sesion * 60
+    )
     await sesion_bd.refresh(await sesion_bd.get(SesionUsuario, sesion_id))
     assert (await sesion_bd.get(SesionUsuario, sesion_id)).fecha_ultima_actividad >= actividad_antes
 
@@ -248,6 +256,7 @@ async def test_sesion_inactiva_mas_de_30_minutos_expira_y_queda_revocada(cliente
 
     assert respuesta.status_code == 401
     assert respuesta.json()["error"]["codigo"] == "SESION_EXPIRADA"
+    assert "X-Sesion-Expira-En" not in respuesta.headers
     sesion_guardada = await sesion_bd.get(SesionUsuario, sesion_id)
     await sesion_bd.refresh(sesion_guardada)
     assert sesion_guardada.revocada is True and sesion_guardada.fecha_revocacion is not None
@@ -277,6 +286,9 @@ async def test_catalogos_responden_con_sesion_valida(cliente_api, sesion_bd):
     await iniciar_sesion(cliente_api, usuario.usuario)
     respuesta = await cliente_api.get("/api/catalogos/unidades")
     assert respuesta.status_code == 200
+    assert respuesta.headers["X-Sesion-Expira-En"] == str(
+        obtener_configuracion().minutos_inactividad_sesion * 60
+    )
     assert isinstance(respuesta.json(), list)
 
 

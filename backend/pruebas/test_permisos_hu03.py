@@ -5,7 +5,7 @@ from uuid import uuid4
 
 import httpx
 import pytest
-from fastapi import Depends, FastAPI
+from fastapi import Depends, FastAPI, Request
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.nucleo.errores import registrar_manejadores_errores
@@ -64,7 +64,11 @@ async def test_codigo_api_adicional_es_obligatorio():
     from aplicacion.nucleo.errores import ErrorAplicacion
 
     with pytest.raises(ErrorAplicacion) as error:
-        await dependencia(usuario_id=uuid4(), sesion=sesion)
+        # Petición mínima: la verificación la usa para auditar el 403 (HU-11).
+        peticion = Request(
+            {"type": "http", "method": "GET", "path": "/protegido", "headers": [], "client": None}
+        )
+        await dependencia(request=peticion, usuario_id=uuid4(), sesion=sesion)
     assert error.value.estado_http == 403
     # No consultar una tabla granular inexistente ni inferir concesiones CRUD.
     assert sesion.scalar.await_count == 1

@@ -3,7 +3,8 @@
  * Se definen una sola vez para no repetir textos sueltos en guardas, interceptor y páginas.
  */
 export const RUTA_PAGINA_INICIO_SESION = 'inicio-sesion';
-export const RUTA_PAGINA_INICIO = 'inicio';
+/** Página de entrada tras el login: el Panel principal (componente DASHBOARD). */
+export const RUTA_PAGINA_INICIO = 'dashboard';
 
 /** Parámetro con la página a la que se vuelve después de iniciar sesión. */
 export const PARAMETRO_VOLVER_A = 'volver';

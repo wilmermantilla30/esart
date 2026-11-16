@@ -207,7 +207,7 @@ PERMISOS = [
         "nombre": "Ver personal en infografia (ESART)",
         "modulo": "infografia",
         "descripcion": (
-            "Ver unicamente la seccion de personal y certificaciones en la inf" "ografia del sistema."
+            "Ver unicamente la seccion de personal y certificaciones en la infografia del sistema."
         ),
     },
     # ── Historial ─────────────────────────────────────────────────────────────
@@ -309,7 +309,7 @@ PERMISOS = [
         "nombre": "Configurar alertas del sistema",
         "modulo": "alertas",
         "descripcion": (
-            "Definir umbrales de alerta: dias sin mantenimiento, stock minimo," " disparos acumulados."
+            "Definir umbrales de alerta: dias sin mantenimiento, stock minimo, disparos acumulados."
         ),
     },
     {

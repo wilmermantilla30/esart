@@ -2,13 +2,13 @@
 
 import ipaddress
 import math
+from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, Header, Request, Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
-from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.autenticacion import (
     RespuestaInicioSesion,
     RespuestaUsuarioActual,
@@ -22,25 +22,22 @@ from aplicacion.seguridad.captcha import VerificadorCaptcha, obtener_verificador
 from aplicacion.seguridad.sesion_http import (
     borrar_cookies_sesion,
     escribir_cookies_sesion,
+    obtener_ip_cliente,
     obtener_usuario_actual,
+    segundos_de_inactividad_permitidos,
     verificar_csrf,
 )
-from aplicacion.servicios import estado_bloqueo
+from aplicacion.servicios import auditoria, estado_bloqueo
 from aplicacion.servicios.autenticacion import (
     UsuarioAutenticado,
     cerrar_sesion,
     iniciar_sesion,
     obtener_nombre_completo,
 )
+from aplicacion.servicios.menu import obtener_menu_y_permisos
 from aplicacion.servicios.seguridad_login import reloj_servidor
 
 enrutador_autenticacion = APIRouter(prefix="/auth", tags=["Autenticación"])
-
-
-def obtener_ip_cliente(request: Request) -> str | None:
-    if any(h in request.headers for h in ("forwarded", "x-forwarded-for", "x-real-ip")):
-        return None
-    return request.client.host if request.client else None
 
 
 @enrutador_autenticacion.get("/captcha")
@@ -60,14 +57,6 @@ async def emitir_captcha(
 
     respuesta.headers["Cache-Control"] = "no-store"
     return await generar(sesion, nombre_usuario, obtener_ip_cliente(request), anterior)
-
-
-SEGUNDOS_POR_MINUTO = 60
-
-
-def segundos_de_inactividad_permitidos() -> int:
-    """Tiempo de inactividad tras el cual se cierra la sesión (MINUTOS_INACTIVIDAD_SESION)."""
-    return obtener_configuracion().minutos_inactividad_sesion * SEGUNDOS_POR_MINUTO
 
 
 @enrutador_autenticacion.post("/login", response_model=RespuestaInicioSesion)
@@ -98,7 +87,18 @@ async def iniciar_sesion_usuario(
             verificador_captcha=captcha,
         )
     except ErrorAplicacion as error:
-        if error.estado_http != 423 or error.codigo != "CUENTA_BLOQUEADA":
+        # HU-11: todo intento fallido queda auditado con el nombre intentado (nunca la contraseña).
+        await sesion.rollback()
+        cuenta_bloqueada = error.estado_http == 423 and error.codigo == "CUENTA_BLOQUEADA"
+        await auditoria.registrar_evento(
+            sesion,
+            auditoria.USUARIO_BLOQUEADO if cuenta_bloqueada else auditoria.LOGIN_FALLIDO,
+            request,
+            nombre_usuario=solicitud.nombre_usuario.strip().lower(),
+            resultado="RECHAZADO",
+            detalle={"codigo": error.codigo},
+        )
+        if not cuenta_bloqueada:
             raise
         salida = construir_respuesta_error(423, error.codigo, error.mensaje, error.detalle, error.cabeceras)
         nombre = await sesion.scalar(select(func.lower(solicitud.nombre_usuario.strip())))
@@ -106,6 +106,14 @@ async def iniciar_sesion_usuario(
             salida, nombre, error.detalle["bloqueado_hasta"], error.detalle.get("intento_actual")
         )
         return salida
+    await auditoria.registrar_evento(
+        sesion,
+        auditoria.LOGIN_EXITOSO,
+        request,
+        usuario_id=resultado.usuario_id,
+        nombre_usuario=resultado.nombre_usuario,
+        resultado="EXITOSO",
+    )
     comprobante_bloqueo.borrar(respuesta)
     escribir_cookies_sesion(respuesta, resultado.token_sesion)
     return RespuestaInicioSesion(
@@ -199,14 +207,16 @@ async def obtener_datos_usuario_actual(
     usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
     sesion: AsyncSession = Depends(obtener_sesion_base_datos),
 ) -> RespuestaUsuarioActual:
-    """Datos del usuario en sesión. El front lo llama al recargar para recuperar la sesión."""
+    """Datos del usuario en sesión, su menú y sus permisos (el front arma el sidebar con esto)."""
+    menu_y_permisos = await obtener_menu_y_permisos(sesion, usuario.id)
     return RespuestaUsuarioActual(
         nombre_usuario=usuario.nombre_usuario,
         nombre_completo=await obtener_nombre_completo(
             sesion, usuario.documento_identidad, usuario.nombre_usuario
         ),
         rol=usuario.rol,
-        permisos=[],
+        permisos=menu_y_permisos.permisos,
+        menu=[asdict(elemento) for elemento in menu_y_permisos.menu],
         expira_por_inactividad_segundos=segundos_de_inactividad_permitidos(),
     )
 
@@ -215,11 +225,20 @@ async def obtener_datos_usuario_actual(
     "/cerrar-sesion", status_code=204, response_class=Response, dependencies=[Depends(verificar_csrf)]
 )
 async def cerrar_sesion_usuario(
+    request: Request,
     usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
     sesion: AsyncSession = Depends(obtener_sesion_base_datos),
 ) -> Response:
     """Revoca la sesión en el servidor y borra las cookies. 204 sin cuerpo."""
     await cerrar_sesion(sesion, usuario.sesion_id)
+    await auditoria.registrar_evento(
+        sesion,
+        auditoria.CIERRE_SESION,
+        request,
+        usuario_id=usuario.id,
+        nombre_usuario=usuario.nombre_usuario,
+        resultado="EXITOSO",
+    )
     respuesta = Response(status_code=204)
     borrar_cookies_sesion(respuesta)
     return respuesta
