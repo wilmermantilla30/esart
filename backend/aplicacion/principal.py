@@ -16,6 +16,7 @@ from aplicacion.base_datos.sesion import cerrar_motor_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.nucleo.errores import registrar_manejadores_errores
 from aplicacion.nucleo.registro import configurar_registro
+from aplicacion.rutas.administracion import enrutador_administracion
 from aplicacion.rutas.autenticacion import enrutador_autenticacion
 from aplicacion.rutas.salud import enrutador_salud
 from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
@@ -79,6 +80,7 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_autenticacion, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_catalogos, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_verificacion, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_administracion, prefix=PREFIJO_API)
 
     return aplicacion
 

@@ -109,4 +109,8 @@ async def test_un_423_con_nombre_no_autoriza_contador_ni_ip(monkeypatch):
         assert "cuenta.original" in parametros and "otra.cuenta" not in parametros
         protegido = await c.get("/api/auth/administracion/bloqueos/44")
         assert protegido.status_code == 401
-    sesion.commit.assert_not_awaited()
+    # HU-11: el único guardado es el evento de auditoría del bloqueo; consultar el estado no escribe.
+    assert sesion.commit.await_count == 1
+    evento = sesion.add.call_args.args[0]
+    assert evento.accion == "USUARIO_BLOQUEADO" and evento.nombre_usuario == "cuenta.original"
+    assert "entrada-solo-prueba" not in str(evento.detalle)

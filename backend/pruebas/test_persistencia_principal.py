@@ -26,6 +26,7 @@ TABLAS_POSTERIORES_A_P0001 = {
     "esart.auditoria_acceso",
     "esart.desafios_captcha",
     "esart.parametros_habilitacion",
+    "esart.auditoria_eventos",
 }
 COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
 
@@ -51,7 +52,7 @@ def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
             assert (mapped.server_default is None) == (
                 c["defecto"] is None and not c["identidad"].endswith("d'")
             )
-    assert len(MODELOS_PENDIENTES) == 6
+    assert len(MODELOS_PENDIENTES) == 5
     assert "esart.permisos" not in BaseModelo.metadata.tables
 
 
@@ -72,7 +73,9 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0006_parametros_habilitacion"]
+    assert script.get_heads() == ["p0008_malla_editable"]
+    assert script.get_revision("p0008_malla_editable").down_revision == "p0007_auditoria_eventos"
+    assert script.get_revision("p0007_auditoria_eventos").down_revision == "p0006_parametros_habilitacion"
     assert script.get_revision("p0006_parametros_habilitacion").down_revision == "p0005_componentes_y_malla"
     assert script.get_revision("p0005_componentes_y_malla").down_revision == "p0004_captcha_local"
     assert script.get_revision("p0002_seguridad_sesiones").down_revision == "p0001_real"

@@ -104,18 +104,21 @@ export const routes: Routes = [
         'Parámetros de habilitación',
         'Reglas que definen cuándo un artillero está APTO: cursos válidos y vigencia del reentrenamiento.',
       ),
-      rutaEnConstruccion(
-        'administracion/permisos',
-        'PERMISOS',
-        'Malla de permisos',
-        'Qué puede hacer cada rol en cada módulo.',
-      ),
-      rutaEnConstruccion(
-        'administracion/auditoria',
-        'AUDITORIA',
-        'Auditoría',
-        'Registro inmutable de accesos y consultas.',
-      ),
+      {
+        path: 'administracion/permisos',
+        title: 'Malla de permisos — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'PERMISOS' },
+        loadComponent: () =>
+          import('./paginas/administracion/malla-permisos/malla-permisos').then((m) => m.MallaPermisos),
+      },
+      {
+        path: 'administracion/auditoria',
+        title: 'Auditoría — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'AUDITORIA' },
+        loadComponent: () => import('./paginas/administracion/auditoria/auditoria').then((m) => m.Auditoria),
+      },
       {
         path: 'unidades',
         title: 'Unidades — ESART',

@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
-from fastapi import Depends
+from fastapi import Depends, Request
 from sqlalchemy import and_, false, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -79,6 +79,7 @@ def requerir_permiso_componente(
     operacion = OperacionCRUD(operacion)
 
     async def verificar(
+        request: Request,
         usuario_id: int = Depends(obtener_identidad),
         sesion: AsyncSession = Depends(obtener_sesion_base_datos),
     ) -> int:
@@ -86,6 +87,18 @@ def requerir_permiso_componente(
         if permitido and codigo_permiso is not None:
             permitido = await tiene_permiso_codigo(sesion, usuario_id, codigo_permiso)
         if not permitido:
+            # HU-09/HU-11: el intento sin permiso queda auditado antes de responder 403.
+            # Importación diferida: auditoria depende de sesion_http, que se carga después.
+            from aplicacion.servicios import auditoria
+
+            await auditoria.registrar_evento(
+                sesion,
+                auditoria.ACCESO_DENEGADO,
+                request,
+                usuario_id=usuario_id,
+                resultado="RECHAZADO",
+                detalle={"componente": componente, "operacion": operacion.value, "ruta": request.url.path},
+            )
             raise ErrorAplicacion(403, "SIN_PERMISO", "No tiene permiso para esta acción.")
         return usuario_id
 

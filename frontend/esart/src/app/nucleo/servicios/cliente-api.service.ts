@@ -34,6 +34,11 @@ export class ClienteApiService {
     return this.http.get<T>(PREFIJO_API + ruta, { headers: cabeceras, params });
   }
 
+  /** PUT con cuerpo JSON (reemplaza un recurso). Angular agrega la cabecera CSRF. */
+  reemplazar<T>(ruta: string, cuerpo: unknown): Observable<T> {
+    return this.http.put<T>(PREFIJO_API + ruta, cuerpo);
+  }
+
   /** POST con cuerpo JSON a una ruta de la API. */
   enviar<T>(ruta: string, cuerpo: unknown = null): Observable<T> {
     return this.http.post<T>(PREFIJO_API + ruta, cuerpo);

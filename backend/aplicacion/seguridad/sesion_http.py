@@ -36,6 +36,16 @@ BYTES_TOKEN_CSRF = 32
 METODOS_SIN_VERIFICACION_CSRF = frozenset({"GET", "HEAD", "OPTIONS"})
 
 
+def obtener_ip_cliente(request: Request) -> str | None:
+    """
+    IP de quien hace la petición. Si llegan cabeceras de proxy (Forwarded, X-Forwarded-For,
+    X-Real-IP) no se confía en ninguna: podrían venir del cliente. En ese caso devuelve None.
+    """
+    if any(cabecera in request.headers for cabecera in ("forwarded", "x-forwarded-for", "x-real-ip")):
+        return None
+    return request.client.host if request.client else None
+
+
 def escribir_cookies_sesion(respuesta: Response, token_sesion: str) -> None:
     """Pone en la respuesta la cookie con el JWT y una cookie CSRF nueva."""
     cookie_segura = obtener_configuracion().cookie_segura

@@ -31,21 +31,21 @@ CARGOS_INICIALES = [
     {
         "nombre": "Comandante de pieza",
         "descripcion": (
-            "Oficial o suboficial responsable de la operacion y empleo tactico" " de una pieza de artilleria."
+            "Oficial o suboficial responsable de la operacion y empleo tactico de una pieza de artilleria."
         ),
         "cuenta_para_coofu": True,
     },
     {
         "nombre": "Comandante de Bateria",
         "descripcion": (
-            "Oficial responsable del mando, control y empleo operacional de un" "a bateria de artilleria."
+            "Oficial responsable del mando, control y empleo operacional de una bateria de artilleria."
         ),
         "cuenta_para_coofu": True,
     },
     {
         "nombre": "Armamento Mayor",
         "descripcion": (
-            "Suboficial tecnico responsable del mantenimiento y control del ar" "mamento de la unidad."
+            "Suboficial tecnico responsable del mantenimiento y control del armamento de la unidad."
         ),
         "cuenta_para_coofu": False,
     },

@@ -1,6 +1,6 @@
 """Modelos operativos de esart_db; esquema auditado sin consultas al importar."""
 
-from .habilitacion import ParametroHabilitacion
+from .habilitacion import AuditoriaEvento, ParametroHabilitacion
 from .persistencia import (
     AlertasAcademicas,
     AlertasCertificacion,
@@ -49,6 +49,7 @@ from .persistencia import (
 from .seguridad import IntentoInicioSesion, SesionUsuario
 
 __all__ = [
+    "AuditoriaEvento",
     "ParametroHabilitacion",
     "IntentoInicioSesion",
     "SesionUsuario",
@@ -101,7 +102,6 @@ MODELOS_PENDIENTES = {
     "Permiso": "permisos",
     "RolPermisoCodigo": "roles_permisos",
     "ImportacionExcel": "importaciones_excel",
-    "AuditoriaEvento": "auditoria_eventos",
     "TipoCertificacion": "tipos_certificacion",
     "RequisitoHabilitacion": "requisitos_habilitacion",
 }
