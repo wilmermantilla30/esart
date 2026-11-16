@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.8 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.9 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -257,6 +257,23 @@ Historial paginado: `{ "importacion_id", "fecha", "nombre_usuario", "nombre_arch
 
 ---
 
+## 5b. Administración (malla de permisos y auditoría)
+
+Malla (componente `PERMISOS`: leer para consultar, actualizar + CSRF para guardar):
+- `GET /api/administracion/permisos/roles` → `[{ "codigo", "nombre", "editable" }]` (ADMINISTRADOR: `editable=false`).
+- `GET|PUT /api/administracion/permisos/roles/{codigo}` → filas por módulo con `permisos: { acceder, crear, leer, actualizar, eliminar }`.
+  `PUT` recibe `{ "permisos": [{ "componente", "acceder", "crear", "leer", "actualizar", "eliminar" }] }`. ADMINISTRADOR → **409** `ROL_NO_EDITABLE`.
+- `GET /api/administracion/permisos/usuarios?texto=` → usuarios con su rol.
+- `GET|PUT /api/administracion/permisos/usuarios/{id}` → por módulo: `rol` (lo que da su rol), `modo` (`HEREDAR` / `CONCEDER` / `QUITAR`), `excepcion`, `efectivo`.
+  `PUT` recibe `{ "cambios": [{ "componente", "modo", "crear", "leer", "actualizar", "eliminar" }] }`.
+  Errores 409: `USUARIO_NO_EDITABLE` (es administrador), `AUTOBLOQUEO` (quitarse la malla a sí mismo), `SIN_ADMINISTRADOR_DE_MALLA`.
+
+Auditoría (componente `AUDITORIA`, solo lectura):
+- `GET /api/administracion/auditoria?accion=&usuario=&documento=&desde=AAAA-MM-DD&hasta=AAAA-MM-DD` → paginado (§1.3) con
+  `{ "id", "fecha", "usuario_id", "nombre_usuario", "accion", "numero_documento_consultado", "resultado", "direccion_ip", "detalle" }`.
+
+---
+
 ## 6. Salud
 `GET /api/salud` (sin autenticación; no expone versiones ni detalles técnicos):
 - **200** `{ "estado": "ok", "base_datos": "ok" }`
@@ -287,3 +304,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.6 | 2026-11-15 | Implementados login, yo y cerrar-sesion (HU-05). `nombre_usuario` hasta 80 caracteres. `permisos` de `/auth/yo` va vacío hasta cerrar el punto 8 del contrato de esquema. Sesión vencida: 401 `SESION_EXPIRADA` |
 | 0.7 | 2026-11-16 | `/api/auth/yo` devuelve `permisos` (códigos de componente) y `menu` (sidebar y pestañas) según la malla (HU-09). Cabecera `X-Sesion-Expira-En` implementada (HU-08) |
 | 0.8 | 2026-11-16 | §3 implementado con la regla acordada (activo + SACLI/SACME aprobado o reentrenamiento vigente 12 meses, alerta 60 días): criterios OBLIGATORIO/ALTERNATIVO, `motivos`, `alerta`, `reentrenamientos`; listado `/habilitacion` con filtro `estado`; `/resumen` |
+| 0.9 | 2026-11-16 | §5b: rutas de administración (malla de permisos por rol y por usuario, consulta de auditoría) |

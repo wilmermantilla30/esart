@@ -70,3 +70,21 @@ regla APTO / NO APTO (cédulas `99000000xx`, unidades `SIM-…`). No corre en pr
 ```
 
 Los tipos de curso se cargan del seed oficial (`seed_catalogos_academicos.sql`) y no se borran.
+
+## Administración de usuarios por consola (HU-10)
+
+Mientras llega el panel web (segunda entrega). Usa la conexión del `.env` y cada acción queda
+en la auditoría como `consola`, con el usuario del sistema operativo que la ejecutó.
+
+```powershell
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios listar
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios crear --usuario jperez.esart --rol USUARIO --cedula 1234567890
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios desbloquear --usuario jperez.esart
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios desbloquear-ip --ip 10.1.2.3
+```
+
+- `crear` pide la contraseña **oculta** dos veces (mínimo 10 caracteres, letras y números) y
+  nunca la acepta como argumento. Con rol `ADMINISTRADOR` pide confirmación.
+- `--cedula` es opcional: enlaza el usuario con su ficha de `personal_militar` (grado y nombre).
+- `desbloquear` pone en cero los intentos y quita el bloqueo de 3 horas; `desbloquear-ip` pone en
+  cero el contador de una IP.
