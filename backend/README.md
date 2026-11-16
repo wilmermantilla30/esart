@@ -58,3 +58,15 @@ try {
 Las pruebas del login (`pruebas/test_login_hu05.py`) usan la base real si se define
 `ESART_URL_BD_INTEGRACION` (base con la migración p0002). Todo se revierte al final.
 Sin la variable, esas pruebas se omiten.
+
+## Datos simulados (solo desarrollo)
+
+Mientras llega la importación por Excel, hay 10 militares de prueba que cubren cada caso de la
+regla APTO / NO APTO (cédulas `99000000xx`, unidades `SIM-…`). No corre en producción.
+
+```powershell
+.venv/Scripts/python.exe -m herramientas.cargar_datos_simulados cargar
+.venv/Scripts/python.exe -m herramientas.cargar_datos_simulados borrar
+```
+
+Los tipos de curso se cargan del seed oficial (`seed_catalogos_academicos.sql`) y no se borran.

@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.6 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.8 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -117,10 +117,21 @@ Datos del usuario en sesión. El front lo llama al cargar cada página para **ar
   "nombre_usuario": "comandante.esart",
   "nombre_completo": "…",
   "rol": "USUARIO",
-  "permisos": ["VERIFICAR_ARTILLERO", "VER_DOCUMENTO_COMPLETO", "LISTAR_HABILITACION"],
+  "permisos": ["DASHBOARD", "PERSONAL_MILITAR", "PERSONAL_VERIFICAR", "PERSONAL_HABILITADOS", "VER_DOCUMENTO_COMPLETO"],
+  "menu": [
+    { "codigo": "DASHBOARD", "nombre": "Panel principal", "ruta": "/dashboard", "operaciones": ["leer"], "hijos": [] },
+    { "codigo": "PERSONAL_MILITAR", "nombre": "Personal militar", "ruta": "/personal", "operaciones": ["leer"],
+      "hijos": [
+        { "codigo": "PERSONAL_VERIFICAR", "nombre": "Verificar artillero", "ruta": "/personal/verificar", "operaciones": ["leer"], "hijos": [] },
+        { "codigo": "PERSONAL_HABILITADOS", "nombre": "Habilitados", "ruta": "/personal/habilitados", "operaciones": ["leer"], "hijos": [] }
+      ] }
+  ],
   "expira_por_inactividad_segundos": 1800
 }
 ```
+`permisos`: códigos de los componentes a los que puede acceder (incluye permisos sin menú).
+`menu`: módulos del sidebar con sus pestañas (`hijos`), ya filtrados por la malla (HU-09).
+Las respuestas autenticadas traen `X-Sesion-Expira-En` (HU-08).
 
 ### `POST /api/auth/cerrar-sesion`
 Revoca la sesión y borra la cookie. **204** sin cuerpo.
@@ -129,60 +140,79 @@ Revoca la sesión y borra la cookie. **204** sin cuerpo.
 
 ## 3. Verificación
 
+**Regla vigente (2026-11-16):** `APTO` = militar **activo** y (**curso habilitante aprobado** o
+**reentrenamiento vigente**). Los parámetros (cursos habilitantes —hoy SACLI y SACME—, meses de
+vigencia —12— y días de alerta —60—) están en `esart.parametros_habilitacion` (migración `p0006`).
+Un reentrenamiento expedido el 16-nov-2026 vence el 16-nov-2027 (vigente ese día inclusive).
+
+Permisos de la malla (HU-09): verificar = `PERSONAL_VERIFICAR`; listados = `PERSONAL_HABILITADOS`;
+resumen = `PERSONAL_MILITAR`. Sin `VER_DOCUMENTO_COMPLETO` la cédula sale como `******5678`.
+
 ### `GET /api/verificar/artillero/{numero_documento}`
-Permiso: `VERIFICAR_ARTILLERO`. El backend limpia puntos y espacios de la cédula.
+El backend quita puntos, espacios y guiones; exige de 5 a 15 dígitos.
 
 **200:**
 ```json
 {
   "artillero": {
-    "numero_documento": "******5678",
-    "nombre_completo": "Juan Carlos Pérez Gómez",
-    "grado": "SARGENTO SEGUNDO",
+    "numero_documento": "9900000004",
+    "nombre_completo": "Diana Carolina Ruiz Pardo",
+    "grado": "SS",
     "categoria": "SUBOFICIAL",
     "unidad_militar": { "sigla": "BAART3", "nombre": "Batallón de Artillería No. 3" },
     "estado_servicio": "ACTIVO"
   },
-  "resultado": "NO_APTO",
-  "fecha_verificacion": "2026-11-18T14:05:12Z",
+  "resultado": "APTO",
+  "fecha_verificacion": "2026-11-16T17:05:12Z",
   "criterios": [
-    { "descripcion": "Estado de servicio activo", "cumple": true,  "motivo": null },
-    { "descripcion": "Curso Básico de Artillería de Campaña", "cumple": false,
-      "motivo": "Le falta el curso Básico de Artillería de Campaña" },
-    { "descripcion": "Certificación de Dirección de Tiro vigente", "cumple": false,
-      "motivo": "Certificación de Dirección de Tiro vencida el 2026-03-01" }
+    { "descripcion": "Estado de servicio activo", "tipo": "OBLIGATORIO", "cumple": true, "detalle": null, "motivo": null },
+    { "descripcion": "Curso habilitante aprobado (SACLI o SACME)", "tipo": "ALTERNATIVO", "cumple": false,
+      "detalle": null, "motivo": "No tiene curso SACLI o SACME aprobado." },
+    { "descripcion": "Reentrenamiento vigente", "tipo": "ALTERNATIVO", "cumple": true,
+      "detalle": "Vigente hasta el 16-dic-2026 (faltan 30 días).", "motivo": null }
   ],
+  "motivos": [],
+  "alerta": "El reentrenamiento vence el 16-dic-2026 (faltan 30 días). Planee el próximo reentrenamiento.",
   "cursos": [
-    { "tipo_curso": "Curso de Observador Adelantado", "numero_cohorte": "2024-I",
-      "fecha_inicio": "2024-02-05", "fecha_fin": "2024-05-30",
-      "estado": "APROBADO", "nota_final": 4.35, "numero_acta": "ACT-2024-118" }
+    { "nombre": "Curso sistemas de artilleria liviana", "codigo": "SACLI", "institucion": "Escuela de Artillería",
+      "fecha_inicio": "2024-01-05", "fecha_fin": "2024-03-16", "estado": "APROBADO", "habilitante": true }
   ],
-  "certificaciones": [
-    { "tipo_certificacion": "Dirección de Tiro", "numero_certificado": "CERT-0912",
-      "fecha_expedicion": "2024-03-01", "fecha_vencimiento": "2026-03-01",
-      "estado": "ACTIVA", "vigente": false }
+  "reentrenamientos": [
+    { "numero_certificado": "CERT-0912", "tipo": "OBUS", "calibre": "105MM",
+      "fecha_expedicion": "2025-12-16", "fecha_vencimiento": "2026-12-16", "estado": "POR_VENCER" }
   ]
 }
 ```
-`resultado` es `"APTO"` o `"NO_APTO"`. Si no hay requisitos configurados, es `"NO_APTO"` con el
-motivo "No hay requisitos de habilitación configurados".
-Errores: `ARTILLERO_NO_ENCONTRADO`, `DATOS_INVALIDOS` (cédula con formato incorrecto), `SIN_PERMISO`.
+- `tipo`: `OBLIGATORIO` debe cumplirse; de los `ALTERNATIVO` basta uno.
+- Cuando un curso habilitante está aprobado, `detalle` dice desde cuándo ("SACLI aprobado el 16-mar-2024 (hace 2 años y 8 meses).").
+- `motivos`: por qué es `NO_APTO` (vacío si es `APTO`).
+- Estado de cada reentrenamiento: `VIGENTE`, `POR_VENCER`, `VENCIDO` o `ANULADO`.
 
-### `GET /api/verificar/no-habilitados` y `GET /api/verificar/habilitados`
-Permiso: `LISTAR_HABILITACION`. Paginados (§1.3).
-Filtros opcionales: `unidad_militar_id`, `grado`, `texto` (busca por nombre o cédula).
+Errores: `ARTILLERO_NO_ENCONTRADO` (404), `DATOS_INVALIDOS` (422), `SIN_PERMISO` (403).
+
+### `GET /api/verificar/habilitacion`, `/habilitados` y `/no-habilitados`
+Paginados (§1.3; `tamano_pagina` hasta 200). Filtros opcionales: `estado` (`APTO`, `NO_APTO`,
+`POR_VENCER`; solo en `/habilitacion`), `unidad_militar_id`, `grado`, `texto` (nombre o cédula).
+`/habilitados` = solo `APTO`; `/no-habilitados` = solo `NO_APTO`.
 
 Cada elemento:
 ```json
 {
-  "numero_documento": "******5678",
-  "nombre_completo": "Juan Carlos Pérez Gómez",
-  "grado": "SARGENTO SEGUNDO",
+  "numero_documento": "9900000005",
+  "nombre_completo": "Jorge Iván Díaz Moreno",
+  "grado": "CP",
   "unidad_militar_sigla": "BAART3",
-  "motivos": [ "Le falta el curso Básico de Artillería de Campaña" ]
+  "activo": true,
+  "resultado": "NO_APTO",
+  "motivos": ["No tiene curso SACLI o SACME aprobado.", "Reentrenamiento vencido el 17-sep-2026."],
+  "curso_habilitante": null,
+  "reentrenamiento_vence": "2026-09-17",
+  "estado_reentrenamiento": "VENCIDO"
 }
 ```
-En `habilitados`, `motivos` viene vacío.
+
+### `GET /api/verificar/resumen`
+Indicadores del panel: `{ "total", "aptos", "no_aptos", "reentrenamiento_por_vencer", "activos", "unidades", "dias_alerta_vencimiento" }`.
 
 ### `GET /api/verificar/sistema/{sistema_id}/habilitados` y `/no-habilitados`
 **Contempladas, no activas.** Mientras el sistema tenga `verificacion_habilitada = false`, responden
@@ -255,3 +285,5 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.4 | 2026-11-14 | Front en Angular: CSRF por doble cookie (`esart_csrf` + `X-CSRF-Token`), proxy de desarrollo, reglas de front para Angular; se quita `token_csrf` de `/api/auth/yo` |
 | 0.5 | 2026-11-15 | Códigos de rol `ADMINISTRADOR` y `USUARIO` (contrato de esquema §10 punto 7) |
 | 0.6 | 2026-11-15 | Implementados login, yo y cerrar-sesion (HU-05). `nombre_usuario` hasta 80 caracteres. `permisos` de `/auth/yo` va vacío hasta cerrar el punto 8 del contrato de esquema. Sesión vencida: 401 `SESION_EXPIRADA` |
+| 0.7 | 2026-11-16 | `/api/auth/yo` devuelve `permisos` (códigos de componente) y `menu` (sidebar y pestañas) según la malla (HU-09). Cabecera `X-Sesion-Expira-En` implementada (HU-08) |
+| 0.8 | 2026-11-16 | §3 implementado con la regla acordada (activo + SACLI/SACME aprobado o reentrenamiento vigente 12 meses, alerta 60 días): criterios OBLIGATORIO/ALTERNATIVO, `motivos`, `alerta`, `reentrenamientos`; listado `/habilitacion` con filtro `estado`; `/resumen` |

@@ -1,4 +1,4 @@
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpParams } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -16,9 +16,22 @@ export const PREFIJO_API = '/api';
 export class ClienteApiService {
   private readonly http = inject(HttpClient);
 
-  /** GET a una ruta de la API, por ejemplo obtener('/auth/yo'). */
-  obtener<T>(ruta: string, cabeceras: Record<string, string> = {}): Observable<T> {
-    return this.http.get<T>(PREFIJO_API + ruta, { headers: cabeceras });
+  /**
+   * GET a una ruta de la API, por ejemplo obtener('/auth/yo').
+   * Los parámetros de consulta vacíos (null, undefined o '') no se envían.
+   */
+  obtener<T>(
+    ruta: string,
+    cabeceras: Record<string, string> = {},
+    parametros: Record<string, string | number | null | undefined> = {},
+  ): Observable<T> {
+    let params = new HttpParams();
+    for (const [nombre, valor] of Object.entries(parametros)) {
+      if (valor !== null && valor !== undefined && valor !== '') {
+        params = params.set(nombre, String(valor));
+      }
+    }
+    return this.http.get<T>(PREFIJO_API + ruta, { headers: cabeceras, params });
   }
 
   /** POST con cuerpo JSON a una ruta de la API. */

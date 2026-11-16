@@ -19,6 +19,7 @@ from aplicacion.nucleo.registro import configurar_registro
 from aplicacion.rutas.autenticacion import enrutador_autenticacion
 from aplicacion.rutas.salud import enrutador_salud
 from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
+from aplicacion.rutas.verificacion import enrutador_verificacion
 
 registrador = logging.getLogger(__name__)
 
@@ -77,6 +78,7 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_salud, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_autenticacion, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_catalogos, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_verificacion, prefix=PREFIJO_API)
 
     return aplicacion
 

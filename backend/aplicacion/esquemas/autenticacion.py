@@ -38,10 +38,22 @@ class RespuestaInicioSesion(BaseModel):
     expira_por_inactividad_segundos: int
 
 
+class ElementoMenu(BaseModel):
+    """Opción del menú: módulo del sidebar (con sus pestañas en 'hijos')."""
+
+    codigo: str
+    nombre: str
+    ruta: str
+    # Lo que el usuario puede hacer ahí: "crear", "leer", "actualizar", "eliminar".
+    operaciones: list[str]
+    hijos: list["ElementoMenu"] = []
+
+
 class RespuestaUsuarioActual(UsuarioEnSesion):
     """Cuerpo de GET /api/auth/yo (contrato §2)."""
 
-    # Códigos de permiso para armar el menú. Vacío por ahora: el modelo de HU-04 maneja
-    # permisos por componente y falta acordar cómo se traducen (contrato de esquema §10 punto 8).
+    # Códigos de los componentes a los que puede acceder (malla de permisos, HU-09).
     permisos: list[str]
+    # Menú ya filtrado por permisos: el front lo dibuja tal cual.
+    menu: list[ElementoMenu]
     expira_por_inactividad_segundos: int

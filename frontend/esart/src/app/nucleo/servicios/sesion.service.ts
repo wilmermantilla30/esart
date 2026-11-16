@@ -4,6 +4,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 
 import {
   CaptchaLocal,
+  ElementoMenu,
   EstadoBloqueoPublico,
   RespuestaInicioSesion,
   RespuestaUsuarioActual,
@@ -30,10 +31,23 @@ export class SesionService {
   private readonly clienteApi = inject(ClienteApiService);
 
   private readonly usuarioActual = signal<UsuarioEnSesion | null>(null);
+  private readonly menuActual = signal<ElementoMenu[] | null>(null);
+  private readonly permisosActuales = signal<ReadonlySet<string>>(new Set());
 
   /** Usuario en sesión, o null si no hay sesión confirmada. */
   readonly usuario = this.usuarioActual.asReadonly();
   readonly haySesion = computed(() => this.usuarioActual() !== null);
+
+  /** Menú del usuario (sidebar y pestañas), o null si todavía no se ha cargado. */
+  readonly menu = this.menuActual.asReadonly();
+
+  /**
+   * Indica si el usuario puede acceder a un componente de la malla (HU-09).
+   * Solo sirve para mostrar u ocultar opciones: el backend vuelve a verificar cada petición.
+   */
+  tienePermiso(codigoComponente: string): boolean {
+    return this.permisosActuales().has(codigoComponente);
+  }
 
   consultarBloqueo(): Observable<EstadoBloqueoPublico> {
     return this.clienteApi.obtener<EstadoBloqueoPublico>('/auth/bloqueo');
@@ -73,20 +87,31 @@ export class SesionService {
    * Devuelve true/false y nunca lanza error (lo usan las guardas de ruta).
    */
   comprobarSesion(): Observable<boolean> {
-    if (this.usuarioActual()) {
+    // Tras el login se conoce el usuario pero no su menú: se pide /api/auth/yo una vez.
+    if (this.usuarioActual() && this.menuActual()) {
       return of(true);
     }
+    return this.renovarSesion();
+  }
+
+  /**
+   * Pregunta SIEMPRE al backend (/api/auth/yo) si la sesión sigue vigente. Si lo está,
+   * el backend reinicia la ventana de inactividad (HU-08). Devuelve true/false sin lanzar error.
+   */
+  renovarSesion(): Observable<boolean> {
     return this.clienteApi.obtener<RespuestaUsuarioActual>(RUTA_USUARIO_ACTUAL).pipe(
-      tap((respuesta) =>
+      tap((respuesta) => {
         this.usuarioActual.set({
           nombre_usuario: respuesta.nombre_usuario,
           nombre_completo: respuesta.nombre_completo,
           rol: respuesta.rol,
-        }),
-      ),
+        });
+        this.menuActual.set(respuesta.menu ?? []);
+        this.permisosActuales.set(new Set(respuesta.permisos ?? []));
+      }),
       map(() => true),
       catchError(() => {
-        this.usuarioActual.set(null);
+        this.olvidarSesion();
         return of(false);
       }),
     );
@@ -107,5 +132,7 @@ export class SesionService {
   /** Borra el estado local (lo usa el interceptor cuando el backend responde 401). */
   olvidarSesion(): void {
     this.usuarioActual.set(null);
+    this.menuActual.set(null);
+    this.permisosActuales.set(new Set());
   }
 }

@@ -198,7 +198,7 @@ describe('InicioSesion', () => {
       expira_por_inactividad_segundos: 1800,
     });
     await fixture.whenStable();
-    expect(navegarPorUrl).toHaveBeenCalledWith('/inicio');
+    expect(navegarPorUrl).toHaveBeenCalledWith('/dashboard');
     expect(pagina.querySelector('[role="dialog"]')).toBeNull();
   });
 
@@ -290,7 +290,7 @@ describe('InicioSesion', () => {
       },
       expira_por_inactividad_segundos: 1800,
     });
-    expect(navegarPorUrl).toHaveBeenCalledWith('/inicio');
+    expect(navegarPorUrl).toHaveBeenCalledWith('/dashboard');
   });
 
   it('vuelve a la página pedida si es interna, pero nunca a otro sitio', async () => {
@@ -306,7 +306,7 @@ describe('InicioSesion', () => {
       },
       expira_por_inactividad_segundos: 1800,
     });
-    expect(navegarPorUrl).toHaveBeenCalledWith('/inicio');
+    expect(navegarPorUrl).toHaveBeenCalledWith('/dashboard');
   });
 
   it('muestra el mensaje genérico del servidor y vacía la contraseña', async () => {

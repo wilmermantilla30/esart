@@ -17,26 +17,26 @@ from aplicacion.modelos import MODELOS_PENDIENTES, TipoUnidad, UnidadMilitar, Us
 RAIZ = Path(__file__).parents[1]
 
 
-# Lo que la revisión p0002_seguridad_sesiones agrega sobre la fotografía p0001.
-TABLAS_P0002 = {"esart.sesiones_usuario", "esart.intentos_inicio_sesion"}
+# Tablas creadas por revisiones posteriores a la fotografía p0001 (p0002 en adelante).
+TABLAS_POSTERIORES_A_P0001 = {
+    "esart.sesiones_usuario",
+    "esart.intentos_inicio_sesion",
+    "esart.limites_inicio_ip",
+    "esart.estados_acceso_anonimos",
+    "esart.auditoria_acceso",
+    "esart.desafios_captcha",
+    "esart.parametros_habilitacion",
+}
 COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
 
 
 def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
     referencia = json.loads((RAIZ / "migraciones_principal/estructura_p0001.json").read_text())
-    assert set(BaseModelo.metadata.tables) - TABLAS_P0002 - {
-        "esart.limites_inicio_ip",
-        "esart.estados_acceso_anonimos",
-        "esart.auditoria_acceso",
-        "esart.desafios_captcha",
-    } == {t["esquema"] + "." + t["tabla"] for t in referencia["tablas"]}
+    assert set(BaseModelo.metadata.tables) - TABLAS_POSTERIORES_A_P0001 == {
+        t["esquema"] + "." + t["tabla"] for t in referencia["tablas"]
+    }
     for tabla in BaseModelo.metadata.tables.values():
-        if tabla.fullname in TABLAS_P0002 | {
-            "esart.limites_inicio_ip",
-            "esart.estados_acceso_anonimos",
-            "esart.auditoria_acceso",
-            "esart.desafios_captcha",
-        }:
+        if tabla.fullname in TABLAS_POSTERIORES_A_P0001:
             continue
         columnas = [
             c for c in referencia["columnas"] if c["esquema"] == tabla.schema and c["tabla"] == tabla.name
@@ -72,7 +72,9 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0004_captcha_local"]
+    assert script.get_heads() == ["p0006_parametros_habilitacion"]
+    assert script.get_revision("p0006_parametros_habilitacion").down_revision == "p0005_componentes_y_malla"
+    assert script.get_revision("p0005_componentes_y_malla").down_revision == "p0004_captcha_local"
     assert script.get_revision("p0002_seguridad_sesiones").down_revision == "p0001_real"
     assert script.get_revision("p0001_real").down_revision == "p0000_instalacion_inicial"
     assert script.get_revision("p0000_instalacion_inicial").down_revision is None

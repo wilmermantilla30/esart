@@ -65,7 +65,20 @@ export interface RespuestaInicioSesion {
 }
 
 /** Respuesta de GET /api/auth/yo. */
+/** Opción del menú armada por el backend según la malla de permisos (HU-09). */
+export interface ElementoMenu {
+  codigo: string;
+  nombre: string;
+  ruta: string;
+  /** Lo que el usuario puede hacer ahí: 'crear', 'leer', 'actualizar', 'eliminar'. */
+  operaciones: string[];
+  /** Pestañas del módulo (componentes hijos). */
+  hijos: ElementoMenu[];
+}
+
 export interface RespuestaUsuarioActual extends UsuarioEnSesion {
+  /** Códigos de los componentes a los que puede acceder (incluye permisos sin menú). */
   permisos: string[];
+  menu: ElementoMenu[];
   expira_por_inactividad_segundos: number;
 }

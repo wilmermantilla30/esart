@@ -8,22 +8,14 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.modelos import TipoCargo, TipoCurso, TipoUnidad, UnidadMilitar
-from aplicacion.seguridad.sesion_http import obtener_usuario_actual
-from aplicacion.servicios.autenticacion import UsuarioAutenticado
+from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual
 
 enrutador = APIRouter(prefix="/catalogos", tags=["Catálogos"])
 Sesion = Annotated[AsyncSession, Depends(obtener_sesion_base_datos)]
 
 
-async def exigir_identidad(usuario: UsuarioAutenticado = Depends(obtener_usuario_actual)) -> int:
-    """Solo identidad validada por el servidor (cookie de sesión firmada + sesión vigente).
-
-    Nunca se toma de cabeceras del cliente. Sin sesión válida responde 401 (HU-05).
-    """
-    return usuario.id
-
-
-enrutador.dependencies.append(Depends(exigir_identidad))
+# Solo identidad validada por el servidor (cookie de sesión firmada + sesión vigente).
+enrutador.dependencies.append(Depends(obtener_id_usuario_actual))
 
 
 async def filas_unidades(sesion: AsyncSession) -> list[dict]:

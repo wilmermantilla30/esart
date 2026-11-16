@@ -1,5 +1,6 @@
 """Modelos operativos de esart_db; esquema auditado sin consultas al importar."""
 
+from .habilitacion import ParametroHabilitacion
 from .persistencia import (
     AlertasAcademicas,
     AlertasCertificacion,
@@ -48,6 +49,7 @@ from .persistencia import (
 from .seguridad import IntentoInicioSesion, SesionUsuario
 
 __all__ = [
+    "ParametroHabilitacion",
     "IntentoInicioSesion",
     "SesionUsuario",
     "AlertasAcademicas",

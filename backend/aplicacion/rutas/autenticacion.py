@@ -2,13 +2,13 @@
 
 import ipaddress
 import math
+from dataclasses import asdict
 
 from fastapi import APIRouter, Depends, Header, Request, Response
 from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
-from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.autenticacion import (
     RespuestaInicioSesion,
     RespuestaUsuarioActual,
@@ -23,6 +23,7 @@ from aplicacion.seguridad.sesion_http import (
     borrar_cookies_sesion,
     escribir_cookies_sesion,
     obtener_usuario_actual,
+    segundos_de_inactividad_permitidos,
     verificar_csrf,
 )
 from aplicacion.servicios import estado_bloqueo
@@ -32,6 +33,7 @@ from aplicacion.servicios.autenticacion import (
     iniciar_sesion,
     obtener_nombre_completo,
 )
+from aplicacion.servicios.menu import obtener_menu_y_permisos
 from aplicacion.servicios.seguridad_login import reloj_servidor
 
 enrutador_autenticacion = APIRouter(prefix="/auth", tags=["Autenticación"])
@@ -60,14 +62,6 @@ async def emitir_captcha(
 
     respuesta.headers["Cache-Control"] = "no-store"
     return await generar(sesion, nombre_usuario, obtener_ip_cliente(request), anterior)
-
-
-SEGUNDOS_POR_MINUTO = 60
-
-
-def segundos_de_inactividad_permitidos() -> int:
-    """Tiempo de inactividad tras el cual se cierra la sesión (MINUTOS_INACTIVIDAD_SESION)."""
-    return obtener_configuracion().minutos_inactividad_sesion * SEGUNDOS_POR_MINUTO
 
 
 @enrutador_autenticacion.post("/login", response_model=RespuestaInicioSesion)
@@ -199,14 +193,16 @@ async def obtener_datos_usuario_actual(
     usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
     sesion: AsyncSession = Depends(obtener_sesion_base_datos),
 ) -> RespuestaUsuarioActual:
-    """Datos del usuario en sesión. El front lo llama al recargar para recuperar la sesión."""
+    """Datos del usuario en sesión, su menú y sus permisos (el front arma el sidebar con esto)."""
+    menu_y_permisos = await obtener_menu_y_permisos(sesion, usuario.id)
     return RespuestaUsuarioActual(
         nombre_usuario=usuario.nombre_usuario,
         nombre_completo=await obtener_nombre_completo(
             sesion, usuario.documento_identidad, usuario.nombre_usuario
         ),
         rol=usuario.rol,
-        permisos=[],
+        permisos=menu_y_permisos.permisos,
+        menu=[asdict(elemento) for elemento in menu_y_permisos.menu],
         expira_por_inactividad_segundos=segundos_de_inactividad_permitidos(),
     )
 
