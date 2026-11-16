@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.4 (borrador para acordar entre Dev 1 y Dev 2)
+**Versión:** 0.6 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -104,7 +104,7 @@ Sin autenticación. Genera un captcha nuevo de un solo uso (vence en 5 minutos).
 **200:**
 ```json
 {
-  "usuario": { "nombre_usuario": "comandante.esart", "nombre_completo": "…", "rol": "COMANDANTE" },
+  "usuario": { "nombre_usuario": "comandante.esart", "nombre_completo": "…", "rol": "USUARIO" },
   "expira_por_inactividad_segundos": 1800
 }
 ```
@@ -116,7 +116,7 @@ Datos del usuario en sesión. El front lo llama al cargar cada página para **ar
 {
   "nombre_usuario": "comandante.esart",
   "nombre_completo": "…",
-  "rol": "COMANDANTE",
+  "rol": "USUARIO",
   "permisos": ["VERIFICAR_ARTILLERO", "VER_DOCUMENTO_COMPLETO", "LISTAR_HABILITACION"],
   "expira_por_inactividad_segundos": 1800
 }
@@ -253,3 +253,5 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.2 | 2026-11-14 | Decidido: sesión con JWT en cookie httpOnly + CSRF |
 | 0.3 | 2026-11-14 | Códigos `RECURSO_NO_ENCONTRADO`, `METODO_NO_PERMITIDO`; respuesta 503 de salud |
 | 0.4 | 2026-11-14 | Front en Angular: CSRF por doble cookie (`esart_csrf` + `X-CSRF-Token`), proxy de desarrollo, reglas de front para Angular; se quita `token_csrf` de `/api/auth/yo` |
+| 0.5 | 2026-11-15 | Códigos de rol `ADMINISTRADOR` y `USUARIO` (contrato de esquema §10 punto 7) |
+| 0.6 | 2026-11-15 | Implementados login, yo y cerrar-sesion (HU-05). `nombre_usuario` hasta 80 caracteres. `permisos` de `/auth/yo` va vacío hasta cerrar el punto 8 del contrato de esquema. Sesión vencida: 401 `SESION_EXPIRADA` |

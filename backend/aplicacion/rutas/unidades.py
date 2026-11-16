@@ -2,27 +2,25 @@
 
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy import select
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.modelos import TipoCargo, TipoCurso, TipoUnidad, UnidadMilitar
+from aplicacion.seguridad.sesion_http import obtener_usuario_actual
+from aplicacion.servicios.autenticacion import UsuarioAutenticado
 
 enrutador = APIRouter(prefix="/catalogos", tags=["Catálogos"])
 Sesion = Annotated[AsyncSession, Depends(obtener_sesion_base_datos)]
 
 
-def exigir_identidad(request: Request) -> int:
-    """Solo identidad validada por un proveedor del servidor; nunca cabeceras del cliente.
+async def exigir_identidad(usuario: UsuarioAutenticado = Depends(obtener_usuario_actual)) -> int:
+    """Solo identidad validada por el servidor (cookie de sesión firmada + sesión vigente).
 
-    No hay un login implementado en este proyecto. Hasta integrar su proveedor,
-    las rutas fallan cerradas; las pruebas sustituyen explícitamente esta dependencia.
+    Nunca se toma de cabeceras del cliente. Sin sesión válida responde 401 (HU-05).
     """
-    identidad = getattr(request.state, "usuario_id", None)
-    if not isinstance(identidad, int) or isinstance(identidad, bool) or identidad <= 0:
-        raise HTTPException(401, "Se requiere una sesión autenticada")
-    return identidad
+    return usuario.id
 
 
 enrutador.dependencies.append(Depends(exigir_identidad))

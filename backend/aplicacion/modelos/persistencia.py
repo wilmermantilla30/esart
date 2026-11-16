@@ -49,7 +49,8 @@ class AlertasCertificacion(BaseModelo):
         sa.Column("resuelta", sa.Boolean(), server_default=sa.text("false"), nullable=False),
         sa.Column("generada_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            "((anios_sin_ejercer >= (0)::numeric)", name=conv("alertas_certificacion_anios_sin_ejercer_check")
+            "((anios_sin_ejercer >= (0)::numeric))",
+            name=conv("alertas_certificacion_anios_sin_ejercer_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("alertas_certificacion_pkey")),
         sa.ForeignKeyConstraint(
@@ -88,11 +89,7 @@ class AlumnosActivos(BaseModelo):
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.PrimaryKeyConstraint("id", name=conv("alumnos_activos_pkey")),
         sa.CheckConstraint(
-            (
-                "(((estado_alumno)::text = ANY ((ARRAY['EN_CURSO'::character varyi"
-                "ng, 'SUSPENDIDO'::character varying, 'EN_HABILITACION'::character"
-                " varying])::text[]))"
-            ),
+            ("estado_alumno IN ('EN_CURSO', 'SUSPENDIDO', 'EN_HABILITACION')"),
             name=conv("ck_alumnos_estado"),
         ),
         sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_alumnos_activos_curso_id")),
@@ -122,7 +119,7 @@ class ArtilleroCargo(BaseModelo):
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.PrimaryKeyConstraint("id", name=conv("artillero_cargos_pkey")),
         sa.CheckConstraint(
-            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio))", name=conv("ck_artillero_cargos_fechas")
+            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))", name=conv("ck_artillero_cargos_fechas")
         ),
         sa.ForeignKeyConstraint(
             ["hoja_vida_id"], ["esart.hoja_vida_artillero.id"], name=conv("fk_artillero_cargos_hoja_vida_id")
@@ -153,10 +150,10 @@ class ArtilleroCertificacion(BaseModelo):
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.PrimaryKeyConstraint("id", name=conv("artillero_certificaciones_pkey")),
         sa.CheckConstraint(
-            "((activo OR (fecha_baja IS NOT NULL))", name=conv("ck_artillero_certificaciones_baja")
+            "((activo OR (fecha_baja IS NOT NULL)))", name=conv("ck_artillero_certificaciones_baja")
         ),
         sa.CheckConstraint(
-            "(((fecha_vencimiento IS NULL) OR (fecha_vencimiento >= fecha_emision))",
+            "(((fecha_vencimiento IS NULL) OR (fecha_vencimiento >= fecha_emision)))",
             name=conv("ck_artillero_certificaciones_vigencia"),
         ),
         sa.ForeignKeyConstraint(
@@ -182,10 +179,10 @@ class ArtilleroCurso(BaseModelo):
         sa.Column("horas", sa.Integer(), nullable=True),
         sa.Column("aprobado", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
-        sa.CheckConstraint("((horas >= 0)", name=conv("artillero_cursos_horas_check")),
+        sa.CheckConstraint("((horas >= 0))", name=conv("artillero_cursos_horas_check")),
         sa.PrimaryKeyConstraint("id", name=conv("artillero_cursos_pkey")),
         sa.CheckConstraint(
-            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio))", name=conv("ck_artillero_cursos_fechas")
+            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))", name=conv("ck_artillero_cursos_fechas")
         ),
         sa.ForeignKeyConstraint(
             ["hoja_vida_id"], ["esart.hoja_vida_artillero.id"], name=conv("fk_artillero_cursos_hoja_vida_id")
@@ -212,7 +209,7 @@ class ArtilleroDisparos(BaseModelo):
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            "((cantidad_disparos >= 0)", name=conv("artillero_disparos_cantidad_disparos_check")
+            "((cantidad_disparos >= 0))", name=conv("artillero_disparos_cantidad_disparos_check")
         ),
         sa.PrimaryKeyConstraint("id", name=conv("artillero_disparos_pkey")),
         sa.ForeignKeyConstraint(
@@ -393,15 +390,11 @@ class Cursos(BaseModelo):
         sa.Column("creado_por_id", sa.BigInteger(), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            (
-                "(((estado)::text = ANY ((ARRAY['PLANEADO'::character varying, 'EN"
-                "_EJECUCION'::character varying, 'FINALIZADO'::character varying, "
-                "'CANCELADO'::character varying])::text[]))"
-            ),
+            ("estado IN ('PLANEADO', 'EN_EJECUCION', 'FINALIZADO', 'CANCELADO')"),
             name=conv("ck_cursos_estado"),
         ),
         sa.CheckConstraint(
-            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio))", name=conv("ck_cursos_fechas")
+            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))", name=conv("ck_cursos_fechas")
         ),
         sa.UniqueConstraint("codigo", name=conv("cursos_codigo_key")),
         sa.PrimaryKeyConstraint("id", name=conv("cursos_pkey")),
@@ -515,20 +508,16 @@ class EgresadosCurso(BaseModelo):
         sa.Column("observaciones_comandante", sa.Text(), nullable=True),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            "(((fecha_egreso IS NULL) OR (fecha_egreso >= fecha_ingreso))",
+            "(((fecha_egreso IS NULL) OR (fecha_egreso >= fecha_ingreso)))",
             name=conv("ck_egresados_curso_fechas"),
         ),
         sa.CheckConstraint(
-            (
-                "(((resultado)::text = ANY ((ARRAY['APROBADO'::character varying, "
-                "'REPROBADO'::character varying, 'RETIRADO'::character varying])::"
-                "text[]))"
-            ),
+            ("resultado IN ('APROBADO', 'REPROBADO', 'RETIRADO')"),
             name=conv("ck_egresados_resultado"),
         ),
-        sa.CheckConstraint("((dias_en_curso >= 0)", name=conv("egresados_curso_dias_en_curso_check")),
+        sa.CheckConstraint("((dias_en_curso >= 0))", name=conv("egresados_curso_dias_en_curso_check")),
         sa.CheckConstraint(
-            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric))",
+            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))",
             name=conv("egresados_curso_nota_final_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("egresados_curso_pkey")),
@@ -582,10 +571,7 @@ class Habilitaciones(BaseModelo):
         sa.Column("registrado_por_id", sa.BigInteger(), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            (
-                "(((resultado)::text = ANY ((ARRAY['APROBADA'::character varying, "
-                "'REPROBADA'::character varying])::text[]))"
-            ),
+            ("resultado IN ('APROBADA', 'REPROBADA')"),
             name=conv("ck_habilitaciones_resultado"),
         ),
         sa.ForeignKeyConstraint(
@@ -600,11 +586,11 @@ class Habilitaciones(BaseModelo):
             ["registrado_por_id"], ["esart_ref.usuarios.id"], name=conv("fk_habilitaciones_registrado_por_id")
         ),
         sa.CheckConstraint(
-            "(((nota_obtenida >= (0)::numeric) AND (nota_obtenida <= (100)::numeric))",
+            "(((nota_obtenida >= (0)::numeric) AND (nota_obtenida <= (100)::numeric)))",
             name=conv("habilitaciones_nota_obtenida_check"),
         ),
         sa.CheckConstraint(
-            "(((numero_habilitacion >= 1) AND (numero_habilitacion <= 2))",
+            "(((numero_habilitacion >= 1) AND (numero_habilitacion <= 2)))",
             name=conv("habilitaciones_numero_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("habilitaciones_pkey")),
@@ -647,12 +633,7 @@ class InscripcionesCurso(BaseModelo):
         sa.Column("fecha_resultado", sa.Date(), nullable=True),
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.CheckConstraint(
-            (
-                "(((estado)::text = ANY ((ARRAY['INSCRITO'::character varying, 'SE"
-                "LECCIONADO'::character varying, 'RETIRADO'::character varying, 'G"
-                "RADUADO'::character varying, 'REPROBADO'::character varying])::te"
-                "xt[]))"
-            ),
+            ("estado IN ('INSCRITO', 'SELECCIONADO', 'RETIRADO', 'GRADUADO', 'REPROBADO')"),
             name=conv("ck_inscripciones_estado"),
         ),
         sa.ForeignKeyConstraint(
@@ -662,7 +643,7 @@ class InscripcionesCurso(BaseModelo):
             ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_inscripciones_curso_personal_id")
         ),
         sa.CheckConstraint(
-            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric))",
+            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))",
             name=conv("inscripciones_curso_nota_final_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("inscripciones_curso_pkey")),
@@ -729,7 +710,7 @@ class MallaCurricular(BaseModelo):
             ["tipo_curso_id"], ["esart.tipos_curso.id"], name=conv("fk_malla_curricular_tipo_curso_id")
         ),
         sa.CheckConstraint(
-            "(((nota_minima_aprobacion >= (0)::numeric) AND (nota_minima_aprobacion <= (100)::numeric))",
+            "(((nota_minima_aprobacion >= (0)::numeric) AND (nota_minima_aprobacion <= (100)::numeric)))",
             name=conv("malla_curricular_nota_minima_aprobacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("malla_curricular_pkey")),
@@ -769,11 +750,11 @@ class NotasFinalesEgresado(BaseModelo):
             ["materia_id"], ["esart.materias.id"], name=conv("fk_notas_finales_egresado_materia_id")
         ),
         sa.CheckConstraint(
-            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric))",
+            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric)))",
             name=conv("notas_finales_egresado_nota_check"),
         ),
         sa.CheckConstraint(
-            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric))",
+            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))",
             name=conv("notas_finales_egresado_nota_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("notas_finales_egresado_pkey")),
@@ -802,10 +783,10 @@ class NotasMateria(BaseModelo):
             ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_notas_materia_malla_id")
         ),
         sa.CheckConstraint(
-            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric))", name=conv("notas_materia_nota_check")
+            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric)))", name=conv("notas_materia_nota_check")
         ),
         sa.CheckConstraint(
-            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric))",
+            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))",
             name=conv("notas_materia_nota_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("notas_materia_pkey")),
@@ -854,11 +835,7 @@ class ParticipantesReentrenamiento(BaseModelo):
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.Column("fecha_resultado", sa.Date(), nullable=True),
         sa.CheckConstraint(
-            (
-                "(((resultado)::text = ANY ((ARRAY['CERTIFICADO'::character varyin"
-                "g, 'NO_CERTIFICADO'::character varying, 'RETIRADO'::character var"
-                "ying])::text[]))"
-            ),
+            ("resultado IN ('CERTIFICADO', 'NO_CERTIFICADO', 'RETIRADO')"),
             name=conv("ck_participantes_resultado"),
         ),
         sa.ForeignKeyConstraint(
@@ -928,15 +905,11 @@ class Reentrenamientos(BaseModelo):
         sa.Column("fecha_vencimiento", sa.Date(), nullable=True),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            (
-                "(((estado)::text = ANY ((ARRAY['PLANEADO'::character varying, 'EN"
-                "_EJECUCION'::character varying, 'FINALIZADO'::character varying, "
-                "'CANCELADO'::character varying])::text[]))"
-            ),
+            ("estado IN ('PLANEADO', 'EN_EJECUCION', 'FINALIZADO', 'CANCELADO')"),
             name=conv("ck_reentrenamientos_estado"),
         ),
         sa.CheckConstraint(
-            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio))", name=conv("ck_reentrenamientos_fechas")
+            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))", name=conv("ck_reentrenamientos_fechas")
         ),
         sa.ForeignKeyConstraint(
             ["bateria_designada_por"],
@@ -970,7 +943,7 @@ class RolPermiso(BaseModelo):
             "actualizado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
         ),
         sa.CheckConstraint(
-            "((puede_acceder OR (NOT (puede_crear OR puede_leer OR puede_actualizar OR puede_eliminar)))",
+            "((puede_acceder OR (NOT (puede_crear OR puede_leer OR puede_actualizar OR puede_eliminar))))",
             name=conv("ck_esart_rol_crud_acceso"),
         ),
         sa.ForeignKeyConstraint(
@@ -998,10 +971,7 @@ class Rol(BaseModelo):
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            (
-                "(((codigo)::text = ANY ((ARRAY['ADMINISTRADOR'::character varying"
-                ", 'USUARIO'::character varying])::text[]))"
-            ),
+            ("codigo IN ('ADMINISTRADOR', 'USUARIO')"),
             name=conv("ck_esart_roles_codigo"),
         ),
         sa.UniqueConstraint("codigo", name=conv("roles_codigo_key")),
@@ -1022,10 +992,10 @@ class SemestresAcademicos(BaseModelo):
         sa.Column("fecha_fin", sa.Date(), nullable=False),
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.CheckConstraint(
-            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio))",
+            "(((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))",
             name=conv("ck_semestres_academicos_fechas"),
         ),
-        sa.CheckConstraint("((numero = ANY (ARRAY[1, 2]))", name=conv("semestres_academicos_numero_check")),
+        sa.CheckConstraint("((numero = ANY (ARRAY[1, 2])))", name=conv("semestres_academicos_numero_check")),
         sa.PrimaryKeyConstraint("id", name=conv("semestres_academicos_pkey")),
         schema="esart",
     )
@@ -1059,7 +1029,7 @@ class TipoCurso(BaseModelo):
         sa.Column("duracion_semanas", sa.Integer(), nullable=False),
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.UniqueConstraint("codigo", name=conv("tipos_curso_codigo_key")),
-        sa.CheckConstraint("((duracion_semanas >= 0)", name=conv("tipos_curso_duracion_semanas_check")),
+        sa.CheckConstraint("((duracion_semanas >= 0))", name=conv("tipos_curso_duracion_semanas_check")),
         sa.PrimaryKeyConstraint("id", name=conv("tipos_curso_pkey")),
         schema="esart",
     )
@@ -1095,7 +1065,7 @@ class UsuarioPermiso(BaseModelo):
         ),
         sa.Column("actualizado_por_id", sa.BigInteger(), nullable=True),
         sa.CheckConstraint(
-            "((puede_acceder OR (NOT (puede_crear OR puede_leer OR puede_actualizar OR puede_eliminar)))",
+            "((puede_acceder OR (NOT (puede_crear OR puede_leer OR puede_actualizar OR puede_eliminar))))",
             name=conv("ck_esart_usuario_crud_acceso"),
         ),
         sa.ForeignKeyConstraint(
@@ -1215,8 +1185,16 @@ class Usuario(BaseModelo):
             "actualizado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
         ),
         sa.Column("ultimo_acceso_en", sa.DateTime(timezone=True), nullable=True),
+        # Columnas de la revisión p0002_seguridad_sesiones (bloqueo por intentos, HU-06).
+        sa.Column(
+            "intentos_fallidos_consecutivos", sa.Integer(), server_default=sa.text("0"), nullable=False
+        ),
+        sa.Column("bloqueado_hasta", sa.DateTime(timezone=True), nullable=True),
         sa.CheckConstraint(
-            "(((contrasena_hash IS NULL) OR (length(TRIM(BOTH FROM contrasena_hash)) > 0))",
+            "intentos_fallidos_consecutivos >= 0", name=conv("ck_esart_usuario_intentos_no_negativos")
+        ),
+        sa.CheckConstraint(
+            "(((contrasena_hash IS NULL) OR (length(TRIM(BOTH FROM contrasena_hash)) > 0)))",
             name=conv("ck_esart_usuario_hash_no_vacio"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("usuarios_pkey")),

@@ -17,6 +17,9 @@ target_metadata = BaseModelo.metadata
 def ejecutar(conexion):
     if conexion.scalar(text("SELECT current_database()")) != "esart_db":
         raise RuntimeError("Alembic operativo solo admite esart_db")
+    # La tabla de versiones vive en el esquema esart: en una base vacía hay que crearlo
+    # antes de que Alembic la cree (p0000 instala el resto de la estructura).
+    conexion.execute(text("CREATE SCHEMA IF NOT EXISTS esart"))
     context.configure(
         connection=conexion,
         target_metadata=target_metadata,

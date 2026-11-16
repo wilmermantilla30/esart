@@ -1,7 +1,7 @@
 """Verifica y adopta el esquema real; no representa las revisiones UUID 0001/0002.
 
 No ejecutar sin autorización: Alembic crea/escribe esart.alembic_version.
-La instalación vacía requiere una migración inicial adicional, aún no aprobada.
+La instalación vacía la crea p0000_instalacion_inicial; esta revisión la valida igual.
 """
 
 import json
@@ -11,7 +11,7 @@ from alembic import op
 from sqlalchemy import text
 
 revision = "p0001_real"
-down_revision = None
+down_revision = "p0000_instalacion_inicial"
 branch_labels = None
 depends_on = None
 

@@ -1,0 +1,205 @@
+<div class="min-h-screen flex flex-col">
+  <esart-encabezado-institucional>
+    <div class="flex items-center gap-2 text-xs font-semibold text-azul-institucional">
+      <span class="material-symbols-outlined text-[16px]" aria-hidden="true">verified_user</span>
+      <span class="hidden sm:inline">Servidor Seguro Militar</span>
+    </div>
+  </esart-encabezado-institucional>
+
+  <!-- Contenedor central: tarjeta de acceso institucional -->
+  <main class="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+    <div
+      class="w-full max-w-4xl bg-white rounded-xl border border-gris-bordes shadow-xl overflow-hidden grid grid-cols-1 md:grid-cols-12"
+    >
+      <!-- Columna izquierda: contexto institucional (la foto de la Escuela se agregará después) -->
+      <section
+        class="md:col-span-5 bg-azul-pizarra text-white p-6 md:p-8 flex flex-col justify-between relative overflow-hidden"
+        aria-label="Escuela de Artillería"
+      >
+        <div class="absolute inset-0 bg-gradient-to-t from-azul-pizarra via-azul-pizarra/90 to-azul-pizarra/70"></div>
+
+        <div class="relative z-10">
+          <div
+            class="inline-flex items-center gap-2 px-2.5 py-1 rounded bg-white/10 text-azul-claro text-[11px] font-headline font-semibold uppercase tracking-wider mb-4 md:mb-6 border border-white/15"
+          >
+            <span class="w-2 h-2 rounded-full bg-azul-institucional" aria-hidden="true"></span>
+            Plataforma Oficial
+          </div>
+
+          <div class="flex items-center gap-4 md:block md:mb-4">
+            <img
+              src="imagenes/escudo-esart.png"
+              alt="Escudo de la Escuela de Artillería"
+              class="h-16 md:h-24 w-auto object-contain drop-shadow-md md:mb-4 bg-white/10 p-2 rounded-lg border border-white/20"
+            />
+            <div>
+              <p class="font-headline font-bold text-headline-md text-white tracking-tight">ESCUELA DE ARTILLERÍA</p>
+              <p class="text-body-sm text-azul-claro font-medium italic mt-0.5">“General Carlos Julio Gil Colorado”</p>
+            </div>
+          </div>
+
+          <!-- En celular se ocultan los textos largos para que el formulario quede a la vista. -->
+          <p class="hidden md:block text-xs text-white/80 leading-relaxed mt-4">
+            Verificación de habilitación de artilleros: consulte en tiempo real si un artillero está APTO o NO APTO y
+            el detalle de cada criterio.
+          </p>
+        </div>
+
+        <div class="hidden md:block relative z-10 pt-6 border-t border-white/15 mt-8">
+          <div class="text-[11px] text-white/60 space-y-1">
+            <p class="font-semibold text-white/80">“Deber antes que vida”</p>
+            <p>Acceso restringido a personal militar autorizado.</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Columna derecha: formulario de acceso -->
+      <section class="md:col-span-7 p-8 md:p-10 flex flex-col justify-center bg-white">
+        <div class="mb-6">
+          <span
+            class="px-2.5 py-1 rounded-full bg-azul-hielo text-azul-institucional font-headline text-label-sm uppercase tracking-wider"
+          >
+            Portal ESART
+          </span>
+          <h1 class="font-headline font-bold text-headline-md text-negro-institucional mt-2">
+            Iniciar Sesión Institucional
+          </h1>
+          <p class="text-body-sm text-azul-pizarra/70 mt-1">Ingrese el usuario y la contraseña asignados por el comando.</p>
+        </div>
+
+        <!-- Aviso de sesión expirada (llega desde el interceptor) -->
+        @if (sesionExpirada && !errorServidor()) {
+          <div
+            class="mb-4 p-3 bg-warning/10 border border-warning/40 rounded-sm flex items-start gap-2.5 text-xs text-azul-pizarra"
+            role="status"
+          >
+            <span class="material-symbols-outlined text-warning text-[18px] shrink-0 mt-0.5" aria-hidden="true">schedule</span>
+            <span>Su sesión expiró por inactividad. Inicie sesión de nuevo.</span>
+          </div>
+        }
+
+        <!-- Error devuelto por el servidor (mensaje genérico, nunca detalles técnicos) -->
+        @if (errorServidor(); as error) {
+          <div
+            class="mb-4 p-3 bg-error/10 border border-error/40 rounded-sm flex items-start gap-2.5 text-xs text-azul-pizarra"
+            role="alert"
+          >
+            <span class="material-symbols-outlined text-error text-[18px] shrink-0 mt-0.5" aria-hidden="true">error</span>
+            <span>
+              {{ error.mensaje }}
+              @if (horaDesbloqueo(error); as hora) {
+                <span class="block mt-1 font-semibold">Desbloqueo estimado: {{ hora }}</span>
+              }
+            </span>
+          </div>
+        }
+
+        <form class="space-y-4" [formGroup]="formulario" (ngSubmit)="iniciarSesion()" novalidate>
+          <!-- Usuario -->
+          <div class="space-y-1">
+            <label for="nombre-usuario" class="block font-headline text-label-md text-azul-pizarra">Usuario</label>
+            <div class="relative flex items-center">
+              <span
+                class="material-symbols-outlined absolute left-3.5 text-azul-pizarra/50 text-[20px]"
+                aria-hidden="true"
+                >badge</span
+              >
+              <input
+                id="nombre-usuario"
+                type="text"
+                formControlName="nombreUsuario"
+                autocomplete="username"
+                autocapitalize="none"
+                spellcheck="false"
+                placeholder="usuario.esart"
+                [attr.maxlength]="longitudMaximaUsuario"
+                [attr.aria-invalid]="campoConError('nombreUsuario')"
+                aria-describedby="ayuda-usuario"
+                class="w-full pl-10 pr-3.5 py-2.5 bg-white border border-gris-bordes rounded-sm text-body-md text-azul-pizarra placeholder:text-azul-pizarra/40 focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20 outline-none transition-all aria-invalid:border-error"
+              />
+            </div>
+            @if (campoConError('nombreUsuario')) {
+              <p id="ayuda-usuario" class="text-xs text-error">
+                Escriba su usuario (entre {{ longitudMinimaUsuario }} y {{ longitudMaximaUsuario }} caracteres).
+              </p>
+            } @else {
+              <p id="ayuda-usuario" class="text-xs text-azul-pizarra/60">
+                Utilice el usuario asignado por la Dirección de Telemática.
+              </p>
+            }
+          </div>
+
+          <!-- Contraseña -->
+          <div class="space-y-1">
+            <label for="contrasena" class="block font-headline text-label-md text-azul-pizarra">Contraseña</label>
+            <div class="relative flex items-center">
+              <span
+                class="material-symbols-outlined absolute left-3.5 text-azul-pizarra/50 text-[20px]"
+                aria-hidden="true"
+                >lock</span
+              >
+              <input
+                id="contrasena"
+                [type]="contrasenaVisible() ? 'text' : 'password'"
+                formControlName="contrasena"
+                autocomplete="current-password"
+                placeholder="••••••••••••"
+                [attr.maxlength]="longitudMaximaContrasena"
+                [attr.aria-invalid]="campoConError('contrasena')"
+                [attr.aria-describedby]="campoConError('contrasena') ? 'error-contrasena' : null"
+                class="w-full pl-10 pr-10 py-2.5 bg-white border border-gris-bordes rounded-sm text-body-md text-azul-pizarra placeholder:text-azul-pizarra/40 focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20 outline-none transition-all aria-invalid:border-error"
+              />
+              <button
+                type="button"
+                (click)="alternarVisibilidadContrasena()"
+                [attr.aria-label]="contrasenaVisible() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+                [attr.aria-pressed]="contrasenaVisible()"
+                class="absolute right-3 text-azul-pizarra/50 hover:text-azul-institucional focus:outline-none focus-visible:text-azul-institucional"
+              >
+                <span class="material-symbols-outlined text-[20px]" aria-hidden="true">
+                  {{ contrasenaVisible() ? 'visibility_off' : 'visibility' }}
+                </span>
+              </button>
+            </div>
+            @if (campoConError('contrasena')) {
+              <p id="error-contrasena" class="text-xs text-error">Escriba su contraseña.</p>
+            }
+          </div>
+
+          <!-- Botón de acceso -->
+          <div class="pt-2">
+            <button
+              type="submit"
+              [disabled]="enviando()"
+              [attr.aria-busy]="enviando()"
+              class="w-full inline-flex items-center justify-center gap-2 py-3 px-4 bg-azul-institucional hover:bg-[#1A8FB3] active:bg-[#167897] text-white rounded-sm font-headline text-label-lg shadow-sm transition-all duration-150 ease-state-change focus:outline-none focus:ring-2 focus:ring-azul-institucional/40 disabled:opacity-70 disabled:cursor-wait"
+            >
+              @if (enviando()) {
+                <span class="material-symbols-outlined text-[18px] animate-spin" aria-hidden="true">progress_activity</span>
+                <span>Verificando credenciales…</span>
+              } @else {
+                <span>Acceder al Sistema ESART</span>
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">login</span>
+              }
+            </button>
+          </div>
+
+          <!-- Advertencia de seguridad -->
+          <div
+            class="mt-4 p-3 bg-azul-hielo/60 border border-azul-claro/40 rounded-sm flex items-start gap-2.5 text-xs text-azul-pizarra/80"
+          >
+            <span class="material-symbols-outlined text-azul-institucional text-[18px] shrink-0 mt-0.5" aria-hidden="true"
+              >info</span
+            >
+            <span>
+              El acceso no autorizado o el mal uso de esta información está sancionado por la Ley de Seguridad y Defensa
+              Nacional. Todas las sesiones son monitoreadas.
+            </span>
+          </div>
+        </form>
+      </section>
+    </div>
+  </main>
+
+  <esart-pie-institucional />
+</div>
