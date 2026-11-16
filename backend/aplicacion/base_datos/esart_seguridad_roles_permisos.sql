@@ -105,16 +105,20 @@ INSERT INTO esart.roles(codigo,nombre,descripcion) VALUES
 ON CONFLICT (codigo) DO NOTHING;
 
 INSERT INTO esart.componentes(codigo,nombre,ruta_angular,orden) VALUES
- ('DASHBOARD','Panel principal','/dashboard',10),
- ('PERSONAL_MILITAR','Personal militar','/personal',20),
- ('HOJAS_VIDA','Hojas de vida','/hojas-vida',30),
- ('CURSOS','Cursos academicos','/cursos',40),
- ('NOTAS','Notas academicas','/notas',50),
- ('REENTRENAMIENTOS','Reentrenamientos','/reentrenamientos',60),
- ('CERTIFICACIONES','Certificaciones','/certificaciones',70),
- ('DOCTRINA','Documentos de doctrina','/doctrina',80),
- ('USUARIOS','Gestion de usuarios','/administracion/usuarios',90),
- ('PERMISOS','Malla de permisos','/administracion/permisos',100)
+    ('DASHBOARD', 'Panel principal', '/dashboard', 10),
+
+    ('PERSONAL_MILITAR', 'Personal militar', '/personal', 20),
+    ('PERSONAL_CARGUE_EXCEL', 'Cargue masivo por Excel', '/personal/cargue_excel', 21),
+    ('PERSONAL_CARGUE_MANUAL', 'Registro manual de personal', '/personal/cargue_manual', 22),
+
+    ('HOJAS_VIDA', 'Hojas de vida', '/hojas-vida', 30),
+    ('CURSOS', 'Cursos académicos', '/cursos', 40),
+    ('NOTAS', 'Notas académicas', '/notas', 50),
+    ('REENTRENAMIENTOS', 'Reentrenamientos', '/reentrenamientos', 60),
+    ('CERTIFICACIONES', 'Certificaciones', '/certificaciones', 70),
+    ('DOCTRINA', 'Documentos de doctrina', '/doctrina', 80),
+    ('USUARIOS', 'Gestión de usuarios', '/administracion/usuarios', 90),
+    ('PERMISOS', 'Malla de permisos', '/administracion/permisos', 100)
 ON CONFLICT (codigo) DO NOTHING;
 
 -- Valores iniciales: administrador tiene acceso completo a los componentes
