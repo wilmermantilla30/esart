@@ -131,6 +131,27 @@ def main():
             ],
             entorno=entorno,
         )
+        ejecutar_comando([sys.executable, "-m", "alembic", "upgrade", "p0004_captcha_local"], entorno=entorno)
+
+        async def preparar_seguridad():
+            c = await asyncpg.connect(
+                host="127.0.0.1",
+                port=puerto,
+                user="esart_operador_pruebas",
+                password=clave,
+                database="esart_db",
+                ssl=False,
+            )
+            try:
+                if Path(await c.fetchval("SHOW data_directory")).resolve() != datos:
+                    raise RuntimeError("Destino aislado inesperado")
+                if await c.fetchval("SELECT to_regclass('seguridad.usuario_totp')") is not None:
+                    raise RuntimeError("No recrear tablas seguridad existentes")
+                await c.execute((RAIZ / "aplicacion/base_datos/seguridad.sql").read_text(encoding="utf-8"))
+            finally:
+                await c.close()
+
+        asyncio.run(preparar_seguridad())
         ejecutar_comando([sys.executable, "-m", "alembic", "upgrade", "head"], entorno=entorno)
         salida = ejecutar_comando(
             [
@@ -139,6 +160,7 @@ def main():
                 "pytest",
                 "pruebas/test_seguridad_login_pg.py",
                 "pruebas/test_captcha_local_pg.py",
+                "pruebas/test_totp_pg.py",
                 "-o",
                 "addopts=",
                 "-q",

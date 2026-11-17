@@ -108,14 +108,12 @@ async def iniciar_sesion_usuario(
             salida, nombre, error.detalle["bloqueado_hasta"], error.detalle.get("intento_actual")
         )
         return salida
-    await auditoria.registrar_evento(
-        sesion,
-        auditoria.LOGIN_EXITOSO,
-        request,
-        usuario_id=resultado.usuario_id,
-        nombre_usuario=resultado.nombre_usuario,
-        resultado="EXITOSO",
-    )
+    from aplicacion.servicios.totp import DesafioLoginTotp
+
+    if isinstance(resultado, DesafioLoginTotp):
+        from aplicacion.rutas.totp import respuesta_desafio
+
+        return respuesta_desafio(resultado, "LOGIN")
     comprobante_bloqueo.borrar(respuesta)
     escribir_cookies_sesion(respuesta, resultado.token_sesion)
     return RespuestaInicioSesion(

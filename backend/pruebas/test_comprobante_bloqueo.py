@@ -72,6 +72,7 @@ async def test_un_423_con_nombre_no_autoriza_contador_ni_ip(monkeypatch):
     ahora = datetime.now(UTC)
     fin = ahora + timedelta(hours=3)
     sesion = AsyncMock()
+    sesion.add = MagicMock()
     sesion.scalar.side_effect = ["cuenta.original", ahora]
     filas = MagicMock()
     filas.one_or_none.return_value = SimpleNamespace(

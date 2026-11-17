@@ -1,0 +1,4904 @@
+﻿{
+  "conexion": [
+    {
+      "base": "esart_db",
+      "rol": "esart_aplicacion",
+      "servidor": "127.0.0.1/32",
+      "puerto": 5432,
+      "version": "18.7",
+      "inicio_instancia": "2026-11-16 15:46:10.387289-05"
+    }
+  ],
+  "objetos": [
+    {
+      "esquema": "esart",
+      "nombre": "alembic_version",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "auditoria_acceso",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "componentes",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "desafios_captcha",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "estados_acceso_anonimos",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": true,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "limites_inicio_ip",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": true,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "rol_permisos",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "roles",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart",
+      "nombre": "usuario_permisos",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "esart_ref",
+      "nombre": "usuarios",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "auditoria",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "auditoria_cambios",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "autorizaciones",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "desafios",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "politicas_accion",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": false,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "totp_recuperacion",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": false,
+      "borrado": false,
+      "truncado": false
+    },
+    {
+      "esquema": "seguridad",
+      "nombre": "usuario_totp",
+      "tipo": "r",
+      "propietario": "postgres",
+      "rls": false,
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": true,
+      "borrado": false,
+      "truncado": false
+    }
+  ],
+  "columnas": [
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "d",
+      "defecto": null
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "usuario",
+      "tipo": "character varying(80)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "contrasena_hash",
+      "tipo": "text",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "documento_identidad",
+      "tipo": "character varying(50)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "activo",
+      "tipo": "boolean",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "true"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "requiere_cambio_contrasena",
+      "tipo": "boolean",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "false"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "actualizado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "ultimo_acceso_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "intentos_fallidos_consecutivos",
+      "tipo": "integer",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "0"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "columna": "bloqueado_hasta",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "a",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "evento_id",
+      "tipo": "uuid",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "correlacion_id",
+      "tipo": "uuid",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "actor_tipo",
+      "tipo": "character varying(30)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "'USUARIO'::character varying"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "modulo",
+      "tipo": "character varying(80)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "accion",
+      "tipo": "character varying(100)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "recurso_tipo",
+      "tipo": "character varying(100)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "recurso_id",
+      "tipo": "character varying(150)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "autorizacion_id",
+      "tipo": "uuid",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "resultado",
+      "tipo": "character varying(30)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "motivo",
+      "tipo": "text",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "ip_origen",
+      "tipo": "inet",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "agente_usuario",
+      "tipo": "text",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "fecha_evento",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "'{}'::jsonb"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "a",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "columna": "auditoria_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "columna": "campo",
+      "tipo": "character varying(120)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "columna": "valor_anterior",
+      "tipo": "jsonb",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "columna": "valor_nuevo",
+      "tipo": "jsonb",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "id",
+      "tipo": "uuid",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "desafio_id",
+      "tipo": "uuid",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "politica_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "operacion_hash",
+      "tipo": "character varying(64)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "autorizada_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "expira_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "consumida_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "columna": "resultado",
+      "tipo": "character varying(20)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "'AUTORIZADA'::character varying"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "id",
+      "tipo": "uuid",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "politica_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "recurso_tipo",
+      "tipo": "character varying(100)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "recurso_id",
+      "tipo": "character varying(150)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "operacion_hash",
+      "tipo": "character varying(64)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "estado",
+      "tipo": "character varying(20)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "'PENDIENTE'::character varying"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "intentos",
+      "tipo": "integer",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "0"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "expira_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "verificado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "consumido_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "ip_origen",
+      "tipo": "inet",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "columna": "correlacion_id",
+      "tipo": "uuid",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "a",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "codigo",
+      "tipo": "character varying(100)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "nombre",
+      "tipo": "character varying(160)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "descripcion",
+      "tipo": "text",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "modulo",
+      "tipo": "character varying(80)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "permiso_requerido",
+      "tipo": "character varying(100)",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "requiere_totp",
+      "tipo": "boolean",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "true"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "activa",
+      "tipo": "boolean",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "true"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "vigencia_segundos",
+      "tipo": "integer",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "120"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "a",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "columna": "codigo_hash",
+      "tipo": "text",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "columna": "usado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "columna": "revocado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "a",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "secreto_cifrado",
+      "tipo": "text",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "estado",
+      "tipo": "character varying(15)",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "'PENDIENTE'::character varying"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "activado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "expira_configuracion_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "revocado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "ultimo_intervalo_aceptado",
+      "tipo": "bigint",
+      "obligatorio": false,
+      "identidad": "",
+      "defecto": null
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "columna": "actualizado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true,
+      "identidad": "",
+      "defecto": "now()"
+    }
+  ],
+  "restricciones": [
+    {
+      "esquema": "esart",
+      "tabla": "alembic_version",
+      "nombre": "alembic_version_pkc",
+      "validada": true,
+      "definicion": "PRIMARY KEY (version_num)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alembic_version",
+      "nombre": "alembic_version_version_num_not_null",
+      "validada": true,
+      "definicion": "NOT NULL version_num"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_alumno_activo_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL alumno_activo_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_descripcion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL descripcion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_generada_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL generada_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_resuelta_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resuelta"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "alertas_academicas_tipo_alerta_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo_alerta"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "fk_alertas_academicas_alumno_activo_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (alumno_activo_id) REFERENCES esart.alumnos_activos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "fk_alertas_academicas_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_academicas",
+      "nombre": "fk_alertas_academicas_resuelta_por_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (resuelta_por_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_anios_sin_ejercer_check",
+      "validada": true,
+      "definicion": "CHECK ((anios_sin_ejercer >= (0)::numeric))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_anios_sin_ejercer_not_null",
+      "validada": true,
+      "definicion": "NOT NULL anios_sin_ejercer"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_certificado_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL certificado_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_generada_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL generada_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_resuelta_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resuelta"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "alertas_certificacion_tipo_alerta_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo_alerta"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "fk_alertas_certificacion_certificado_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (certificado_id) REFERENCES esart.certificados_reentrenamiento(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "fk_alertas_certificacion_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alertas_certificacion",
+      "nombre": "fk_alertas_certificacion_sistema_en_op_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (sistema_en_op_id) REFERENCES esart_ref.sistemas_en_operacion(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_estado_alumno_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado_alumno"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_fecha_fin_prevista_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_fin_prevista"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_fecha_ingreso_escuela_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_ingreso_escuela"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_inscripcion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL inscripcion_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "alumnos_activos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "ck_alumnos_estado",
+      "validada": true,
+      "definicion": "CHECK (((estado_alumno)::text = ANY ((ARRAY['EN_CURSO'::character varying, 'SUSPENDIDO'::character varying, 'EN_HABILITACION'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "fk_alumnos_activos_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (curso_id) REFERENCES esart.cursos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "fk_alumnos_activos_inscripcion_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (inscripcion_id) REFERENCES esart.inscripciones_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "alumnos_activos",
+      "nombre": "fk_alumnos_activos_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "artillero_cargos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "artillero_cargos_fecha_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "artillero_cargos_hoja_vida_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL hoja_vida_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "artillero_cargos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "artillero_cargos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "artillero_cargos_tipo_cargo_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo_cargo_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "ck_artillero_cargos_fechas",
+      "validada": true,
+      "definicion": "CHECK (((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "fk_artillero_cargos_hoja_vida_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (hoja_vida_id) REFERENCES esart.hoja_vida_artillero(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "fk_artillero_cargos_tipo_cargo_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (tipo_cargo_id) REFERENCES esart.tipos_cargo(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cargos",
+      "nombre": "fk_artillero_cargos_unidad_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_entidad_not_null",
+      "validada": true,
+      "definicion": "NOT NULL entidad"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_fecha_emision_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_emision"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_hoja_vida_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL hoja_vida_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "artillero_certificaciones_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "ck_artillero_certificaciones_baja",
+      "validada": true,
+      "definicion": "CHECK ((activo OR (fecha_baja IS NOT NULL)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "ck_artillero_certificaciones_vigencia",
+      "validada": true,
+      "definicion": "CHECK (((fecha_vencimiento IS NULL) OR (fecha_vencimiento >= fecha_emision)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_certificaciones",
+      "nombre": "fk_artillero_certificaciones_hoja_vida_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (hoja_vida_id) REFERENCES esart.hoja_vida_artillero(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_aprobado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL aprobado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_fecha_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_hoja_vida_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL hoja_vida_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_horas_check",
+      "validada": true,
+      "definicion": "CHECK ((horas >= 0))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_institucion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL institucion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "artillero_cursos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "ck_artillero_cursos_fechas",
+      "validada": true,
+      "definicion": "CHECK (((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "fk_artillero_cursos_hoja_vida_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (hoja_vida_id) REFERENCES esart.hoja_vida_artillero(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_cursos",
+      "nombre": "fk_artillero_cursos_tipo_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (tipo_curso_id) REFERENCES esart.tipos_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_cantidad_disparos_check",
+      "validada": true,
+      "definicion": "CHECK ((cantidad_disparos >= 0))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_cantidad_disparos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL cantidad_disparos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_ejercicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL ejercicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_fecha_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_hoja_vida_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL hoja_vida_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "artillero_disparos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "fk_artillero_disparos_hoja_vida_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (hoja_vida_id) REFERENCES esart.hoja_vida_artillero(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "fk_artillero_disparos_sistema_artilleria_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (sistema_artilleria_id) REFERENCES esart_ref.sistemas_artilleria(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "artillero_disparos",
+      "nombre": "fk_artillero_disparos_unidad_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "auditoria_acceso_evento_not_null",
+      "validada": true,
+      "definicion": "NOT NULL evento"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "auditoria_acceso_fecha_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "auditoria_acceso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "ck_auditoria_acceso_auditoria_referencia",
+      "validada": true,
+      "definicion": "CHECK (((intento_id IS NOT NULL) OR (captcha_id IS NOT NULL) OR (origen_hmac IS NOT NULL)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "fk_auditoria_acceso_intento_id_intentos_inicio_sesion",
+      "validada": true,
+      "definicion": "FOREIGN KEY (intento_id) REFERENCES esart.intentos_inicio_sesion(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "fk_auditoria_captcha",
+      "validada": true,
+      "definicion": "FOREIGN KEY (captcha_id) REFERENCES esart.desafios_captcha(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "auditoria_acceso",
+      "nombre": "pk_auditoria_acceso",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_apto_para_disparar_not_null",
+      "validada": true,
+      "definicion": "NOT NULL apto_para_disparar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_calibre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL calibre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_expedido_por_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL expedido_por_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_fecha_expedicion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_expedicion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_movilidad_not_null",
+      "validada": true,
+      "definicion": "NOT NULL movilidad"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_numero_certificado_key",
+      "validada": true,
+      "definicion": "UNIQUE (numero_certificado)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_numero_certificado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL numero_certificado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_participante_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (participante_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_participante_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL participante_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_proposito_not_null",
+      "validada": true,
+      "definicion": "NOT NULL proposito"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_tipo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "certificados_reentrenamiento_vigente_not_null",
+      "validada": true,
+      "definicion": "NOT NULL vigente"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "fk_certificados_reentrenamiento_expedido_por_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (expedido_por_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "fk_certificados_reentrenamiento_participante_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (participante_id) REFERENCES esart.participantes_reentrenamiento(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "certificados_reentrenamiento",
+      "nombre": "fk_certificados_reentrenamiento_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_comite_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL comite_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_fecha_asignacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_asignacion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_instructor_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL instructor_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "comite_movil_instructores_rol_not_null",
+      "validada": true,
+      "definicion": "NOT NULL rol"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "fk_comite_movil_instructores_comite_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (comite_id) REFERENCES esart.comites_moviles(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comite_movil_instructores",
+      "nombre": "fk_comite_movil_instructores_instructor_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (instructor_id) REFERENCES esart.instructores(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_director_autoriza_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL director_autoriza_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_fecha_constitucion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_constitucion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "comites_moviles_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "comites_moviles",
+      "nombre": "fk_comites_moviles_director_autoriza_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (director_autoriza_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_componente_padre_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (componente_padre_id) REFERENCES esart.componentes(id) ON DELETE RESTRICT"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_orden_not_null",
+      "validada": true,
+      "definicion": "NOT NULL orden"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "componentes",
+      "nombre": "componentes_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "consejos_academicos_alerta_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL alerta_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "consejos_academicos_alumno_activo_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL alumno_activo_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "consejos_academicos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "consejos_academicos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "consejos_academicos_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "consejos_academicos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "fk_consejos_academicos_alerta_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (alerta_id) REFERENCES esart.alertas_academicas(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "fk_consejos_academicos_alumno_activo_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (alumno_activo_id) REFERENCES esart.alumnos_activos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "consejos_academicos",
+      "nombre": "fk_consejos_academicos_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "ck_cursos_estado",
+      "validada": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['PLANEADO'::character varying, 'EN_EJECUCION'::character varying, 'FINALIZADO'::character varying, 'CANCELADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "ck_cursos_fechas",
+      "validada": true,
+      "definicion": "CHECK (((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_comandante_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL comandante_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_creado_por_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_por_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_estado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_fecha_fin_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_fin"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_fecha_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_semestre_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL semestre_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "cursos_tipo_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo_curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "fk_cursos_comandante_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (comandante_id) REFERENCES esart.instructores(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "fk_cursos_creado_por_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (creado_por_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "fk_cursos_semestre_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (semestre_id) REFERENCES esart.semestres_academicos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos",
+      "nombre": "fk_cursos_tipo_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (tipo_curso_id) REFERENCES esart.tipos_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "cursos_instructores_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "cursos_instructores_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "cursos_instructores_instructor_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL instructor_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "cursos_instructores_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "cursos_instructores_rol_en_curso_not_null",
+      "validada": true,
+      "definicion": "NOT NULL rol_en_curso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "fk_cursos_instructores_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (curso_id) REFERENCES esart.cursos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "cursos_instructores",
+      "nombre": "fk_cursos_instructores_instructor_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (instructor_id) REFERENCES esart.instructores(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "ck_desafios_captcha_captcha_consumo",
+      "validada": true,
+      "definicion": "CHECK (((consumido_en IS NULL) OR (consumido_en >= creado_en)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "ck_desafios_captcha_captcha_plazo",
+      "validada": true,
+      "definicion": "CHECK ((expira_en > creado_en))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "desafios_captcha_contexto_not_null",
+      "validada": true,
+      "definicion": "NOT NULL contexto"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "desafios_captcha_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "desafios_captcha_expira_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL expira_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "desafios_captcha_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "desafios_captcha_respuesta_hmac_not_null",
+      "validada": true,
+      "definicion": "NOT NULL respuesta_hmac"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "desafios_captcha",
+      "nombre": "pk_desafios_captcha",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_expedido_por_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL expedido_por_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_fecha_expedicion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_expedicion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_inscripcion_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (inscripcion_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_inscripcion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL inscripcion_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_numero_diploma_key",
+      "validada": true,
+      "definicion": "UNIQUE (numero_diploma)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_numero_diploma_not_null",
+      "validada": true,
+      "definicion": "NOT NULL numero_diploma"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "diplomas_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "fk_diplomas_expedido_por_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (expedido_por_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "fk_diplomas_inscripcion_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (inscripcion_id) REFERENCES esart.inscripciones_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "diplomas",
+      "nombre": "fk_diplomas_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_modulo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL modulo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_ruta_archivo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL ruta_archivo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_subido_por_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL subido_por_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_titulo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL titulo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "doctrina_documentos_version_not_null",
+      "validada": true,
+      "definicion": "NOT NULL version"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "doctrina_documentos",
+      "nombre": "fk_doctrina_documentos_subido_por_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (subido_por_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "ck_egresados_curso_fechas",
+      "validada": true,
+      "definicion": "CHECK (((fecha_egreso IS NULL) OR (fecha_egreso >= fecha_ingreso)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "ck_egresados_resultado",
+      "validada": true,
+      "definicion": "CHECK (((resultado)::text = ANY ((ARRAY['APROBADO'::character varying, 'REPROBADO'::character varying, 'RETIRADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_comandante_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL comandante_curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_dias_en_curso_check",
+      "validada": true,
+      "definicion": "CHECK ((dias_en_curso >= 0))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_dias_en_curso_not_null",
+      "validada": true,
+      "definicion": "NOT NULL dias_en_curso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_distincion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL distincion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_fecha_egreso_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_egreso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_fecha_ingreso_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_ingreso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_folio_disciplinario_not_null",
+      "validada": true,
+      "definicion": "NOT NULL folio_disciplinario"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_inscripcion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL inscripcion_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_nota_final_check",
+      "validada": true,
+      "definicion": "CHECK (((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_puede_repetir_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_repetir"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "egresados_curso_resultado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "fk_egresados_curso_comandante_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (comandante_curso_id) REFERENCES esart.instructores(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "fk_egresados_curso_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (curso_id) REFERENCES esart.cursos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "fk_egresados_curso_inscripcion_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (inscripcion_id) REFERENCES esart.inscripciones_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "fk_egresados_curso_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "egresados_curso",
+      "nombre": "fk_egresados_curso_unidad_destino_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_destino_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "especialidades_instructor",
+      "nombre": "especialidades_instructor_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "especialidades_instructor",
+      "nombre": "especialidades_instructor_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "especialidades_instructor",
+      "nombre": "especialidades_instructor_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "especialidades_instructor",
+      "nombre": "especialidades_instructor_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "especialidades_instructor",
+      "nombre": "especialidades_instructor_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "estados_acceso_anonimos",
+      "nombre": "ck_estados_acceso_anonimos_fallos_anonimos",
+      "validada": true,
+      "definicion": "CHECK ((intentos_fallidos_consecutivos >= 0))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "estados_acceso_anonimos",
+      "nombre": "estados_acceso_anonimos_clave_not_null",
+      "validada": true,
+      "definicion": "NOT NULL clave"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "estados_acceso_anonimos",
+      "nombre": "estados_acceso_anonimos_intentos_fallidos_consecutivos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL intentos_fallidos_consecutivos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "estados_acceso_anonimos",
+      "nombre": "pk_estados_acceso_anonimos",
+      "validada": true,
+      "definicion": "PRIMARY KEY (clave)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "ck_habilitaciones_resultado",
+      "validada": true,
+      "definicion": "CHECK (((resultado)::text = ANY ((ARRAY['APROBADA'::character varying, 'REPROBADA'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "fk_habilitaciones_alumno_activo_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (alumno_activo_id) REFERENCES esart.alumnos_activos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "fk_habilitaciones_nota_materia_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (nota_materia_id) REFERENCES esart.notas_materia(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "fk_habilitaciones_registrado_por_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (registrado_por_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_alumno_activo_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL alumno_activo_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_fecha_habilitacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_habilitacion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_nota_materia_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nota_materia_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_nota_obtenida_check",
+      "validada": true,
+      "definicion": "CHECK (((nota_obtenida >= (0)::numeric) AND (nota_obtenida <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_numero_habilitacion_check",
+      "validada": true,
+      "definicion": "CHECK (((numero_habilitacion >= 1) AND (numero_habilitacion <= 2)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_numero_habilitacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL numero_habilitacion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_registrado_por_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL registrado_por_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "habilitaciones",
+      "nombre": "habilitaciones_resultado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "fk_hoja_vida_artillero_artillero_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (artillero_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "hoja_vida_artillero_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "hoja_vida_artillero_artillero_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (artillero_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "hoja_vida_artillero_artillero_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL artillero_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "hoja_vida_artillero_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "hoja_vida_artillero_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "hoja_vida_artillero",
+      "nombre": "hoja_vida_artillero_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "ck_inscripciones_estado",
+      "validada": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['INSCRITO'::character varying, 'SELECCIONADO'::character varying, 'RETIRADO'::character varying, 'GRADUADO'::character varying, 'REPROBADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "fk_inscripciones_curso_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (curso_id) REFERENCES esart.cursos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "fk_inscripciones_curso_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_estado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_fecha_inscripcion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inscripcion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_nota_final_check",
+      "validada": true,
+      "definicion": "CHECK (((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "inscripciones_curso",
+      "nombre": "inscripciones_curso_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "fk_instructores_usuario_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_fecha_ingreso_escuela_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_ingreso_escuela"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_usuario_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (usuario_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores",
+      "nombre": "instructores_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "fk_instructores_especialidades_especialidad_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (especialidad_id) REFERENCES esart.especialidades_instructor(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "fk_instructores_especialidades_instructor_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (instructor_id) REFERENCES esart.instructores(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "instructores_especialidades_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "instructores_especialidades_especialidad_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL especialidad_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "instructores_especialidades_fecha_asignacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_asignacion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "instructores_especialidades_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "instructores_especialidades_instructor_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL instructor_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "instructores_especialidades",
+      "nombre": "instructores_especialidades_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "fk_intentos_inicio_sesion_usuario_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id) ON DELETE SET NULL"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "intentos_inicio_sesion_captcha_requerido_not_null",
+      "validada": true,
+      "definicion": "NOT NULL captcha_requerido"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "intentos_inicio_sesion_exitoso_not_null",
+      "validada": true,
+      "definicion": "NOT NULL exitoso"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "intentos_inicio_sesion_fecha_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "intentos_inicio_sesion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "intentos_inicio_sesion_nombre_usuario_intentado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre_usuario_intentado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion",
+      "nombre": "intentos_inicio_sesion_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "limites_inicio_ip",
+      "nombre": "ck_limites_inicio_ip_intentos_ip_positivos",
+      "validada": true,
+      "definicion": "CHECK ((intentos >= 0))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "limites_inicio_ip",
+      "nombre": "limites_inicio_ip_clave_not_null",
+      "validada": true,
+      "definicion": "NOT NULL clave"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "limites_inicio_ip",
+      "nombre": "limites_inicio_ip_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "limites_inicio_ip",
+      "nombre": "limites_inicio_ip_intentos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL intentos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "limites_inicio_ip",
+      "nombre": "pk_limites_inicio_ip",
+      "validada": true,
+      "definicion": "PRIMARY KEY (clave)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "fk_malla_curricular_materia_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (materia_id) REFERENCES esart.materias(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "fk_malla_curricular_tipo_curso_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (tipo_curso_id) REFERENCES esart.tipos_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_materia_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL materia_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_nota_minima_aprobacion_check",
+      "validada": true,
+      "definicion": "CHECK (((nota_minima_aprobacion >= (0)::numeric) AND (nota_minima_aprobacion <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_nota_minima_aprobacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nota_minima_aprobacion"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_orden_not_null",
+      "validada": true,
+      "definicion": "NOT NULL orden"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "malla_curricular",
+      "nombre": "malla_curricular_tipo_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo_curso_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "materias",
+      "nombre": "materias_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "materias",
+      "nombre": "materias_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "materias",
+      "nombre": "materias_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "materias",
+      "nombre": "materias_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "materias",
+      "nombre": "materias_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "materias",
+      "nombre": "materias_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "fk_notas_finales_egresado_egresado_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (egresado_id) REFERENCES esart.egresados_curso(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "fk_notas_finales_egresado_materia_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (materia_id) REFERENCES esart.materias(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_egresado_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL egresado_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_materia_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL materia_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_nota_check",
+      "validada": true,
+      "definicion": "CHECK (((nota >= (0)::numeric) AND (nota <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_nota_habilitacion_check",
+      "validada": true,
+      "definicion": "CHECK (((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_nota_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nota"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_finales_egresado",
+      "nombre": "notas_finales_egresado_resultado_materia_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resultado_materia"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "fk_notas_materia_alumno_activo_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (alumno_activo_id) REFERENCES esart.alumnos_activos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "fk_notas_materia_malla_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (malla_id) REFERENCES esart.malla_curricular(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_alumno_activo_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL alumno_activo_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_estado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_malla_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL malla_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_nota_check",
+      "validada": true,
+      "definicion": "CHECK (((nota >= (0)::numeric) AND (nota <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_nota_habilitacion_check",
+      "validada": true,
+      "definicion": "CHECK (((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "notas_materia",
+      "nombre": "notas_materia_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "fk_operadores_sistema_certificado_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (certificado_id) REFERENCES esart.certificados_reentrenamiento(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "fk_operadores_sistema_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "fk_operadores_sistema_sistema_en_op_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (sistema_en_op_id) REFERENCES esart_ref.sistemas_en_operacion(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_apto_para_disparar_not_null",
+      "validada": true,
+      "definicion": "NOT NULL apto_para_disparar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_rol_en_sistema_not_null",
+      "validada": true,
+      "definicion": "NOT NULL rol_en_sistema"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "operadores_sistema",
+      "nombre": "operadores_sistema_sistema_en_op_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL sistema_en_op_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "ck_participantes_resultado",
+      "validada": true,
+      "definicion": "CHECK (((resultado)::text = ANY ((ARRAY['CERTIFICADO'::character varying, 'NO_CERTIFICADO'::character varying, 'RETIRADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "fk_participantes_reentrenamiento_personal_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "fk_participantes_reentrenamiento_reentrenamiento_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (reentrenamiento_id) REFERENCES esart.reentrenamientos(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "participantes_reentrenamiento_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "participantes_reentrenamiento_personal_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL personal_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "participantes_reentrenamiento_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "participantes_reentrenamiento_reentrenamiento_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL reentrenamiento_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "participantes_reentrenamiento",
+      "nombre": "participantes_reentrenamiento_resultado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "fk_personal_militar_unidad_actual_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_actual_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_apellidos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL apellidos"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_categoria_not_null",
+      "validada": true,
+      "definicion": "NOT NULL categoria"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_documento_identidad_key",
+      "validada": true,
+      "definicion": "UNIQUE (documento_identidad)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_documento_identidad_not_null",
+      "validada": true,
+      "definicion": "NOT NULL documento_identidad"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_genero_not_null",
+      "validada": true,
+      "definicion": "NOT NULL genero"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_grado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL grado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_nombres_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombres"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "personal_militar",
+      "nombre": "personal_militar_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "ck_reentrenamientos_estado",
+      "validada": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['PLANEADO'::character varying, 'EN_EJECUCION'::character varying, 'FINALIZADO'::character varying, 'CANCELADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "ck_reentrenamientos_fechas",
+      "validada": true,
+      "definicion": "CHECK (((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "fk_reentrenamientos_bateria_designada_por",
+      "validada": true,
+      "definicion": "FOREIGN KEY (bateria_designada_por) REFERENCES esart_ref.usuarios(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "fk_reentrenamientos_comite_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (comite_id) REFERENCES esart.comites_moviles(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "fk_reentrenamientos_unidad_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_bateria_designada_por_not_null",
+      "validada": true,
+      "definicion": "NOT NULL bateria_designada_por"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_calibre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL calibre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_comite_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL comite_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_estado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_fecha_fin_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_fin"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_fecha_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_movilidad_not_null",
+      "validada": true,
+      "definicion": "NOT NULL movilidad"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_proposito_not_null",
+      "validada": true,
+      "definicion": "NOT NULL proposito"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_tipo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL tipo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "reentrenamientos",
+      "nombre": "reentrenamientos_unidad_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL unidad_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "ck_esart_rol_crud_acceso",
+      "validada": true,
+      "definicion": "CHECK ((puede_acceder OR (NOT (puede_crear OR puede_leer OR puede_actualizar OR puede_eliminar))))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_componente_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (componente_id) REFERENCES esart.componentes(id) ON DELETE CASCADE"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_componente_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL componente_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (rol_id, componente_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_puede_acceder_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_acceder"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_puede_actualizar_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_actualizar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_puede_crear_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_crear"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_puede_eliminar_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_eliminar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_puede_leer_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_leer"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_rol_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (rol_id) REFERENCES esart.roles(id) ON DELETE CASCADE"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "rol_permisos",
+      "nombre": "rol_permisos_rol_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL rol_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "ck_esart_roles_codigo",
+      "validada": true,
+      "definicion": "CHECK (((codigo)::text = ANY ((ARRAY['ADMINISTRADOR'::character varying, 'USUARIO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "roles",
+      "nombre": "roles_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "ck_semestres_academicos_fechas",
+      "validada": true,
+      "definicion": "CHECK (((fecha_fin IS NULL) OR (fecha_fin >= fecha_inicio)))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_anio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL anio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_fecha_fin_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_fin"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_fecha_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_numero_check",
+      "validada": true,
+      "definicion": "CHECK ((numero = ANY (ARRAY[1, 2])))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_numero_not_null",
+      "validada": true,
+      "definicion": "NOT NULL numero"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "semestres_academicos",
+      "nombre": "semestres_academicos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "ck_sesiones_usuario_ck_sesiones_usuario_revocacion",
+      "validada": true,
+      "definicion": "CHECK (((revocada AND (fecha_revocacion IS NOT NULL)) OR ((NOT revocada) AND (fecha_revocacion IS NULL))))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "fk_sesiones_usuario_usuario_id",
+      "validada": true,
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id) ON DELETE CASCADE"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "sesiones_usuario_fecha_inicio_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_inicio"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "sesiones_usuario_fecha_ultima_actividad_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_ultima_actividad"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "sesiones_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "sesiones_usuario_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "sesiones_usuario_revocada_not_null",
+      "validada": true,
+      "definicion": "NOT NULL revocada"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "sesiones_usuario",
+      "nombre": "sesiones_usuario_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_cuenta_para_coofu_not_null",
+      "validada": true,
+      "definicion": "NOT NULL cuenta_para_coofu"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_nombre_key",
+      "validada": true,
+      "definicion": "UNIQUE (nombre)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_cargo",
+      "nombre": "tipos_cargo_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_duracion_semanas_check",
+      "validada": true,
+      "definicion": "CHECK ((duracion_semanas >= 0))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_duracion_semanas_not_null",
+      "validada": true,
+      "definicion": "NOT NULL duracion_semanas"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_modalidad_not_null",
+      "validada": true,
+      "definicion": "NOT NULL modalidad"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_curso",
+      "nombre": "tipos_curso_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_unidad",
+      "nombre": "tipos_unidad_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_unidad",
+      "nombre": "tipos_unidad_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_unidad",
+      "nombre": "tipos_unidad_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_unidad",
+      "nombre": "tipos_unidad_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_unidad",
+      "nombre": "tipos_unidad_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "tipos_unidad",
+      "nombre": "tipos_unidad_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "ck_esart_usuario_crud_acceso",
+      "validada": true,
+      "definicion": "CHECK ((puede_acceder OR (NOT (puede_crear OR puede_leer OR puede_actualizar OR puede_eliminar))))"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_actualizado_por_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (actualizado_por_id) REFERENCES esart_ref.usuarios(id) ON DELETE SET NULL"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_componente_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (componente_id) REFERENCES esart.componentes(id) ON DELETE CASCADE"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_componente_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL componente_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (usuario_id, componente_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_puede_acceder_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_acceder"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_puede_actualizar_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_actualizar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_puede_crear_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_crear"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_puede_eliminar_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_eliminar"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_puede_leer_not_null",
+      "validada": true,
+      "definicion": "NOT NULL puede_leer"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_usuario_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id) ON DELETE CASCADE"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_permisos",
+      "nombre": "usuario_permisos_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_asignado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL asignado_en"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_asignado_por_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (asignado_por_id) REFERENCES esart_ref.usuarios(id) ON DELETE SET NULL"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (usuario_id, rol_id)"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_rol_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (rol_id) REFERENCES esart.roles(id) ON DELETE RESTRICT"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_rol_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL rol_id"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_usuario_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES esart_ref.usuarios(id) ON DELETE CASCADE"
+    },
+    {
+      "esquema": "esart",
+      "tabla": "usuario_roles",
+      "nombre": "usuario_roles_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "sistemas_artilleria",
+      "nombre": "sistemas_artilleria_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "sistemas_artilleria",
+      "nombre": "sistemas_artilleria_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "sistemas_en_operacion",
+      "nombre": "sistemas_en_operacion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "sistemas_en_operacion",
+      "nombre": "sistemas_en_operacion_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "fk_esart_unidades_padre",
+      "validada": true,
+      "definicion": "FOREIGN KEY (unidad_padre_id) REFERENCES esart_ref.unidades_militares(id)"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "fk_esart_unidades_tipo",
+      "validada": true,
+      "definicion": "FOREIGN KEY (tipo_unidad_id) REFERENCES esart.tipos_unidad(id)"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "unidades_militares_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "unidades_militares_fecha_actualizacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_actualizacion"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "unidades_militares_fecha_creacion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_creacion"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "unidades_militares_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "unidades_militares",
+      "nombre": "unidades_militares_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "ck_esart_usuario_hash_no_vacio",
+      "validada": true,
+      "definicion": "CHECK (((contrasena_hash IS NULL) OR (length(TRIM(BOTH FROM contrasena_hash)) > 0)))"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "ck_usuarios_ck_esart_usuario_intentos_no_negativos",
+      "validada": true,
+      "definicion": "CHECK ((intentos_fallidos_consecutivos >= 0))"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_activo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activo"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_intentos_fallidos_consecutivos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL intentos_fallidos_consecutivos"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "esart_ref",
+      "tabla": "usuarios",
+      "nombre": "usuarios_requiere_cambio_contrasena_not_null",
+      "validada": true,
+      "definicion": "NOT NULL requiere_cambio_contrasena"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_accion_not_null",
+      "validada": true,
+      "definicion": "NOT NULL accion"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_actor_tipo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actor_tipo"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_autorizacion_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (autorizacion_id) REFERENCES seguridad.autorizaciones(id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_evento_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (evento_id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_evento_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL evento_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_fecha_evento_not_null",
+      "validada": true,
+      "definicion": "NOT NULL fecha_evento"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_metadata_not_null",
+      "validada": true,
+      "definicion": "NOT NULL metadata"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_modulo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL modulo"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria",
+      "nombre": "auditoria_resultado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "nombre": "auditoria_cambios_auditoria_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (auditoria_id) REFERENCES seguridad.auditoria(id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "nombre": "auditoria_cambios_auditoria_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL auditoria_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "nombre": "auditoria_cambios_campo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL campo"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "nombre": "auditoria_cambios_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "nombre": "auditoria_cambios_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "auditoria_cambios",
+      "nombre": "auditoria_cambios_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_autorizada_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL autorizada_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_desafio_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (desafio_id) REFERENCES seguridad.desafios(id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_desafio_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (desafio_id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_desafio_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL desafio_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_expira_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL expira_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_operacion_hash_not_null",
+      "validada": true,
+      "definicion": "NOT NULL operacion_hash"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_politica_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (politica_id) REFERENCES seguridad.politicas_accion(id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_politica_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL politica_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_resultado_check",
+      "validada": true,
+      "definicion": "CHECK (((resultado)::text = ANY ((ARRAY['AUTORIZADA'::character varying, 'CONSUMIDA'::character varying, 'REVOCADA'::character varying])::text[])))"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_resultado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "autorizaciones",
+      "nombre": "autorizaciones_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_estado_check",
+      "validada": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'VERIFICADO'::character varying, 'CONSUMIDO'::character varying, 'EXPIRADO'::character varying, 'CANCELADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_estado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_expira_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL expira_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_intentos_check",
+      "validada": true,
+      "definicion": "CHECK ((intentos >= 0))"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_intentos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL intentos"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_operacion_hash_not_null",
+      "validada": true,
+      "definicion": "NOT NULL operacion_hash"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_politica_id_fkey",
+      "validada": true,
+      "definicion": "FOREIGN KEY (politica_id) REFERENCES seguridad.politicas_accion(id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_politica_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL politica_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "desafios",
+      "nombre": "desafios_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_activa_not_null",
+      "validada": true,
+      "definicion": "NOT NULL activa"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_codigo_key",
+      "validada": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_codigo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_modulo_not_null",
+      "validada": true,
+      "definicion": "NOT NULL modulo"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_nombre_not_null",
+      "validada": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_requiere_totp_not_null",
+      "validada": true,
+      "definicion": "NOT NULL requiere_totp"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_vigencia_segundos_check",
+      "validada": true,
+      "definicion": "CHECK (((vigencia_segundos >= 30) AND (vigencia_segundos <= 600)))"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "politicas_accion",
+      "nombre": "politicas_accion_vigencia_segundos_not_null",
+      "validada": true,
+      "definicion": "NOT NULL vigencia_segundos"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "nombre": "totp_recuperacion_codigo_hash_not_null",
+      "validada": true,
+      "definicion": "NOT NULL codigo_hash"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "nombre": "totp_recuperacion_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "nombre": "totp_recuperacion_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "nombre": "totp_recuperacion_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "totp_recuperacion",
+      "nombre": "totp_recuperacion_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_actualizado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_creado_en_not_null",
+      "validada": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_estado_check",
+      "validada": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'ACTIVO'::character varying, 'REVOCADO'::character varying])::text[])))"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_estado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_pkey",
+      "validada": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_secreto_cifrado_not_null",
+      "validada": true,
+      "definicion": "NOT NULL secreto_cifrado"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_usuario_id_key",
+      "validada": true,
+      "definicion": "UNIQUE (usuario_id)"
+    },
+    {
+      "esquema": "seguridad",
+      "tabla": "usuario_totp",
+      "nombre": "usuario_totp_usuario_id_not_null",
+      "validada": true,
+      "definicion": "NOT NULL usuario_id"
+    }
+  ],
+  "triggers": [],
+  "funciones_auditoria": [],
+  "permisos_columnas_usuario": [
+    {
+      "columna": "id",
+      "actualizable": false
+    },
+    {
+      "columna": "usuario",
+      "actualizable": false
+    },
+    {
+      "columna": "contrasena_hash",
+      "actualizable": false
+    },
+    {
+      "columna": "documento_identidad",
+      "actualizable": false
+    },
+    {
+      "columna": "activo",
+      "actualizable": false
+    },
+    {
+      "columna": "requiere_cambio_contrasena",
+      "actualizable": false
+    },
+    {
+      "columna": "creado_en",
+      "actualizable": false
+    },
+    {
+      "columna": "actualizado_en",
+      "actualizable": false
+    },
+    {
+      "columna": "ultimo_acceso_en",
+      "actualizable": true
+    },
+    {
+      "columna": "intentos_fallidos_consecutivos",
+      "actualizable": true
+    },
+    {
+      "columna": "bloqueado_hasta",
+      "actualizable": true
+    }
+  ],
+  "historial_aplicado": "NO_VERIFICABLE_CON_ESTE_ROL",
+  "huerfanos_usuario": {
+    "usuario_totp": 0,
+    "totp_recuperacion": 0,
+    "desafios": 0,
+    "autorizaciones": "PENDIENTE_PROPIETARIO",
+    "auditoria": "PENDIENTE_PROPIETARIO"
+  },
+  "contextos_autorizacion_incompatibles": "PENDIENTE_PROPIETARIO",
+  "politicas": [
+    {
+      "codigo": "CURSO_APROBAR",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "CURSO_CARGUE_EXCEL",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "CURSO_ELIMINAR",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "CURSO_MODIFICAR_APROBACION",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "CURSO_REPROBAR",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "DESBLOQUEO_TOTP",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "LOGIN_TOTP",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "PERSONAL_CARGUE_EXCEL",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    },
+    {
+      "codigo": "PERSONAL_ELIMINAR",
+      "activa": true,
+      "requiere_totp": true,
+      "vigencia_segundos": 120,
+      "permiso_requerido": null
+    }
+  ]
+}

@@ -1,6 +1,6 @@
 """La dependencia FastAPI aplica controles CRUD y códigos sin confiar en Angular."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 from uuid import uuid4
 
 import httpx
@@ -22,6 +22,7 @@ async def test_control_crud_en_fastapi(operacion, permitido):
         return usuario_id
 
     sesion = AsyncMock()
+    sesion.add = MagicMock()
     sesion.scalar.return_value = permitido
 
     async def sesion_falsa():
@@ -54,6 +55,7 @@ async def test_codigo_api_adicional_es_obligatorio():
         return uuid4()
 
     sesion = AsyncMock()
+    sesion.add = MagicMock()
     sesion.scalar.side_effect = [True, None]
     dependencia = requerir_permiso_componente(
         "PERSONAL_MILITAR",

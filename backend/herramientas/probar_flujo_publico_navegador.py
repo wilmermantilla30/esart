@@ -37,7 +37,7 @@ def esperar(url, proceso):
     raise RuntimeError("Tiempo de inicio agotado en servicio aislado")
 
 
-def ejecutar(nombre: str) -> dict:
+def ejecutar(nombre: str, escenario="publico", clave_cifrado=None, credencial=None, secreto=None) -> dict:
     url = os.environ["ESART_SEGURIDAD_TEST_URL"]
     conexion = make_url(url)
     datos = Path(os.environ["ESART_SEGURIDAD_TEST_DIR"]).resolve()
@@ -50,7 +50,9 @@ def ejecutar(nombre: str) -> dict:
         or not nombre.startswith("hu06.")
     ):
         raise RuntimeError("El navegador solo admite la cuenta y clúster aislados marcados")
-    carpeta = datos.parent / "navegador_publico"
+    if escenario not in {"publico", "totp", "desbloqueo"}:
+        raise RuntimeError("Escenario de pruebas no permitido")
+    carpeta = datos.parent / ("navegador_" + escenario)
     carpeta.mkdir(exist_ok=True)
     backend, frontend, cdp = puerto_libre(), puerto_libre(), puerto_libre()
     proxy = carpeta / "proxy.json"
@@ -66,7 +68,19 @@ def ejecutar(nombre: str) -> dict:
         COOKIE_SEGURA="false",
         JWT_CLAVE_SECRETA=secrets.token_urlsafe(48),
         PYTHONIOENCODING="utf-8",
+        ESART_EVIDENCIA_PUBLICA=str(carpeta),
     )
+    if escenario != "publico":
+        if not clave_cifrado or not credencial:
+            raise RuntimeError("Configuración de pruebas TOTP incompleta")
+        entorno.update(
+            TOTP_HABILITADO="true",
+            TOTP_CLAVE_CIFRADO=clave_cifrado,
+            ESART_CREDENCIAL_PRUEBA=credencial,
+            ESART_ESCENARIO_TOTP=escenario,
+        )
+        if secreto:
+            entorno["ESART_SECRETO_PRUEBA"] = secreto
     for variable in ("ESART_MIGRACIONES_URL", "ESART_SEGURIDAD_TEST_ADMIN"):
         entorno.pop(variable, None)
     procesos = []
@@ -92,7 +106,7 @@ def ejecutar(nombre: str) -> dict:
                 sys.executable,
                 "-m",
                 "uvicorn",
-                "aplicacion.principal:aplicacion",
+                "herramientas.app_pruebas_navegador:aplicacion",
                 "--host",
                 "127.0.0.1",
                 "--port",
@@ -145,7 +159,14 @@ def ejecutar(nombre: str) -> dict:
             ESART_EVIDENCIA_PUBLICA=str(carpeta),
         )
         resultado = subprocess.run(  # noqa: S603 -- script local fijo, sin shell
-            [node, str(RAIZ / "herramientas/navegador_publico.mjs")],
+            [
+                node,
+                str(
+                    RAIZ
+                    / "herramientas"
+                    / ("navegador_publico.mjs" if escenario == "publico" else "navegador_totp.mjs")
+                ),
+            ],
             cwd=RAIZ,
             env=entorno,
             capture_output=True,
@@ -159,6 +180,7 @@ def ejecutar(nombre: str) -> dict:
             raise RuntimeError("Falló la prueba pública real; revisar evidencia local aislada")
         return json.loads((carpeta / "resultado.json").read_text(encoding="utf-8"))
     finally:
+        (carpeta / "captcha_efimero.txt").unlink(missing_ok=True)
         for proceso in reversed(procesos):
             if proceso.poll() is None:
                 if os.name == "nt":

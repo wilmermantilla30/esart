@@ -1,7 +1,11 @@
 import { Route, Routes } from '@angular/router';
 
 import { exigirPermiso } from './nucleo/guardas/permiso.guard';
-import { exigirSesion, exigirSesionParaCambiarContrasena, soloSinSesion } from './nucleo/guardas/sesion.guard';
+import {
+  exigirSesion,
+  exigirSesionParaCambiarContrasena,
+  soloSinSesion,
+} from './nucleo/guardas/sesion.guard';
 import {
   RUTA_PAGINA_CAMBIAR_CONTRASENA,
   RUTA_PAGINA_INICIO,
@@ -16,7 +20,12 @@ const cargarEnConstruccion = () =>
  * Ruta de un módulo todavía sin pantalla. Exige su permiso de la malla igual que
  * cuando tenga pantalla: así la navegación ya respeta la malla desde hoy.
  */
-function rutaEnConstruccion(ruta: string, componente: string, titulo: string, descripcion: string): Route {
+function rutaEnConstruccion(
+  ruta: string,
+  componente: string,
+  titulo: string,
+  descripcion: string,
+): Route {
   return {
     path: ruta,
     title: `${titulo} — ESART`,
@@ -33,10 +42,17 @@ function rutaEnConstruccion(ruta: string, componente: string, titulo: string, de
  */
 export const routes: Routes = [
   {
+    path: 'totp',
+    title: 'Seguridad del autenticador — ESART',
+    canActivate: [exigirSesion],
+    loadComponent: () => import('./paginas/totp/totp').then((m) => m.Totp),
+  },
+  {
     path: RUTA_PAGINA_INICIO_SESION,
     title: 'Iniciar sesión — ESART',
     canActivate: [soloSinSesion],
-    loadComponent: () => import('./paginas/inicio-sesion/inicio-sesion').then((m) => m.InicioSesion),
+    loadComponent: () =>
+      import('./paginas/inicio-sesion/inicio-sesion').then((m) => m.InicioSesion),
   },
   {
     // Fuera del marco Plataforma: con contraseña temporal no se muestra el menú.
@@ -57,7 +73,8 @@ export const routes: Routes = [
         title: 'Panel principal — ESART',
         canActivate: [exigirPermiso],
         data: { componente: 'DASHBOARD' },
-        loadComponent: () => import('./paginas/panel-principal/panel-principal').then((m) => m.PanelPrincipal),
+        loadComponent: () =>
+          import('./paginas/panel-principal/panel-principal').then((m) => m.PanelPrincipal),
       },
       {
         path: 'personal',
@@ -70,7 +87,9 @@ export const routes: Routes = [
             path: '',
             title: 'Personal militar — ESART',
             loadComponent: () =>
-              import('./paginas/personal-militar/panel-personal/panel-personal').then((m) => m.PanelPersonal),
+              import('./paginas/personal-militar/panel-personal/panel-personal').then(
+                (m) => m.PanelPersonal,
+              ),
           },
           {
             path: 'verificar',
@@ -88,7 +107,9 @@ export const routes: Routes = [
             canActivate: [exigirPermiso],
             data: { componente: 'PERSONAL_HABILITADOS' },
             loadComponent: () =>
-              import('./paginas/personal-militar/habilitados/habilitados').then((m) => m.Habilitados),
+              import('./paginas/personal-militar/habilitados/habilitados').then(
+                (m) => m.Habilitados,
+              ),
           },
           rutaEnConstruccion(
             'cargue-excel',
@@ -110,7 +131,9 @@ export const routes: Routes = [
         canActivate: [exigirPermiso],
         data: { componente: 'USUARIOS' },
         loadComponent: () =>
-          import('./paginas/administracion/gestion-usuarios/gestion-usuarios').then((m) => m.GestionUsuarios),
+          import('./paginas/administracion/gestion-usuarios/gestion-usuarios').then(
+            (m) => m.GestionUsuarios,
+          ),
       },
       rutaEnConstruccion(
         'administracion/parametros',
@@ -124,14 +147,17 @@ export const routes: Routes = [
         canActivate: [exigirPermiso],
         data: { componente: 'PERMISOS' },
         loadComponent: () =>
-          import('./paginas/administracion/malla-permisos/malla-permisos').then((m) => m.MallaPermisos),
+          import('./paginas/administracion/malla-permisos/malla-permisos').then(
+            (m) => m.MallaPermisos,
+          ),
       },
       {
         path: 'administracion/auditoria',
         title: 'Auditoría — ESART',
         canActivate: [exigirPermiso],
         data: { componente: 'AUDITORIA' },
-        loadComponent: () => import('./paginas/administracion/auditoria/auditoria').then((m) => m.Auditoria),
+        loadComponent: () =>
+          import('./paginas/administracion/auditoria/auditoria').then((m) => m.Auditoria),
       },
       {
         path: 'unidades',

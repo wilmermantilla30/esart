@@ -57,3 +57,6 @@ backend/.pytest_tmp/
 .venv/
 **/.env
 **/.env.*
+
+# Ejecutable ajeno al código de ESART.
+Epson_L3210_Series_EM_50_Web.exe

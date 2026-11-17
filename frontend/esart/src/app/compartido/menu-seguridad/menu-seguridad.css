@@ -1,0 +1,144 @@
+:host {
+  position: relative;
+  display: inline-flex;
+  color: #173b5e;
+}
+.seguridad-llave {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 9px 10px;
+  background: white;
+  border: 1px solid #dce5ed;
+  border-radius: 8px;
+  cursor: pointer;
+  transition:
+    background 150ms,
+    border-color 150ms;
+}
+.seguridad-llave:hover,
+.seguridad-llave[aria-expanded='true'] {
+  background: #edf6fd;
+  border-color: #7daed0;
+}
+.icono {
+  width: 18px;
+  height: 18px;
+  display: inline-block;
+  flex-shrink: 0;
+  background: currentColor;
+  mask: var(--icono) center / contain no-repeat;
+}
+.icono-llave {
+  --icono: url('/iconos/lucide/key-round.svg');
+}
+.icono-escudo {
+  --icono: url('/iconos/lucide/shield-check.svg');
+}
+.icono-dispositivo {
+  --icono: url('/iconos/lucide/smartphone.svg');
+}
+.icono-flecha {
+  --icono: url('/iconos/lucide/chevron-down.svg');
+  width: 12px;
+  height: 12px;
+}
+.seguridad-menu {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 12px);
+  width: min(300px, calc(100vw - 32px));
+  max-height: calc(100dvh - 100px);
+  overflow-y: auto;
+  padding: 8px;
+  border: 1px solid #dce5ed;
+  border-radius: 12px;
+  background: white;
+  box-shadow: 0 12px 34px #173b5e24;
+  animation: desplegar 150ms ease-out;
+}
+.seguridad-cabecera {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px;
+}
+.seguridad-cabecera strong {
+  font-size: 13px;
+}
+.seguridad-cabecera p {
+  margin: 2px 0 0;
+  font-size: 11px;
+  color: #587084;
+}
+.seguridad-estado {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  margin: 4px 8px 8px;
+  padding: 8px;
+  border-radius: 6px;
+  background: #edf6fd;
+  font-size: 12px;
+}
+.indicador {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: currentColor;
+}
+.estado-activo {
+  color: #17644b;
+  background: #edf8f2;
+}
+.estado-error {
+  color: #934727;
+  background: #fff5ed;
+}
+.seguridad-opcion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 11px 10px;
+  border-radius: 7px;
+  text-align: left;
+  font-size: 13px;
+  cursor: pointer;
+  transition: background 150ms;
+}
+.seguridad-opcion:hover {
+  background: #edf6fd;
+}
+.seguridad-opcion:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+.seguridad-aviso {
+  margin: 8px 10px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #587084;
+}
+button:focus-visible,
+a:focus-visible {
+  outline: 2px solid #438abd;
+  outline-offset: 2px;
+}
+@keyframes desplegar {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  *,
+  .seguridad-menu {
+    animation: none;
+    transition: none;
+  }
+}

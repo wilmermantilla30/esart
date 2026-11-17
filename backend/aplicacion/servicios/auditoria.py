@@ -65,6 +65,7 @@ async def registrar_evento(
     documento: str | None = None,
     resultado: str | None = None,
     detalle: dict | None = None,
+    confirmar: bool = True,
 ) -> None:
     """Inserta un evento y lo confirma en la base (commit)."""
     _validar_detalle(detalle)
@@ -81,4 +82,5 @@ async def registrar_evento(
             detalle=detalle,
         )
     )
-    await sesion.commit()
+    if confirmar:
+        await sesion.commit()

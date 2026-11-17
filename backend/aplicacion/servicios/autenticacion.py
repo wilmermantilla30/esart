@@ -27,6 +27,7 @@ from aplicacion.seguridad.captcha import VerificadorCaptcha
 from aplicacion.seguridad.contrasenas import gastar_tiempo_de_verificacion, verificar_contrasena
 from aplicacion.seguridad.tokens import crear_token_sesion
 from aplicacion.servicios import seguridad_login
+from aplicacion.servicios.totp import DesafioLoginTotp
 
 registrador = logging.getLogger(__name__)
 
@@ -133,13 +134,15 @@ async def iniciar_sesion(
     captcha_id: str | None = None,
     captcha_respuesta: str | None = None,
     verificador_captcha: VerificadorCaptcha | None = None,
-) -> ResultadoInicioSesion:
+) -> DesafioLoginTotp:
     """
-    Verifica las credenciales y, si son correctas, abre una sesión.
+    Verifica contraseña, CAPTCHA y bloqueo; entrega un desafío sin sesión completa.
 
-    Crea la fila de sesiones_usuario (su id es el 'jti' del JWT), actualiza el último
-    acceso y devuelve el token firmado. Ante cualquier fallo lanza el mismo 401 genérico.
+    El propósito es VINCULACION si falta factor activo, o LOGIN si ya existe.
+    Solo finalizar_login, después del TOTP, puede emitir la sesión y su JWT.
     """
+    # Contraseña, CAPTCHA y bloqueo persisten incluso si TOTP no está disponible.
+    # Su disponibilidad se exige después de validar credenciales, antes de emitir JWT.
     contexto = await seguridad_login.preparar(
         sesion, nombre_usuario, direccion_ip, captcha_id, captcha_respuesta, verificador_captcha
     )
@@ -157,7 +160,33 @@ async def iniciar_sesion(
     if not contrasena_correcta or not usuario.activo or rol is None:
         await seguridad_login.rechazar(sesion, contexto, "CREDENCIALES_INVALIDAS")
 
-    ahora = datetime.now(UTC)
+    from aplicacion.servicios.totp import TotpService
+
+    totp = TotpService(sesion)
+    await totp.preparar()
+    registro = await totp.registro(usuario.id)
+    proposito = (
+        "CAMBIO_CONTRASENA"
+        if usuario.requiere_cambio_contrasena
+        else "LOGIN"
+        if registro and registro.estado == "ACTIVO"
+        else "VINCULACION"
+    )
+    desafio = await totp.crear_desafio(usuario.id, proposito, direccion_ip)
+    await seguridad_login.registrar(
+        sesion, contexto, exito=False, motivo="TOTP_PENDIENTE", evento="TOTP_REQUERIDO"
+    )
+    await sesion.commit()
+    return desafio
+
+
+async def finalizar_login(sesion, usuario, direccion_ip, agente_usuario, contexto, request=None):
+    rol = await obtener_codigo_rol(sesion, usuario.id)
+    if not usuario.activo or rol is None:
+        raise ErrorAplicacion(401, "CREDENCIALES_INVALIDAS", "No fue posible iniciar sesi?n.")
+    if usuario.requiere_cambio_contrasena:
+        raise ErrorAplicacion(403, "CAMBIO_CONTRASENA_REQUERIDO", "Debe cambiar su contraseña temporal.")
+    ahora = await seguridad_login.reloj_servidor(sesion)
     sesion_usuario = SesionUsuario(
         id=uuid.uuid4(),
         usuario_id=usuario.id,
@@ -173,7 +202,22 @@ async def iniciar_sesion(
     usuario.bloqueado_hasta = None
     nombre_completo = await obtener_nombre_completo(sesion, usuario.documento_identidad, usuario.usuario)
     await seguridad_login.registrar(sesion, contexto, exito=True, motivo=None, evento="LOGIN_EXITOSO")
+    if obtener_configuracion().totp_habilitado:
+        from aplicacion.servicios.totp import TotpService
+
+        await TotpService(sesion).auditar(usuario.id, "LOGIN_EXITOSO", "CORRECTO", direccion_ip)
     token = crear_token_sesion(usuario.id, sesion_usuario.id)
+    from aplicacion.servicios import auditoria
+
+    await auditoria.registrar_evento(
+        sesion,
+        auditoria.LOGIN_EXITOSO,
+        request,
+        usuario_id=usuario.id,
+        nombre_usuario=usuario.usuario,
+        resultado="EXITOSO",
+        confirmar=False,
+    )
     await sesion.commit()
 
     registrador.info("Inicio de sesión exitoso del usuario_id=%s", usuario.id)
@@ -210,6 +254,18 @@ async def validar_sesion(sesion: AsyncSession, usuario_id: int, sesion_id: uuid.
     limite_inactividad = timedelta(minutes=obtener_configuracion().minutos_inactividad_sesion)
     if usuario.bloqueado_hasta is not None and ahora < usuario.bloqueado_hasta:
         raise ErrorAplicacion(401, "NO_AUTENTICADO", "Debe iniciar sesión.")
+    from aplicacion.servicios.totp import TotpService
+
+    totp = TotpService(sesion)
+    await totp.preparar()
+    factor = await totp.registro(usuario_id)
+    if (
+        not factor
+        or factor.estado != "ACTIVO"
+        or factor.activado_en is None
+        or sesion_usuario.fecha_inicio < factor.activado_en
+    ):
+        raise ErrorAplicacion(401, "NO_AUTENTICADO", "Complete la vinculación del autenticador.")
     if ahora - sesion_usuario.fecha_ultima_actividad > limite_inactividad:
         sesion_usuario.revocada = True
         sesion_usuario.fecha_revocacion = ahora

@@ -4,8 +4,9 @@ import { filter } from 'rxjs';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { PieInstitucional } from '../../compartido/pie-institucional/pie-institucional';
+import { MenuSeguridad } from '../../compartido/menu-seguridad/menu-seguridad';
 import { iconoDeComponente } from '../../nucleo/iconos-menu';
-import { RUTA_PAGINA_CAMBIAR_CONTRASENA, RUTA_PAGINA_INICIO_SESION } from '../../nucleo/rutas-paginas';
+import { RUTA_PAGINA_INICIO_SESION } from '../../nucleo/rutas-paginas';
 import { SesionService } from '../../nucleo/servicios/sesion.service';
 
 /** Nombre visible de cada código de rol (la base solo admite ADMINISTRADOR y USUARIO). */
@@ -20,7 +21,7 @@ const NOMBRES_DE_ROL: Readonly<Record<string, string>> = {
  */
 @Component({
   selector: 'esart-plataforma',
-  imports: [RouterOutlet, RouterLink, RouterLinkActive, PieInstitucional],
+  imports: [RouterOutlet, RouterLink, RouterLinkActive, PieInstitucional, MenuSeguridad],
   templateUrl: './plataforma.html',
 })
 export class Plataforma {
@@ -30,7 +31,6 @@ export class Plataforma {
   protected readonly usuario = this.sesion.usuario;
   protected readonly menu = computed(() => this.sesion.menu() ?? []);
   protected readonly iconoDeComponente = iconoDeComponente;
-  protected readonly rutaCambiarContrasena = '/' + RUTA_PAGINA_CAMBIAR_CONTRASENA;
 
   /** En celular el sidebar se abre y cierra con el botón de menú. */
   protected readonly sidebarAbierto = signal(false);

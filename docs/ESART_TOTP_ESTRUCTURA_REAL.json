@@ -1,0 +1,1072 @@
+﻿{
+  "conexion": {
+    "base": "esart_db",
+    "rol": "esart_aplicacion"
+  },
+  "columnas": [
+    {
+      "tabla": "auditoria",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "evento_id",
+      "tipo": "uuid",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "correlacion_id",
+      "tipo": "uuid",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "actor_tipo",
+      "tipo": "character varying(30)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "modulo",
+      "tipo": "character varying(80)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "accion",
+      "tipo": "character varying(100)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "recurso_tipo",
+      "tipo": "character varying(100)",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "recurso_id",
+      "tipo": "character varying(150)",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "autorizacion_id",
+      "tipo": "uuid",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "resultado",
+      "tipo": "character varying(30)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "motivo",
+      "tipo": "text",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "ip_origen",
+      "tipo": "inet",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "agente_usuario",
+      "tipo": "text",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "fecha_evento",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria",
+      "columna": "metadata",
+      "tipo": "jsonb",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "columna": "auditoria_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "columna": "campo",
+      "tipo": "character varying(120)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "columna": "valor_anterior",
+      "tipo": "jsonb",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "columna": "valor_nuevo",
+      "tipo": "jsonb",
+      "obligatorio": false
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "id",
+      "tipo": "uuid",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "desafio_id",
+      "tipo": "uuid",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "politica_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "operacion_hash",
+      "tipo": "character varying(64)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "autorizada_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "expira_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "consumida_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "autorizaciones",
+      "columna": "resultado",
+      "tipo": "character varying(20)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "id",
+      "tipo": "uuid",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "politica_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "recurso_tipo",
+      "tipo": "character varying(100)",
+      "obligatorio": false
+    },
+    {
+      "tabla": "desafios",
+      "columna": "recurso_id",
+      "tipo": "character varying(150)",
+      "obligatorio": false
+    },
+    {
+      "tabla": "desafios",
+      "columna": "operacion_hash",
+      "tipo": "character varying(64)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "estado",
+      "tipo": "character varying(20)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "intentos",
+      "tipo": "integer",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "expira_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "desafios",
+      "columna": "verificado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "desafios",
+      "columna": "consumido_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "desafios",
+      "columna": "ip_origen",
+      "tipo": "inet",
+      "obligatorio": false
+    },
+    {
+      "tabla": "desafios",
+      "columna": "correlacion_id",
+      "tipo": "uuid",
+      "obligatorio": false
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "codigo",
+      "tipo": "character varying(100)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "nombre",
+      "tipo": "character varying(160)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "descripcion",
+      "tipo": "text",
+      "obligatorio": false
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "modulo",
+      "tipo": "character varying(80)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "permiso_requerido",
+      "tipo": "character varying(100)",
+      "obligatorio": false
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "requiere_totp",
+      "tipo": "boolean",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "activa",
+      "tipo": "boolean",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "vigencia_segundos",
+      "tipo": "integer",
+      "obligatorio": true
+    },
+    {
+      "tabla": "politicas_accion",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "columna": "codigo_hash",
+      "tipo": "text",
+      "obligatorio": true
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "columna": "usado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "columna": "revocado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "usuario_id",
+      "tipo": "bigint",
+      "obligatorio": true
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "secreto_cifrado",
+      "tipo": "text",
+      "obligatorio": true
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "estado",
+      "tipo": "character varying(15)",
+      "obligatorio": true
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "creado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "activado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "expira_configuracion_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "revocado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": false
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "ultimo_intervalo_aceptado",
+      "tipo": "bigint",
+      "obligatorio": false
+    },
+    {
+      "tabla": "usuario_totp",
+      "columna": "actualizado_en",
+      "tipo": "timestamp with time zone",
+      "obligatorio": true
+    }
+  ],
+  "restricciones": [
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_accion_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL accion"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_actor_tipo_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL actor_tipo"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_autorizacion_id_fkey",
+      "convalidated": true,
+      "definicion": "FOREIGN KEY (autorizacion_id) REFERENCES seguridad.autorizaciones(id)"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_evento_id_key",
+      "convalidated": true,
+      "definicion": "UNIQUE (evento_id)"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_evento_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL evento_id"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_fecha_evento_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL fecha_evento"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_metadata_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL metadata"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_modulo_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL modulo"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "auditoria",
+      "conname": "auditoria_resultado_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "conname": "auditoria_cambios_auditoria_id_fkey",
+      "convalidated": true,
+      "definicion": "FOREIGN KEY (auditoria_id) REFERENCES seguridad.auditoria(id)"
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "conname": "auditoria_cambios_auditoria_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL auditoria_id"
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "conname": "auditoria_cambios_campo_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL campo"
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "conname": "auditoria_cambios_creado_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "conname": "auditoria_cambios_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "conname": "auditoria_cambios_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_autorizada_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL autorizada_en"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_desafio_id_fkey",
+      "convalidated": true,
+      "definicion": "FOREIGN KEY (desafio_id) REFERENCES seguridad.desafios(id)"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_desafio_id_key",
+      "convalidated": true,
+      "definicion": "UNIQUE (desafio_id)"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_desafio_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL desafio_id"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_expira_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL expira_en"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_operacion_hash_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL operacion_hash"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_politica_id_fkey",
+      "convalidated": true,
+      "definicion": "FOREIGN KEY (politica_id) REFERENCES seguridad.politicas_accion(id)"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_politica_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL politica_id"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_resultado_check",
+      "convalidated": true,
+      "definicion": "CHECK (((resultado)::text = ANY ((ARRAY['AUTORIZADA'::character varying, 'CONSUMIDA'::character varying, 'REVOCADA'::character varying])::text[])))"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_resultado_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL resultado"
+    },
+    {
+      "tabla": "autorizaciones",
+      "conname": "autorizaciones_usuario_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_creado_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_estado_check",
+      "convalidated": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'VERIFICADO'::character varying, 'CONSUMIDO'::character varying, 'EXPIRADO'::character varying, 'CANCELADO'::character varying])::text[])))"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_estado_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_expira_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL expira_en"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_intentos_check",
+      "convalidated": true,
+      "definicion": "CHECK ((intentos >= 0))"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_intentos_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL intentos"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_operacion_hash_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL operacion_hash"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_politica_id_fkey",
+      "convalidated": true,
+      "definicion": "FOREIGN KEY (politica_id) REFERENCES seguridad.politicas_accion(id)"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_politica_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL politica_id"
+    },
+    {
+      "tabla": "desafios",
+      "conname": "desafios_usuario_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_activa_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL activa"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_codigo_key",
+      "convalidated": true,
+      "definicion": "UNIQUE (codigo)"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_codigo_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL codigo"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_creado_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_modulo_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL modulo"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_nombre_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL nombre"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_requiere_totp_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL requiere_totp"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_vigencia_segundos_check",
+      "convalidated": true,
+      "definicion": "CHECK (((vigencia_segundos >= 30) AND (vigencia_segundos <= 600)))"
+    },
+    {
+      "tabla": "politicas_accion",
+      "conname": "politicas_accion_vigencia_segundos_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL vigencia_segundos"
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "conname": "totp_recuperacion_codigo_hash_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL codigo_hash"
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "conname": "totp_recuperacion_creado_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "conname": "totp_recuperacion_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "conname": "totp_recuperacion_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "conname": "totp_recuperacion_usuario_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL usuario_id"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_actualizado_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL actualizado_en"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_creado_en_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL creado_en"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_estado_check",
+      "convalidated": true,
+      "definicion": "CHECK (((estado)::text = ANY ((ARRAY['PENDIENTE'::character varying, 'ACTIVO'::character varying, 'REVOCADO'::character varying])::text[])))"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_estado_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL estado"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL id"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_pkey",
+      "convalidated": true,
+      "definicion": "PRIMARY KEY (id)"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_secreto_cifrado_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL secreto_cifrado"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_usuario_id_key",
+      "convalidated": true,
+      "definicion": "UNIQUE (usuario_id)"
+    },
+    {
+      "tabla": "usuario_totp",
+      "conname": "usuario_totp_usuario_id_not_null",
+      "convalidated": true,
+      "definicion": "NOT NULL usuario_id"
+    }
+  ],
+  "permisos_columnas": [
+    {
+      "table_name": "usuario_totp",
+      "column_name": "activado_en",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "activado_en",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "activado_en",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "actualizado_en",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "actualizado_en",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "actualizado_en",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "creado_en",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "creado_en",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "creado_en",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "estado",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "estado",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "estado",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "expira_configuracion_en",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "expira_configuracion_en",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "expira_configuracion_en",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "id",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "id",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "id",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "revocado_en",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "revocado_en",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "revocado_en",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "secreto_cifrado",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "secreto_cifrado",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "secreto_cifrado",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "ultimo_intervalo_aceptado",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "ultimo_intervalo_aceptado",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "ultimo_intervalo_aceptado",
+      "privilege_type": "UPDATE"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "usuario_id",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "usuario_id",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "column_name": "usuario_id",
+      "privilege_type": "UPDATE"
+    }
+  ],
+  "permisos_tablas": [
+    {
+      "table_name": "usuario_totp",
+      "privilege_type": "INSERT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "privilege_type": "SELECT"
+    },
+    {
+      "table_name": "usuario_totp",
+      "privilege_type": "UPDATE"
+    }
+  ],
+  "triggers": [],
+  "accesos_efectivos": [
+    {
+      "tabla": "auditoria",
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false
+    },
+    {
+      "tabla": "auditoria_cambios",
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false
+    },
+    {
+      "tabla": "autorizaciones",
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false
+    },
+    {
+      "tabla": "desafios",
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false
+    },
+    {
+      "tabla": "politicas_accion",
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false
+    },
+    {
+      "tabla": "totp_recuperacion",
+      "lectura": false,
+      "insercion": false,
+      "actualizacion": false
+    },
+    {
+      "tabla": "usuario_totp",
+      "lectura": true,
+      "insercion": true,
+      "actualizacion": true
+    }
+  ],
+  "secuencias": [
+    {
+      "secuencia": "auditoria_cambios_id_seq",
+      "uso": false
+    },
+    {
+      "secuencia": "auditoria_id_seq",
+      "uso": false
+    },
+    {
+      "secuencia": "politicas_accion_id_seq",
+      "uso": false
+    },
+    {
+      "secuencia": "totp_recuperacion_id_seq",
+      "uso": false
+    },
+    {
+      "secuencia": "usuario_totp_id_seq",
+      "uso": false
+    }
+  ],
+  "columnas_mapeadas_ausentes": []
+}
