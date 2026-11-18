@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.12 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.15 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -238,6 +238,29 @@ Indicadores del panel: `{ "total", "aptos", "no_aptos", "reentrenamiento_por_ven
 
 ---
 
+## 3b. Estadísticas del panel principal
+`GET /api/estadisticas/panel?anio=AAAA&semestre=1|2` (componente `DASHBOARD`, leer; todos los roles). Sin parámetros = todo el histórico.
+Los cursos se ubican por su **fecha de inicio**; semestre 1 = enero a junio, 2 = julio a diciembre. Solo cifras agregadas.
+
+```json
+{
+  "periodo": { "anio": 2026, "semestre": 2 }, "hoy": "2026-11-18", "anios_disponibles": [2024, 2025, 2026],
+  "indicadores": { "cursos_periodo": 5, "alumnos_periodo": 35, "egresados": 3, "cursos_culminados": 1,
+                   "cursos_en_curso": 3, "alumnos_en_curso": 27 },
+  "habilitacion": { "total": 243, "aptos": 30, "no_aptos": 213, "reentrenamiento_por_vencer": 2 },
+  "cursos_por_anio": [{ "anio": 2026, "semestre_1": 3, "semestre_2": 5 }],
+  "grados": [{ "sigla": "CS", "nombre": "Cabo Segundo", "categoria": "SUBOFICIAL" }],
+  "cursos": [{ "id", "codigo", "nombre", "tipo_curso", "estado", "fecha_inicio", "fecha_fin", "comandante", "alumnos",
+               "grados": { "CS": 2 }, "genero": { "M": 4, "F": 1 } }],
+  "en_curso": [{ "...curso", "dias_totales", "dias_transcurridos", "porcentaje", "dias_restantes", "vencido" }]
+}
+```
+- **Alumno** de un curso: fila de `hoja_vida_artillero` con ese curso (grado al ingresar). **Egresado**: alumno de un curso `CULMINADO`.
+- `en_curso` y los indicadores `cursos_en_curso` / `alumnos_en_curso` son el estado de **hoy** (no dependen del filtro).
+- `vencido`: ya pasó `fecha_fin` y el curso sigue `EN_CURSO`. `grados` viene en orden jerárquico (oficiales, suboficiales, soldados).
+
+---
+
 ## 4. Catálogos (para selectores y filtros)
 
 | Ruta | Respuesta |
@@ -407,3 +430,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.12 | 2026-11-17 | §5d panel de instructores (militares y civiles, foto y especialidades) y cursos del instructor. Migraciones p0013 y p0014 |
 | 0.13 | 2026-11-18 | §5e registro manual de personal militar y accesos a Instructores / Usuarios con `?cedula=`. Migración p0015 |
 | 0.14 | 2026-11-18 | §3 documentos PDF del artillero (diploma, oficio remisorio, certificación) con ReportLab |
+| 0.15 | 2026-11-18 | §3b estadísticas del panel principal (cursos por año y semestre, grados y género por curso, egresados, seguimiento de cursos en curso) |
