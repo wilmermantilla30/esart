@@ -121,12 +121,16 @@ export const routes: Routes = [
                 (m) => m.CargueExcel,
               ),
           },
-          rutaEnConstruccion(
-            'cargue-manual',
-            'PERSONAL_CARGUE_MANUAL',
-            'Registro manual de personal',
-            'Formulario para registrar un artillero.',
-          ),
+          {
+            path: 'cargue-manual',
+            title: 'Registro manual de personal — ESART',
+            canActivate: [exigirPermiso],
+            data: { componente: 'PERSONAL_CARGUE_MANUAL' },
+            loadComponent: () =>
+              import('./paginas/personal-militar/cargue-manual/cargue-manual').then(
+                (m) => m.CargueManual,
+              ),
+          },
         ],
       },
       {

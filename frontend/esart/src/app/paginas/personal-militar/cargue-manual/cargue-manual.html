@@ -1,1 +1,268 @@
-<p>cargue-manual works!</p>
+<!--
+  Registro manual de personal militar (PERSONAL_CARGUE_MANUAL).
+  Formulario en tarjeta tipo ventana; tras guardar se reemplaza por el resumen y los accesos
+  a Instructores y Usuarios (cada uno visible solo con permiso "crear" en su componente).
+-->
+<section class="registro" aria-labelledby="registro-titulo">
+  <header class="registro-cabecera">
+    <span class="registro-icono material-symbols-outlined" aria-hidden="true">person_add</span>
+    <div class="min-w-0 flex-1">
+      <h2 id="registro-titulo" class="flex flex-wrap items-center gap-2">
+        Registro de Personal Militar <span class="registro-insignia">NUEVO EFECTIVO</span>
+      </h2>
+      <p>Captura homologada con la base de datos PostgreSQL de la Escuela de Artillería.</p>
+    </div>
+    <button
+      type="button"
+      class="registro-cerrar"
+      (click)="cancelar()"
+      aria-label="Cerrar y volver al panel"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">close</span>
+    </button>
+  </header>
+
+  @if (registrado(); as militar) {
+    <!-- Resultado del registro -->
+    <div class="registro-cuerpo">
+      <div class="registro-exito" role="status">
+        <span class="material-symbols-outlined" aria-hidden="true">check_circle</span>
+        <div>
+          <strong>{{ militar.nombre_completo }}</strong> quedó registrado en personal militar.
+          <dl>
+            <div>
+              <dt>Documento</dt>
+              <dd>{{ militar.documento_identidad }}</dd>
+            </div>
+            <div>
+              <dt>Categoría</dt>
+              <dd>{{ militar.categoria }}</dd>
+            </div>
+            <div>
+              <dt>Unidad</dt>
+              <dd>{{ militar.unidad_nombre ?? 'Sin unidad' }}</dd>
+            </div>
+            <div>
+              <dt>Estado</dt>
+              <dd>{{ militar.activo ? 'Activo en servicio' : 'Inactivo' }}</dd>
+            </div>
+          </dl>
+        </div>
+      </div>
+
+      @if (puedeInstructores() || puedeUsuarios()) {
+        <p class="registro-ayuda">¿Qué desea hacer ahora con este efectivo?</p>
+        <div class="registro-accesos">
+          @if (puedeInstructores()) {
+            <a
+              class="registro-acceso"
+              routerLink="/instructores"
+              [queryParams]="{ cedula: militar.documento_identidad }"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">school</span>
+              <span>
+                <strong>Registrar como instructor</strong>
+                <small>Abre Instructores con la cédula cargada.</small>
+              </span>
+            </a>
+          }
+          @if (puedeUsuarios()) {
+            <a
+              class="registro-acceso"
+              routerLink="/administracion/usuarios"
+              [queryParams]="{ cedula: militar.documento_identidad }"
+            >
+              <span class="material-symbols-outlined" aria-hidden="true">manage_accounts</span>
+              <span>
+                <strong>Crear usuario del sistema</strong>
+                <small>Abre Gestión de usuarios con la cédula cargada.</small>
+              </span>
+            </a>
+          }
+        </div>
+      }
+    </div>
+    <footer class="registro-pie">
+      <span class="registro-esquema">PostgreSQL schema: personal_militar</span>
+      <div class="flex gap-2">
+        <button type="button" class="boton-secundario" (click)="cancelar()">Volver al panel</button>
+        <button type="button" class="boton-primario" (click)="registrarOtro()">
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">person_add</span>
+          Registrar otro
+        </button>
+      </div>
+    </footer>
+  } @else {
+    <form [formGroup]="formulario" (ngSubmit)="guardar()" novalidate>
+      <div class="registro-cuerpo">
+        <p class="registro-aviso">
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">info</span>
+          Los campos marcados con asterisco (<span class="obligatorio">*</span>) son de
+          diligenciamiento obligatorio por doctrina de personal.
+        </p>
+
+        @if (cargando()) {
+          <p class="registro-ayuda" role="status">Cargando grados y unidades…</p>
+        } @else if (errorCarga()) {
+          <p class="registro-error-caja" role="alert">
+            {{ errorCarga() }}
+            <button type="button" (click)="cargarOpciones()">Reintentar</button>
+          </p>
+        }
+
+        <fieldset [disabled]="guardando() || cargando()">
+          <!-- Identificación -->
+          <h3 class="registro-seccion">
+            <span class="material-symbols-outlined" aria-hidden="true">badge</span>
+            Datos de identificación personal
+          </h3>
+          <div class="registro-rejilla">
+            <label class="campo campo-ancho">
+              <span>Documento de Identidad <span class="obligatorio">*</span></span>
+              <span class="campo-icono">
+                <span class="material-symbols-outlined" aria-hidden="true">id_card</span>
+                <input
+                  formControlName="documento_identidad"
+                  inputmode="numeric"
+                  maxlength="15"
+                  autocomplete="off"
+                  placeholder="Ej. 1024589632"
+                  [attr.aria-invalid]="invalido('documento_identidad')"
+                  aria-describedby="ayuda-documento"
+                />
+              </span>
+              <small id="ayuda-documento" [class.campo-error]="invalido('documento_identidad')">
+                Cédula de ciudadanía o tarjeta militar única (solo números, 5 a 15 dígitos).
+              </small>
+            </label>
+            <label class="campo">
+              <span>Nombres <span class="obligatorio">*</span></span>
+              <input
+                formControlName="nombres"
+                maxlength="150"
+                autocomplete="off"
+                placeholder="Ej. Carlos Andrés"
+                [attr.aria-invalid]="invalido('nombres')"
+              />
+            </label>
+            <label class="campo">
+              <span>Apellidos <span class="obligatorio">*</span></span>
+              <input
+                formControlName="apellidos"
+                maxlength="150"
+                autocomplete="off"
+                placeholder="Ej. Colorado Gil"
+                [attr.aria-invalid]="invalido('apellidos')"
+              />
+            </label>
+          </div>
+
+          <!-- Escalafón -->
+          <h3 class="registro-seccion">
+            <span class="material-symbols-outlined" aria-hidden="true">military_tech</span>
+            Escalafón y situación operacional
+          </h3>
+          <div class="registro-rejilla registro-rejilla-3">
+            <label class="campo">
+              <span>Grado Militar <span class="obligatorio">*</span></span>
+              <select
+                formControlName="grado"
+                (change)="elegirGrado($any($event.target).value)"
+                [attr.aria-invalid]="invalido('grado')"
+              >
+                <option value="">Seleccione grado…</option>
+                @for (categoria of categorias(); track categoria.codigo) {
+                  <optgroup [label]="categoria.nombre">
+                    @for (grado of categoria.grados; track grado.codigo) {
+                      <option [value]="grado.codigo">
+                        {{ grado.codigo }} — {{ grado.nombre }}
+                      </option>
+                    }
+                  </optgroup>
+                }
+              </select>
+            </label>
+            <label class="campo">
+              <span>Género <span class="obligatorio">*</span></span>
+              <select formControlName="genero" [attr.aria-invalid]="invalido('genero')">
+                <option value="">Seleccione…</option>
+                <option value="M">Masculino</option>
+                <option value="F">Femenino</option>
+              </select>
+            </label>
+            <label class="campo">
+              <span>Categoría <span class="obligatorio">*</span></span>
+              <select
+                formControlName="categoria"
+                (change)="elegirCategoria($any($event.target).value)"
+                [attr.aria-invalid]="invalido('categoria')"
+              >
+                <option value="">Seleccione categoría…</option>
+                @for (categoria of categorias(); track categoria.codigo) {
+                  <option [value]="categoria.codigo">{{ categoria.nombre }}</option>
+                }
+              </select>
+            </label>
+          </div>
+          <div class="registro-rejilla">
+            <label class="campo">
+              <span>Unidad Militar Asignada <em>(Opcional)</em></span>
+              <select formControlName="unidad_actual_id">
+                <option value="">Sin unidad asignada</option>
+                @for (unidad of unidades(); track unidad.id) {
+                  <option [value]="unidad.id">{{ unidad.codigo }} — {{ unidad.nombre }}</option>
+                }
+              </select>
+            </label>
+            <label class="campo">
+              <span>Especialidad en Artillería <em>(Opcional)</em></span>
+              <input
+                formControlName="especialidad_actual"
+                maxlength="100"
+                autocomplete="off"
+                placeholder="Ej. Artillería de Campaña y Dirección de Tiro"
+              />
+            </label>
+          </div>
+
+          <!-- Estado -->
+          <div class="registro-estado">
+            <div>
+              <strong
+                >Estado del Efectivo ({{
+                  formulario.controls.activo.value ? 'Activo' : 'Inactivo'
+                }})</strong
+              >
+              <small
+                >Determina si el militar puede ser convocado a cursos y habilitaciones
+                operativas.</small
+              >
+            </div>
+            <label class="interruptor">
+              <span [class.text-success]="formulario.controls.activo.value">
+                {{ formulario.controls.activo.value ? 'Activo en servicio' : 'Inactivo' }}
+              </span>
+              <input type="checkbox" role="switch" formControlName="activo" />
+              <span class="interruptor-pista" aria-hidden="true"></span>
+            </label>
+          </div>
+        </fieldset>
+
+        @if (errorGuardar()) {
+          <p class="registro-error-caja" role="alert">{{ errorGuardar() }}</p>
+        }
+      </div>
+
+      <footer class="registro-pie">
+        <span class="registro-esquema">PostgreSQL schema: personal_militar</span>
+        <div class="flex gap-2">
+          <button type="button" class="boton-secundario" (click)="cancelar()">Cancelar</button>
+          <button type="submit" class="boton-primario" [disabled]="guardando() || cargando()">
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+            {{ guardando() ? 'Registrando…' : 'Registrar Militar' }}
+          </button>
+        </div>
+      </footer>
+    </form>
+  }
+</section>

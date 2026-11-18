@@ -2,6 +2,7 @@ import { DatePipe } from '@angular/common';
 import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 
 import { ErrorApi, leerErrorApi } from '../../nucleo/modelos/error-api';
@@ -65,6 +66,7 @@ export class Instructores {
   private readonly servicio = inject(InstructoresService);
   private readonly sesion = inject(SesionService);
   private readonly destruir = inject(DestroyRef);
+  private readonly ruta = inject(ActivatedRoute);
 
   protected readonly puedeCrear = computed(() => this.sesion.puede(COMPONENTE, 'crear'));
   protected readonly puedeEditar = computed(() => this.sesion.puede(COMPONENTE, 'actualizar'));
@@ -125,6 +127,19 @@ export class Instructores {
       .pipe(takeUntilDestroyed(this.destruir))
       .subscribe({ next: (lista) => this.especialidades.set(lista) });
     this.cargar();
+    this.abrirDesdeRegistro();
+  }
+
+  /**
+   * Llegada desde "Registro manual de personal" (/instructores?cedula=...): abre el formulario
+   * de instructor militar con la cédula ya buscada. Solo si el usuario puede crear instructores.
+   */
+  private abrirDesdeRegistro(): void {
+    const cedula = this.ruta.snapshot.queryParamMap.get('cedula') ?? '';
+    if (!/^\d{5,15}$/.test(cedula) || !this.puedeCrear()) return;
+    this.abrirNuevo();
+    this.documento.set(cedula);
+    this.buscarMilitar();
   }
 
   protected cargar(): void {

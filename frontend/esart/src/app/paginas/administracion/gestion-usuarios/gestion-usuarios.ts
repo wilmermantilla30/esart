@@ -1,5 +1,6 @@
 import { Component, computed, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
+import { ActivatedRoute } from '@angular/router';
 
 import { contrasenaValida, generarContrasenaTemporal, revisarContrasena } from '../../../nucleo/contrasenas';
 import { MilitarParaUsuario, UsuarioGestion } from '../../../nucleo/modelos/administracion';
@@ -48,6 +49,7 @@ export function estadoDeUsuario(usuario: UsuarioGestion): { texto: string; clase
 export class GestionUsuarios {
   private readonly administracion = inject(AdministracionService);
   private readonly sesion = inject(SesionService);
+  private readonly ruta = inject(ActivatedRoute);
 
   protected readonly puedeCrear = computed(() => this.sesion.puede(COMPONENTE, 'crear'));
   protected readonly puedeActualizar = computed(() => this.sesion.puede(COMPONENTE, 'actualizar'));
@@ -95,6 +97,19 @@ export class GestionUsuarios {
 
   constructor() {
     this.cargar();
+    this.abrirDesdeRegistro();
+  }
+
+  /**
+   * Llegada desde "Registro manual de personal" (/administracion/usuarios?cedula=...): abre el
+   * alta con la cédula ya buscada. Solo si el usuario puede crear usuarios.
+   */
+  private abrirDesdeRegistro(): void {
+    const cedula = this.ruta.snapshot.queryParamMap.get('cedula') ?? '';
+    if (!PATRON_CEDULA.test(cedula) || !this.puedeCrear()) return;
+    this.abrirAlta();
+    this.cedula.set(cedula);
+    this.buscarMilitar();
   }
 
   protected cargar(): void {
