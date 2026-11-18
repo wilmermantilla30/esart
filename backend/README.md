@@ -29,6 +29,27 @@ Desde backend, con .venv 3.12 y configuración válida:
 
 El estado y los bloqueos actuales están en [ESART_ESTADO_DESARROLLO.md](../docs/ESART_ESTADO_DESARROLLO.md). Los contratos describen también funciones futuras: no confundir una ruta diseñada con implementada. Mantener español descriptivo, requirements ASCII, bcrypt directo y secretos fuera de logs/Git. No crear administradores con contraseñas predeterminadas.
 
+## Producción: un solo servidor para el dashboard y la API (HU-21)
+
+FastAPI sirve el Angular compilado en la misma dirección que la API: el Comandante solo abre
+`https://<servidor>/`. Rutas de Angular (`/instructores`, `/dashboard`…) devuelven `index.html`;
+`/api/...` sigue siendo la API (sus 404 son JSON).
+
+```powershell
+# 1. Compilar el front (una vez por despliegue)
+Set-Location frontend/esart; npm.cmd ci; npm.cmd run build; Set-Location ../..
+# 2. Arrancar (desde backend/), sin --reload en producción
+.venv/Scripts/python.exe -m uvicorn aplicacion.principal:aplicacion --host 0.0.0.0 --port 8081
+```
+
+- `RUTA_FRONT` (opcional) apunta a otra carpeta del build; por defecto `frontend/esart/dist/esart/browser`.
+- Producción exige `ENTORNO=produccion` y `COOKIE_SEGURA=true`, es decir, HTTPS (certificado en el servidor
+  o en un proxy delante). Con cookies seguras se envía `Strict-Transport-Security`.
+- Cabeceras: CSP estricta en el dashboard (solo scripts propios, sin CDN), `nosniff`, `X-Frame-Options: DENY`,
+  `Referrer-Policy: same-origin`; `Cache-Control: no-store` en todas las respuestas de datos de la API.
+- `--host 0.0.0.0` lo expone a la red: el firewall del servidor solo debe abrir el puerto de ESART.
+- Caché del front: archivos con huella (`main-XXXX.js`) un año; `index.html` se revalida siempre.
+
 ## Alembic (migraciones_principal)
 
 Cadena: `p0000_instalacion_inicial` → `p0001_real` → `p0002_seguridad_sesiones`.
