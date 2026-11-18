@@ -1,0 +1,370 @@
+<div class="space-y-5">
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  <!-- Filtros rápidos por tipo de archivo -->
+  <div class="bg-white rounded-xl border border-gris-bordes p-3 flex flex-wrap items-center gap-2">
+    <span
+      class="text-xs font-semibold text-azul-pizarra/60 font-headline uppercase tracking-wider mr-1"
+      >Filtrar por formato:</span
+    >
+    <button
+      type="button"
+      (click)="filtro.set('TODOS')"
+      [attr.aria-pressed]="filtro() === 'TODOS'"
+      [class]="
+        'px-3 py-1 rounded-lg text-xs border transition-colors ' +
+        (filtro() === 'TODOS'
+          ? 'font-bold bg-azul-pizarra text-white border-azul-pizarra'
+          : 'font-medium text-azul-pizarra bg-white border-gris-bordes')
+      "
+    >
+      Todos ({{ conteo().TODOS }})
+    </button>
+    @for (
+      opcion of [
+        { valor: 'EXCEL', texto: 'Excel (.xlsx, .xls)', estilo: estilos.XLSX },
+        { valor: 'PDF', texto: 'PDF (.pdf)', estilo: estilos.PDF },
+        { valor: 'WORD', texto: 'Word (.docx)', estilo: estilos.DOCX },
+      ];
+      track opcion.valor
+    ) {
+      <button
+        type="button"
+        (click)="filtro.set($any(opcion.valor))"
+        [attr.aria-pressed]="filtro() === opcion.valor"
+        [class]="
+          'px-3 py-1 rounded-lg text-xs border flex items-center gap-1.5 transition-colors ' +
+          opcion.estilo.filtro +
+          (filtro() === opcion.valor
+            ? ' font-bold ring-2 ring-offset-1 ring-azul-institucional/40'
+            : ' font-medium')
+        "
+      >
+        <span [class]="'w-2 h-2 rounded-full ' + opcion.estilo.punto" aria-hidden="true"></span>
+        {{ opcion.texto }} ({{ $any(conteo())[opcion.valor] }})
+      </button>
+    }
+  </div>
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Cargando plantillas…</p>
+  } @else if (!visibles().length) {
+    <div
+      class="bg-white rounded-2xl border border-dashed border-gris-bordes p-10 text-center space-y-2"
+    >
+      <span class="material-symbols-outlined text-[40px] text-azul-pizarra/40" aria-hidden="true"
+        >folder_open</span
+      >
+      <p class="font-headline font-semibold text-azul-pizarra">
+        {{
+          plantillas().length
+            ? 'No hay plantillas de este formato.'
+            : 'Todavía no hay plantillas publicadas.'
+        }}
+      </p>
+      @if (puedePublicar() && !plantillas().length) {
+        <p class="text-body-md text-azul-pizarra/70">
+          Use el botón "Subir plantilla o formato" para publicar la primera.
+        </p>
+      }
+    </div>
+  } @else {
+    <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+      @for (plantilla of visibles(); track plantilla.id) {
+        @let estilo = estilos[plantilla.formato];
+        <article
+          [class]="
+            'bg-white rounded-2xl border-2 hover:shadow-md transition-all flex flex-col justify-between overflow-hidden ' +
+            estilo.tarjeta
+          "
+        >
+          <div class="p-5 space-y-3">
+            <div class="flex items-start justify-between gap-3">
+              <div
+                [class]="
+                  'w-12 h-12 rounded-xl border flex items-center justify-center shrink-0 ' +
+                  estilo.icono_caja
+                "
+              >
+                <span class="material-symbols-outlined text-[28px]" aria-hidden="true">{{
+                  estilo.icono
+                }}</span>
+              </div>
+              <div class="flex flex-col items-end gap-1">
+                <span
+                  [class]="
+                    'px-2.5 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ' +
+                    estilo.insignia
+                  "
+                >
+                  {{ estilo.etiqueta }}
+                </span>
+                <span class="text-[10px] text-azul-pizarra/60 font-medium">{{
+                  plantilla.version
+                }}</span>
+              </div>
+            </div>
+
+            <div>
+              <h3 class="font-headline font-bold text-negro-institucional text-sm">
+                {{ plantilla.nombre_oficial }}
+              </h3>
+              <p class="text-[11px] font-mono text-azul-pizarra/60 break-all">
+                {{ plantilla.nombre_archivo }}
+              </p>
+              @if (plantilla.descripcion) {
+                <p class="text-xs text-azul-pizarra/80 mt-1 line-clamp-3">
+                  {{ plantilla.descripcion }}
+                </p>
+              }
+            </div>
+
+            <div [class]="'rounded-xl p-2.5 border space-y-1 text-[11px] ' + estilo.ficha">
+              <div class="flex justify-between gap-2">
+                <span class="text-azul-pizarra/60">Tamaño del archivo:</span>
+                <span class="font-semibold text-azul-pizarra">{{
+                  tamanoLegible(plantilla.tamano_bytes)
+                }}</span>
+              </div>
+              <div class="flex justify-between gap-2">
+                <span class="text-azul-pizarra/60">Publicado por:</span>
+                <span class="font-semibold text-azul-pizarra font-mono">{{
+                  plantilla.subido_por ?? '—'
+                }}</span>
+              </div>
+              <div class="flex justify-between gap-2" [title]="'SHA-256: ' + plantilla.sha256">
+                <span class="text-azul-pizarra/60">Huella (integridad):</span>
+                <span class="font-semibold text-azul-pizarra font-mono"
+                  >{{ plantilla.sha256.slice(0, 12) }}…</span
+                >
+              </div>
+            </div>
+          </div>
+
+          <div
+            [class]="
+              'px-5 py-3 border-t flex items-center justify-between gap-2 text-xs ' + estilo.pie
+            "
+          >
+            <span class="text-[11px] text-azul-pizarra/60"
+              >Publicado: {{ plantilla.subido_en | date: 'd MMM y' }}</span
+            >
+            <div class="flex items-center gap-2">
+              @if (puedeRetirar()) {
+                <button
+                  type="button"
+                  (click)="retirar(plantilla)"
+                  [disabled]="ocupado() === plantilla.id"
+                  class="px-2 py-1 rounded bg-white text-azul-pizarra/70 border border-gris-bordes hover:text-error hover:border-error/40 flex items-center gap-1 disabled:opacity-50"
+                  [attr.aria-label]="'Retirar ' + plantilla.nombre_oficial"
+                >
+                  <span class="material-symbols-outlined text-[15px]" aria-hidden="true"
+                    >archive</span
+                  >
+                  <span>Retirar</span>
+                </button>
+              }
+              <button
+                type="button"
+                (click)="descargar(plantilla)"
+                [disabled]="ocupado() === plantilla.id"
+                [class]="
+                  'px-2.5 py-1 rounded bg-white border font-semibold flex items-center gap-1 transition-colors disabled:opacity-50 ' +
+                  estilo.boton
+                "
+                [attr.aria-label]="'Descargar ' + plantilla.nombre_oficial"
+              >
+                <span class="material-symbols-outlined text-[15px]" aria-hidden="true"
+                  >download</span
+                >
+                <span>Descargar</span>
+              </button>
+            </div>
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<!-- Ventana "Subir nueva plantilla o formato" -->
+@if (subiendo()) {
+  <div
+    class="fixed inset-0 z-40 bg-negro-institucional/40 flex items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-subir-plantilla"
+  >
+    <div
+      class="w-full max-w-lg bg-white rounded-2xl border border-gris-bordes shadow-xl overflow-hidden"
+    >
+      <header class="px-6 py-4 border-b border-gris-bordes flex items-start justify-between gap-3">
+        <div class="flex items-center gap-3">
+          <span
+            class="w-10 h-10 rounded-xl bg-azul-hielo text-azul-institucional flex items-center justify-center"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+          </span>
+          <div>
+            <h2
+              id="titulo-subir-plantilla"
+              class="font-headline font-bold text-negro-institucional"
+            >
+              Subir nueva plantilla o formato
+            </h2>
+            <p class="text-xs text-azul-pizarra/60">
+              Admite archivos Excel (.xlsx, .xls), PDF (.pdf) y Word (.docx)
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarSubida()"
+          aria-label="Cerrar"
+          class="text-azul-pizarra/60 hover:text-azul-pizarra"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <form class="px-6 py-5 space-y-4" (ngSubmit)="publicar()">
+        <input
+          #entradaArchivo
+          type="file"
+          class="hidden"
+          accept=".xlsx,.xls,.pdf,.docx"
+          (change)="archivoElegido($event)"
+        />
+        <button
+          type="button"
+          (click)="examinar()"
+          (dragover)="sobre($event)"
+          (dragleave)="arrastrando.set(false)"
+          (drop)="soltar($event)"
+          [class]="
+            'w-full rounded-xl border-2 border-dashed p-6 flex flex-col items-center gap-1.5 text-center transition-colors ' +
+            (arrastrando()
+              ? 'border-azul-institucional bg-azul-hielo'
+              : 'border-gris-bordes hover:border-azul-institucional')
+          "
+        >
+          <span
+            class="material-symbols-outlined text-[36px] text-azul-institucional"
+            aria-hidden="true"
+            >cloud_upload</span
+          >
+          @if (archivo(); as elegido) {
+            <span class="font-headline font-semibold text-negro-institucional break-all">{{
+              elegido.name
+            }}</span>
+            <span class="text-xs text-azul-pizarra/70">
+              {{ formatoElegido() ? estilos[formatoElegido()!].etiqueta : '' }} ·
+              {{ tamanoLegible(elegido.size) }} — clic para cambiar
+            </span>
+          } @else {
+            <span class="font-headline font-semibold text-negro-institucional"
+              >Haga clic para examinar o arrastre el archivo aquí</span
+            >
+            <span class="text-xs text-azul-pizarra/70"
+              >Formatos permitidos: .XLSX, .XLS, .PDF, .DOCX (máx. 25 MB). Sin macros.</span
+            >
+          }
+        </button>
+
+        <div class="space-y-1">
+          <label for="nombre-oficial" class="block font-headline text-label-md"
+            >Nombre oficial del documento</label
+          >
+          <input
+            id="nombre-oficial"
+            name="nombre_oficial"
+            maxlength="200"
+            [ngModel]="nombreOficial()"
+            (ngModelChange)="nombreOficial.set($event)"
+            class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+            placeholder="Ej. Plantilla de cargue de personal militar"
+          />
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div class="space-y-1">
+            <span class="block font-headline text-label-md">Tipo de formato</span>
+            <p class="py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-gris-claro">
+              {{ formatoElegido() ? estilos[formatoElegido()!].etiqueta : 'Según el archivo' }}
+            </p>
+          </div>
+          <div class="space-y-1">
+            <label for="version-plantilla" class="block font-headline text-label-md">Versión</label>
+            <input
+              id="version-plantilla"
+              name="version"
+              maxlength="30"
+              [ngModel]="version()"
+              (ngModelChange)="version.set($event)"
+              class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+              placeholder="v1.0"
+            />
+          </div>
+        </div>
+        <div class="space-y-1">
+          <label for="descripcion-plantilla" class="block font-headline text-label-md"
+            >Descripción o instrucciones de uso</label
+          >
+          <textarea
+            id="descripcion-plantilla"
+            name="descripcion"
+            rows="3"
+            maxlength="2000"
+            [ngModel]="descripcion()"
+            (ngModelChange)="descripcion.set($event)"
+            class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+          ></textarea>
+        </div>
+
+        @if (errorSubida(); as mensaje) {
+          <div
+            class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+            role="alert"
+          >
+            <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+            <span>{{ mensaje }}</span>
+          </div>
+        }
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button
+            type="button"
+            (click)="cerrarSubida()"
+            class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="!puedeEnviar()"
+            class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">upload</span>
+            {{ publicando() ? 'Publicando…' : 'Publicar plantilla' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

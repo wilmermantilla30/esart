@@ -25,6 +25,14 @@ export const NOMBRES_ACCION: Readonly<Record<string, string>> = {
   CONTRASENA_RESTABLECIDA: 'Contraseña restablecida',
   CONTRASENA_CAMBIADA: 'Contraseña cambiada',
   IMPORTACION_EXCEL: 'Importación de Excel',
+  PARAMETROS_ACTUALIZADOS: 'Regla de habilitación modificada',
+  PLANTILLA_PUBLICADA: 'Plantilla publicada',
+  PLANTILLA_DESCARGADA: 'Plantilla descargada',
+  PLANTILLA_RETIRADA: 'Plantilla retirada',
+  INSTRUCTOR_REGISTRADO: 'Instructor registrado',
+  INSTRUCTOR_ACTUALIZADO: 'Instructor actualizado',
+  INSTRUCTOR_ACTIVADO: 'Instructor activado',
+  INSTRUCTOR_DESACTIVADO: 'Instructor desactivado',
 };
 
 const TAMANO_PAGINA = 50;

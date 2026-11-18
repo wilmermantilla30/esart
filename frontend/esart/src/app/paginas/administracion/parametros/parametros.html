@@ -1,0 +1,70 @@
+<div class="space-y-5">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div class="space-y-1">
+      <nav class="flex items-center gap-1 text-xs text-azul-pizarra/60" aria-label="Ruta">
+        <span>Administración</span>
+        <span class="material-symbols-outlined text-[14px]" aria-hidden="true">chevron_right</span>
+        <span>Parámetros</span>
+        <span class="material-symbols-outlined text-[14px]" aria-hidden="true">chevron_right</span>
+        <span class="text-azul-institucional font-semibold">{{ actual().texto }}</span>
+      </nav>
+      <h1 class="font-headline font-bold text-headline-md text-negro-institucional">
+        {{ actual().titulo }}
+      </h1>
+    </div>
+    @if (pestana() === 'plantillas' && puedePublicar()) {
+      <button
+        type="button"
+        (click)="subirPlantilla()"
+        class="px-4 py-2.5 rounded-lg bg-azul-institucional hover:opacity-90 text-white text-xs font-bold shadow-sm flex items-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">upload_file</span>
+        <span>Subir plantilla o formato</span>
+      </button>
+    }
+  </div>
+
+  <!-- Pestañas -->
+  <nav
+    class="bg-white rounded-xl border border-gris-bordes p-1.5 flex flex-col sm:flex-row gap-1"
+    aria-label="Secciones de parámetros"
+  >
+    @for (opcion of pestanas; track opcion.valor) {
+      <button
+        type="button"
+        (click)="cambiar(opcion.valor)"
+        [attr.aria-pressed]="pestana() === opcion.valor"
+        [class]="
+          'flex-1 flex items-center justify-center gap-2.5 py-2.5 px-4 rounded-lg font-headline text-xs border transition-all ' +
+          (pestana() === opcion.valor
+            ? 'font-bold text-azul-institucional bg-azul-hielo border-azul-claro'
+            : 'font-medium text-azul-pizarra/80 hover:bg-gris-claro border-transparent')
+        "
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">{{
+          opcion.icono
+        }}</span>
+        <span>{{ opcion.texto }}</span>
+        @if (opcion.valor === 'plantillas' && cantidadPlantillas() !== null) {
+          <span
+            class="px-1.5 rounded-full text-[10px] bg-azul-claro/40 text-azul-pizarra font-bold"
+          >
+            {{ cantidadPlantillas() }} {{ cantidadPlantillas() === 1 ? 'archivo' : 'archivos' }}
+          </span>
+        }
+      </button>
+    }
+  </nav>
+
+  @switch (pestana()) {
+    @case ('seguridad') {
+      <esart-parametros-seguridad />
+    }
+    @case ('cursos') {
+      <esart-regla-habilitacion />
+    }
+    @case ('plantillas') {
+      <esart-plantillas-formatos (cantidad)="cantidadPlantillas.set($event)" />
+    }
+  }
+</div>

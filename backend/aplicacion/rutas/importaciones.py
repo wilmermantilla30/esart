@@ -9,17 +9,16 @@ from fastapi import APIRouter, Depends, Form, Request, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
-from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.importaciones import DatosFormularioCurso, RespuestaImportacionPersonal
 from aplicacion.nucleo.errores import ErrorAplicacion
-from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente, tiene_permiso_codigo
+from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
 from aplicacion.seguridad.sesion_http import (
     obtener_id_usuario_actual,
-    obtener_ip_cliente,
     obtener_usuario_actual,
     verificar_csrf,
 )
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
+from aplicacion.servicios.confirmacion_totp import exigir_codigo_totp
 from aplicacion.servicios.importacion_personal import (
     MAX_ARCHIVO,
     DatosCurso,
@@ -27,7 +26,6 @@ from aplicacion.servicios.importacion_personal import (
     guardar_personal,
     leer_excel,
 )
-from aplicacion.servicios.totp import TotpService
 
 registrador = logging.getLogger(__name__)
 
@@ -43,27 +41,15 @@ enrutador = APIRouter(
 
 async def autorizar_importacion(sesion, actor, codigo, request):
     """Reutiliza política, límites y verificación TOTP existentes, si están habilitados."""
-    if not obtener_configuracion().totp_habilitado:
-        return
-    servicio = TotpService(sesion)
-    politica = await servicio.politica("PERSONAL_CARGUE_EXCEL")
-    if politica.permiso_requerido not in (None, "PERSONAL_CARGUE_EXCEL") and not await tiene_permiso_codigo(
-        sesion, actor.id, politica.permiso_requerido
-    ):
-        raise ErrorAplicacion(403, "SIN_PERMISO", "No tiene permiso para esta acción.")
-    if not codigo:
-        raise ErrorAplicacion(
-            409, "TOTP_REQUERIDO", "Ingrese el código del autenticador para confirmar esta importación."
-        )
-    ip = obtener_ip_cliente(request)
-    await servicio.limitar(ip, actor.id)
-    await servicio.usuario(actor.id)
-    registro = await servicio.registro(actor.id)
-    if not registro or registro.estado != "ACTIVO" or not await servicio.verificar(registro, codigo):
-        await servicio.auditar(actor.id, "IMPORTACION_TOTP_INVALIDO", "DENEGADO", ip)
-        await sesion.commit()  # conserva el límite y la auditoría; aún no hay inserciones de personal
-        raise ErrorAplicacion(422, "TOTP_INVALIDO", "Código del autenticador inválido o ya utilizado.")
-    await servicio.auditar(actor.id, "IMPORTACION_TOTP_VERIFICADO", "EXITOSO", ip)
+    await exigir_codigo_totp(
+        sesion,
+        actor.id,
+        "PERSONAL_CARGUE_EXCEL",
+        codigo,
+        request,
+        prefijo_auditoria="IMPORTACION",
+        mensaje_requerido="Ingrese el código del autenticador para confirmar esta importación.",
+    )
 
 
 @enrutador.get("/datos-curso", response_model=DatosFormularioCurso)

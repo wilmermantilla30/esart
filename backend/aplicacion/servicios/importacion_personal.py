@@ -333,13 +333,17 @@ SQL_CRUCES = text("""
       AND c.tipo_curso_id = :tipo
       AND c.fecha_inicio <= :fin AND c.fecha_fin >= :inicio
 """)
+# p0013: el instructor puede ser militar (personal_id o su usuario) o civil (nombres propios),
+# y no necesita usuario de ESART; por eso los JOIN son opcionales.
 SQL_INSTRUCTORES = text("""
     SELECT i.id,
            COALESCE(NULLIF(TRIM(CONCAT_WS(' ', p.grado, p.nombres, p.apellidos)), ''),
+                    NULLIF(TRIM(CONCAT_WS(' ', i.nombres, i.apellidos)), ''),
                     u.usuario, 'Instructor ' || i.id) AS nombre
     FROM esart.instructores i
-    JOIN esart_ref.usuarios u ON u.id = i.usuario_id
-    LEFT JOIN esart.personal_militar p ON p.documento_identidad = u.documento_identidad
+    LEFT JOIN esart_ref.usuarios u ON u.id = i.usuario_id
+    LEFT JOIN esart.personal_militar p
+      ON p.id = i.personal_id OR (i.personal_id IS NULL AND p.documento_identidad = u.documento_identidad)
     WHERE i.activo
     ORDER BY nombre
 """)

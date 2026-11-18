@@ -16,6 +16,7 @@ export const ICONOS_MENU: Readonly<Record<string, string>> = {
   REENTRENAMIENTOS: 'target',
   CERTIFICACIONES: 'workspace_premium',
   DOCTRINA: 'menu_book',
+  INSTRUCTORES: 'co_present',
   USUARIOS: 'manage_accounts',
   PARAMETROS_HABILITACION: 'tune',
   PERMISOS: 'admin_panel_settings',

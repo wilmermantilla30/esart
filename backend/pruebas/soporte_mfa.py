@@ -11,6 +11,8 @@ async def completar_vinculacion(cliente, primer_factor):
     qr = await cliente.post("/api/auth/totp/login/configurar", json=datos)
     assert qr.status_code == 200
     secreto = parse_qs(urlparse(qr.json()["uri"]).query)["secret"][0]
+    # Queda en el cliente para las pruebas que luego confirman acciones sensibles con TOTP.
+    cliente.secreto_totp = secreto
     fin = await cliente.post(
         "/api/auth/totp/login/vincular", json={**datos, "codigo": pyotp.TOTP(secreto).now()}
     )

@@ -31,10 +31,22 @@ TABLAS_POSTERIORES_A_P0001 = {
 COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
 # p0011: curso de la importación masiva e historial de grados.
 COLUMNAS_P0011 = {
-    ("esart", "instructores"): {"foto", "foto_tipo"},
+    # p0013 agrega los datos del instructor militar o civil.
+    ("esart", "instructores"): {
+        "foto",
+        "foto_tipo",
+        "tipo",
+        "personal_id",
+        "documento_identidad",
+        "nombres",
+        "apellidos",
+        "profesion",
+        "actualizado_en",
+    },
     ("esart", "hoja_vida_artillero"): {"grado", "curso_id", "unidad_id"},
 }
-OPCIONALES_P0011 = {("esart", "cursos", "semestre_id")}
+# Columnas que una revisión posterior dejó opcionales (p0011: semestre; p0013: usuario del instructor).
+OPCIONALES_P0011 = {("esart", "cursos", "semestre_id"), ("esart", "instructores", "usuario_id")}
 
 
 def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
@@ -84,7 +96,10 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0011_cursos_importacion"]
+    assert script.get_heads() == ["p0014_cursos_del_instructor"]
+    assert script.get_revision("p0014_cursos_del_instructor").down_revision == "p0013_panel_instructores"
+    assert script.get_revision("p0013_panel_instructores").down_revision == "p0012_panel_parametros"
+    assert script.get_revision("p0012_panel_parametros").down_revision == "p0011_cursos_importacion"
     assert script.get_revision("p0011_cursos_importacion").down_revision == "p0010_merge_hu10_totp"
     assert set(script.get_revision("p0010_merge_hu10_totp").down_revision) == {
         "p0009_gestion_usuarios",

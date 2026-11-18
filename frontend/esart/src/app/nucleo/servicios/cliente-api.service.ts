@@ -1,4 +1,4 @@
-import { HttpClient, HttpParams } from '@angular/common/http';
+import { HttpClient, HttpParams, HttpResponse } from '@angular/common/http';
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
@@ -37,6 +37,19 @@ export class ClienteApiService {
   /** PUT con cuerpo JSON (reemplaza un recurso). Angular agrega la cabecera CSRF. */
   reemplazar<T>(ruta: string, cuerpo: unknown): Observable<T> {
     return this.http.put<T>(PREFIJO_API + ruta, cuerpo);
+  }
+
+  /**
+   * GET de un archivo (respuesta binaria completa, con cabeceras). La usa la descarga de
+   * plantillas: el nombre del archivo viene en Content-Disposition.
+   */
+  descargarArchivo(ruta: string): Observable<HttpResponse<Blob>> {
+    return this.http.get(PREFIJO_API + ruta, { observe: 'response', responseType: 'blob' });
+  }
+
+  /** DELETE a una ruta de la API. Angular agrega la cabecera CSRF. */
+  eliminar<T>(ruta: string): Observable<T> {
+    return this.http.delete<T>(PREFIJO_API + ruta);
   }
 
   /** POST con cuerpo JSON a una ruta de la API. */
