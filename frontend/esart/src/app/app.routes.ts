@@ -116,7 +116,10 @@ export const routes: Routes = [
             title: 'Cargue masivo por Excel — ESART',
             canActivate: [exigirPermiso],
             data: { componente: 'PERSONAL_CARGUE_EXCEL' },
-            loadComponent: () => import('./paginas/personal-militar/cargue-excel/cargue-excel').then((m) => m.CargueExcel),
+            loadComponent: () =>
+              import('./paginas/personal-militar/cargue-excel/cargue-excel').then(
+                (m) => m.CargueExcel,
+              ),
           },
           rutaEnConstruccion(
             'cargue-manual',
@@ -125,6 +128,14 @@ export const routes: Routes = [
             'Formulario para registrar un artillero.',
           ),
         ],
+      },
+      {
+        path: 'instructores',
+        title: 'Instructores — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'INSTRUCTORES' },
+        loadComponent: () =>
+          import('./paginas/instructores/instructores').then((m) => m.Instructores),
       },
       {
         path: 'administracion/usuarios',
@@ -136,12 +147,14 @@ export const routes: Routes = [
             (m) => m.GestionUsuarios,
           ),
       },
-      rutaEnConstruccion(
-        'administracion/parametros',
-        'PARAMETROS_HABILITACION',
-        'Parámetros de habilitación',
-        'Reglas que definen cuándo un artillero está APTO: cursos válidos y vigencia del reentrenamiento.',
-      ),
+      {
+        path: 'administracion/parametros',
+        title: 'Parámetros — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'PARAMETROS_HABILITACION' },
+        loadComponent: () =>
+          import('./paginas/administracion/parametros/parametros').then((m) => m.Parametros),
+      },
       {
         path: 'administracion/permisos',
         title: 'Malla de permisos — ESART',

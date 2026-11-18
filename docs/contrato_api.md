@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.10 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.12 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -301,6 +301,59 @@ Auditoría (componente `AUDITORIA`, solo lectura):
 - `GET /api/administracion/auditoria?accion=&usuario=&documento=&desde=AAAA-MM-DD&hasta=AAAA-MM-DD` → paginado (§1.3) con
   `{ "id", "fecha", "usuario_id", "nombre_usuario", "accion", "numero_documento_consultado", "resultado", "direccion_ip", "detalle" }`.
 
+## 5c. Parámetros (regla de habilitación, plantillas y seguridad)
+Todo bajo el componente `PARAMETROS_HABILITACION` de la malla (leer, crear, actualizar, eliminar según la ruta).
+Las rutas que cambian datos exigen CSRF.
+
+Cursos y Capacitaciones — regla APTO / NO APTO:
+- `GET /api/parametros/habilitacion` (leer) → `{ "valores": { "cursos_habilitantes", "meses_vigencia_reentrenamiento",
+  "dias_alerta_vencimiento", "exige_apto_para_disparar" }, "actualizado_en", "actualizado_por", "cursos_disponibles": [{ "codigo", "nombre" }],
+  "resumen": { "total", "aptos", "no_aptos", "reentrenamiento_por_vencer" } }`.
+- `POST /api/parametros/habilitacion/simular` (leer) cuerpo = `valores` → `{ "actual", "propuesto", "pasan_a_no_apto", "pasan_a_apto" }`.
+  No guarda nada.
+- `PUT /api/parametros/habilitacion` (actualizar) cuerpo = `valores` + `{ "version": <actualizado_en leído>, "codigo_totp" }`:
+  **409** `TOTP_REQUERIDO` sin código (política `PARAMETROS_MODIFICAR`), **422** `TOTP_INVALIDO`, **409** `PARAMETROS_DESACTUALIZADOS`
+  si otro administrador guardó antes, **422** `SIN_CAMBIOS` o `DATOS_INVALIDOS` (vigencia 1–60 meses, alerta 1–365 días y menor que la
+  vigencia, cursos existentes y activos). Éxito: la regla guardada (misma forma del GET); auditoría `PARAMETROS_ACTUALIZADOS` con antes y después.
+
+Plantillas y Formatos:
+- `GET /api/parametros/plantillas?formato=XLSX|XLS|PDF|DOCX` (leer) → `[{ "id", "nombre_oficial", "nombre_archivo", "formato", "version",
+  "descripcion", "tamano_bytes", "sha256", "subido_en", "subido_por" }]` (solo vigentes, sin el contenido).
+- `POST /api/parametros/plantillas` (crear) multipart: `archivo`, `nombre_oficial` (3–200), `version` (1–30), `descripcion` → **201** la fila.
+  **422** `ARCHIVO_INVALIDO`: extensión no admitida, más de 25 MB, contenido que no corresponde a la extensión, macros o PDF con JavaScript.
+  **409** `PLANTILLA_DUPLICADA` (mismo nombre y versión vigentes).
+- `GET /api/parametros/plantillas/{id}/descarga` (leer) → el archivo como adjunto (`Content-Disposition: attachment`, `nosniff`); queda auditado.
+- `POST /api/parametros/plantillas/{id}/retirar` (eliminar) → **204**. No se borra: deja de ofrecerse y queda en el historial.
+
+Parámetros de Seguridad (solo consulta):
+- `GET /api/parametros/seguridad` (leer) → `{ "totp_habilitado", "usuarios_activos", "usuarios_con_autenticador", "minutos_inactividad_sesion",
+  "intento_captcha", "intento_bloqueo", "horas_bloqueo", "politicas": [{ "codigo", "nombre", "modulo", "requiere_totp", "activa" }] }`.
+
+## 5d. Instructores
+Componente `INSTRUCTORES` (ADMINISTRADOR: acceder, crear, leer, actualizar; USUARIO: acceder y leer). Las rutas que cambian datos exigen CSRF.
+El documento sale enmascarado sin `VER_DOCUMENTO_COMPLETO`.
+
+Instructor: `{ "id", "tipo": "MILITAR"|"CIVIL", "documento", "grado", "nombres", "apellidos", "nombre_completo", "unidad", "profesion",
+"fecha_ingreso_escuela", "activo", "tiene_foto", "version", "nombre_usuario", "especialidades": [{ "codigo", "nombre" }] }`.
+Del MILITAR, nombre, grado y unidad salen de Personal militar; el CIVIL guarda los suyos. `version` cambia con cada edición.
+
+- `GET /api/instructores?texto=&especialidad=&estado=ACTIVOS|INACTIVOS|TODOS` (leer) → `[Instructor]` (por defecto activos).
+- `GET /api/instructores/especialidades` (leer) → `[{ "codigo", "nombre" }]` (catálogo provisional: OA, ACL, ACM, RSOP, CDT, TP).
+- `GET /api/instructores/militar/{cedula}` (crear) → `{ "documento", "nombre_completo", "unidad", "activo", "ya_es_instructor" }`; **404** `MILITAR_NO_ENCONTRADO`.
+- `POST /api/instructores` (crear) `{ "tipo", "documento", "fecha_ingreso_escuela", "especialidades": [codigos], "profesion"?, "nombres"?, "apellidos"? }`
+  (nombres y apellidos obligatorios si es CIVIL) → **201** Instructor. **409** `INSTRUCTOR_EXISTENTE`, `MILITAR_INACTIVO`, `ES_MILITAR`
+  (documento civil que pertenece a un militar); **422** fecha futura, especialidad inexistente o datos incompletos.
+- `PUT /api/instructores/{id}` (actualizar) `{ "fecha_ingreso_escuela", "especialidades", "profesion"?, "nombres"?, "apellidos"? }` → Instructor.
+  Las especialidades quitadas se desactivan (queda su historial).
+- `PUT /api/instructores/{id}/foto` (actualizar) multipart `archivo` (JPG, PNG o WebP, hasta 5 MB) → Instructor. Se guarda como JPEG de
+  máximo 800 px y sin metadatos; **422** `FOTO_INVALIDA`. `DELETE /api/instructores/{id}/foto` (actualizar) la quita.
+- `GET /api/instructores/{id}/foto` (leer) → `image/jpeg` (`Cache-Control: private`); **404** `FOTO_NO_ENCONTRADA`. El front agrega `?v=<version>`.
+- `POST /api/instructores/{id}/activar` y `/desactivar` (actualizar) → Instructor. Los instructores no se borran.
+- `GET /api/instructores/{id}/cursos` (leer) → `{ "comandante": [Curso], "participa": [Curso + "rol_en_curso"] }` con
+  Curso = `{ "id", "codigo", "nombre", "tipo_curso", "fecha_inicio", "fecha_fin", "estado", "alumnos" }` (más recientes primero).
+  `comandante` sale de `cursos.comandante_id` (cargue por Excel); `participa`, de `cursos_instructores`. Las materias que dicta quedan
+  para cuando exista la malla curricular (segunda entrega). Migración p0014 (solo permisos de lectura).
+
 ---
 
 ## 6. Salud
@@ -335,3 +388,5 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.8 | 2026-11-16 | §3 implementado con la regla acordada (activo + SACLI/SACME aprobado o reentrenamiento vigente 12 meses, alerta 60 días): criterios OBLIGATORIO/ALTERNATIVO, `motivos`, `alerta`, `reentrenamientos`; listado `/habilitacion` con filtro `estado`; `/resumen` |
 | 0.9 | 2026-11-16 | §5b: rutas de administración (malla de permisos por rol y por usuario, consulta de auditoría) |
 | 0.10 | 2026-11-16 | HU-10 web: §5b gestión de usuarios (cédula obligatoria, contraseña temporal, activar/desactivar, desbloquear, restablecer); §2 `requiere_cambio_contrasena`, `POST /auth/cambiar-contrasena` y 403 `CAMBIO_CONTRASENA_REQUERIDO` |
+| 0.11 | 2026-11-17 | §5c panel de Parámetros: regla de habilitación (leer, simular, guardar con TOTP y control de concurrencia), repositorio de plantillas (publicar, descargar, retirar) y parámetros de seguridad (solo consulta). Migración p0012 |
+| 0.12 | 2026-11-17 | §5d panel de instructores (militares y civiles, foto y especialidades) y cursos del instructor. Migraciones p0013 y p0014 |

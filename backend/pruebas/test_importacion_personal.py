@@ -232,11 +232,15 @@ async def test_endpoint_exige_datos_del_curso(cliente_api):
 
 
 async def test_no_guarda_si_falta_autorizacion_totp(monkeypatch):
-    from aplicacion.rutas import importaciones
+    # La verificación TOTP vive en servicios/confirmacion_totp (compartida con el panel de parámetros).
+    from aplicacion.servicios import confirmacion_totp
+    from aplicacion.servicios.totp import TotpService
 
-    monkeypatch.setattr(importaciones, "obtener_configuracion", lambda: SimpleNamespace(totp_habilitado=True))
+    monkeypatch.setattr(
+        confirmacion_totp, "obtener_configuracion", lambda: SimpleNamespace(totp_habilitado=True)
+    )
     politica = AsyncMock(return_value=SimpleNamespace(permiso_requerido=None))
-    monkeypatch.setattr(importaciones.TotpService, "politica", politica)
+    monkeypatch.setattr(TotpService, "politica", politica)
     sesion = AsyncMock()
     with pytest.raises(ErrorAplicacion) as fallo:
         await autorizar_importacion(sesion, SimpleNamespace(id=1), "", None)
@@ -358,7 +362,8 @@ async def test_postgresql_catalogo_real_resuelve_sigla_sin_modificar_datos(sesio
 
 
 async def test_postgresql_guarda_genero_y_fk_correctos_y_rechaza_sin_escrituras(
-    sesion_importacion, laboratorio,  # noqa: F811
+    sesion_importacion,
+    laboratorio,  # noqa: F811
 ):
     sesion = sesion_importacion
     permitido = await sesion.scalar(

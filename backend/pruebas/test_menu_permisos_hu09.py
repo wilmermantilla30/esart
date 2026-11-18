@@ -78,7 +78,9 @@ async def test_menu_de_usuario_solo_consulta_y_sin_administracion(cliente_api, s
 
     assert respuesta.status_code == 200
     menu = respuesta.json()["menu"]
-    assert [e["codigo"] for e in menu] == ["DASHBOARD", "PERSONAL_MILITAR"]
+    # Instructores (p0013): el Comandante consulta el directorio, sin registrar ni editar.
+    assert [e["codigo"] for e in menu] == ["DASHBOARD", "PERSONAL_MILITAR", "INSTRUCTORES"]
+    assert menu[2]["operaciones"] == ["leer"]
     pestanas = [h["codigo"] for h in menu[1]["hijos"]]
     assert pestanas == ["PERSONAL_VERIFICAR", "PERSONAL_HABILITADOS"]
     assert all(h["operaciones"] == ["leer"] for h in menu[1]["hijos"])
@@ -98,6 +100,7 @@ async def test_menu_de_administrador_incluye_cargue_y_administracion(cliente_api
     assert [e["codigo"] for e in menu] == [
         "DASHBOARD",
         "PERSONAL_MILITAR",
+        "INSTRUCTORES",
         "USUARIOS",
         "PARAMETROS_HABILITACION",
         "PERMISOS",

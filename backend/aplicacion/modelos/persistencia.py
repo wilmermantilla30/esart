@@ -672,12 +672,23 @@ class Instructores(BaseModelo):
         "instructores",
         BaseModelo.metadata,
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
-        sa.Column("usuario_id", sa.BigInteger(), nullable=False),
+        # p0013: el usuario de ESART es opcional (un instructor no necesita entrar a la plataforma).
+        sa.Column("usuario_id", sa.BigInteger(), nullable=True),
         sa.Column("fecha_ingreso_escuela", sa.Date(), nullable=False),
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column("foto", sa.LargeBinary(), nullable=True),
         sa.Column("foto_tipo", sa.String(30), nullable=True),
+        # p0013: instructor MILITAR (ligado a Personal militar) o CIVIL (con sus datos propios).
+        sa.Column("tipo", sa.String(10), server_default=sa.text("'MILITAR'"), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=True),
+        sa.Column("documento_identidad", sa.String(20), nullable=True),
+        sa.Column("nombres", sa.String(100), nullable=True),
+        sa.Column("apellidos", sa.String(100), nullable=True),
+        sa.Column("profesion", sa.String(150), nullable=True),
+        sa.Column(
+            "actualizado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+        ),
         sa.CheckConstraint(
             "(foto IS NULL AND foto_tipo IS NULL) OR (foto IS NOT NULL "
             "AND foto_tipo IN ('image/jpeg', 'image/png', 'image/webp') "

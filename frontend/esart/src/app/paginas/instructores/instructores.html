@@ -1,0 +1,701 @@
+<div class="space-y-5">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div class="space-y-1">
+      <h1 class="font-headline font-bold text-headline-md text-negro-institucional">
+        Instructores
+      </h1>
+      <p class="text-body-md text-azul-pizarra/70">
+        Directorio de instructores militares y civiles de la Escuela de Artillería, con sus
+        especialidades.
+      </p>
+    </div>
+    @if (puedeCrear()) {
+      <button
+        type="button"
+        (click)="abrirNuevo()"
+        class="px-4 py-2.5 rounded-lg bg-azul-institucional hover:opacity-90 text-white text-xs font-bold shadow-sm flex items-center gap-2"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">person_add</span>
+        <span>Nuevo instructor</span>
+      </button>
+    }
+  </div>
+
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  <!-- Filtros -->
+  <form
+    class="bg-white rounded-xl border border-gris-bordes p-3 flex flex-wrap items-end gap-3"
+    (ngSubmit)="cargar()"
+  >
+    <div class="flex-1 min-w-[200px] space-y-1">
+      <label
+        for="buscar-instructor"
+        class="block text-xs font-semibold text-azul-pizarra/60 font-headline uppercase tracking-wider"
+        >Buscar</label
+      >
+      <input
+        id="buscar-instructor"
+        name="texto"
+        [(ngModel)]="texto"
+        maxlength="100"
+        placeholder="Nombre, documento o profesión"
+        class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+      />
+    </div>
+    <div class="space-y-1">
+      <label
+        for="filtro-especialidad"
+        class="block text-xs font-semibold text-azul-pizarra/60 font-headline uppercase tracking-wider"
+        >Especialidad</label
+      >
+      <select
+        id="filtro-especialidad"
+        name="especialidad"
+        [(ngModel)]="especialidadFiltro"
+        (change)="cargar()"
+        class="py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+      >
+        <option value="">Todas</option>
+        @for (especialidad of especialidades(); track especialidad.codigo) {
+          <option [value]="especialidad.codigo">{{ especialidad.nombre }}</option>
+        }
+      </select>
+    </div>
+    <div class="space-y-1">
+      <label
+        for="filtro-estado"
+        class="block text-xs font-semibold text-azul-pizarra/60 font-headline uppercase tracking-wider"
+        >Estado</label
+      >
+      <select
+        id="filtro-estado"
+        name="estado"
+        [(ngModel)]="estado"
+        (change)="cargar()"
+        class="py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+      >
+        <option value="ACTIVOS">Activos</option>
+        <option value="INACTIVOS">Inactivos</option>
+        <option value="TODOS">Todos</option>
+      </select>
+    </div>
+    <div class="flex gap-2">
+      <button
+        type="submit"
+        class="inline-flex items-center gap-1.5 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">search</span>
+        Buscar
+      </button>
+      <button
+        type="button"
+        (click)="limpiarFiltros()"
+        class="py-2 px-3 border border-gris-bordes rounded-sm text-label-lg font-headline"
+      >
+        Limpiar
+      </button>
+    </div>
+  </form>
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Cargando instructores…</p>
+  } @else if (!instructores().length) {
+    <div
+      class="bg-white rounded-2xl border border-dashed border-gris-bordes p-10 text-center space-y-2"
+    >
+      <span class="material-symbols-outlined text-[40px] text-azul-pizarra/40" aria-hidden="true"
+        >co_present</span
+      >
+      <p class="font-headline font-semibold text-azul-pizarra">
+        No hay instructores que coincidan con la búsqueda.
+      </p>
+      @if (puedeCrear()) {
+        <p class="text-body-md text-azul-pizarra/70">
+          Use "Nuevo instructor" para registrar el primero.
+        </p>
+      }
+    </div>
+  } @else {
+    <p class="text-xs text-azul-pizarra/60">{{ instructores().length }} instructor(es)</p>
+    <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-5">
+      @for (instructor of instructores(); track instructor.id) {
+        <article
+          [class]="
+            'bg-white rounded-2xl border-2 flex flex-col overflow-hidden transition-all hover:shadow-md ' +
+            (instructor.activo
+              ? 'border-gris-bordes hover:border-azul-claro'
+              : 'border-dashed border-gris-bordes opacity-70')
+          "
+        >
+          <div class="p-5 flex gap-4">
+            <!-- Foto o iniciales -->
+            @if (instructor.tiene_foto) {
+              <img
+                [src]="urlFoto(instructor)"
+                [alt]="'Foto de ' + instructor.nombre_completo"
+                class="w-20 h-24 rounded-xl object-cover border border-gris-bordes shrink-0 bg-gris-claro"
+                loading="lazy"
+              />
+            } @else {
+              <div
+                class="w-20 h-24 rounded-xl bg-azul-hielo border border-azul-claro/50 text-azul-institucional flex items-center justify-center shrink-0 font-headline font-bold text-2xl"
+                aria-hidden="true"
+              >
+                {{ iniciales(instructor) }}
+              </div>
+            }
+            <div class="min-w-0 space-y-1">
+              <div class="flex flex-wrap items-center gap-1.5">
+                <span
+                  [class]="
+                    'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border ' +
+                    (instructor.tipo === 'MILITAR'
+                      ? 'bg-emerald-50 text-emerald-800 border-emerald-200'
+                      : 'bg-blue-50 text-blue-800 border-blue-200')
+                  "
+                >
+                  {{ instructor.tipo === 'MILITAR' ? 'Militar' : 'Civil' }}
+                </span>
+                @if (!instructor.activo) {
+                  <span
+                    class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase tracking-wider border bg-gris-claro text-azul-pizarra/70 border-gris-bordes"
+                    >Inactivo</span
+                  >
+                }
+              </div>
+              <h2 class="font-headline font-bold text-negro-institucional text-sm leading-snug">
+                {{ instructor.nombre_completo }}
+              </h2>
+              <p class="text-xs text-azul-pizarra/70 font-mono">{{ instructor.documento }}</p>
+              @if (instructor.unidad) {
+                <p class="text-xs text-azul-pizarra/80">Unidad: {{ instructor.unidad }}</p>
+              }
+              @if (instructor.profesion) {
+                <p class="text-xs text-azul-pizarra/80">{{ instructor.profesion }}</p>
+              }
+              <p class="text-xs text-azul-pizarra/60">
+                En la Escuela desde {{ instructor.fecha_ingreso_escuela | date: 'MMM y' }}
+              </p>
+            </div>
+          </div>
+
+          <div class="px-5 pb-4 flex-1">
+            <p
+              class="text-[11px] font-semibold text-azul-pizarra/60 uppercase tracking-wider mb-1.5"
+            >
+              Especialidades
+            </p>
+            @if (instructor.especialidades.length) {
+              <ul
+                class="flex flex-wrap gap-1.5"
+                [attr.aria-label]="'Especialidades de ' + instructor.nombre_completo"
+              >
+                @for (especialidad of instructor.especialidades; track especialidad.codigo) {
+                  <li
+                    class="px-2.5 py-1 rounded-lg text-xs font-medium bg-azul-hielo text-azul-pizarra border border-azul-claro/50"
+                  >
+                    {{ especialidad.nombre }}
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-xs text-azul-pizarra/50">Sin especialidades registradas.</p>
+            }
+          </div>
+
+          <div
+            class="px-5 py-3 bg-gris-claro/60 border-t border-gris-bordes flex flex-wrap justify-end gap-2"
+          >
+            <button
+              type="button"
+              (click)="abrirDetalle(instructor)"
+              class="mr-auto px-2.5 py-1 rounded bg-white border border-gris-bordes text-xs font-semibold text-azul-pizarra flex items-center gap-1"
+            >
+              <span class="material-symbols-outlined text-[15px]" aria-hidden="true">school</span>
+              Ver cursos
+            </button>
+            @if (puedeEditar()) {
+              <button
+                type="button"
+                (click)="cambiarEstado(instructor)"
+                [disabled]="ocupado() === instructor.id"
+                class="px-2.5 py-1 rounded bg-white border border-gris-bordes text-xs font-semibold text-azul-pizarra/80 flex items-center gap-1 disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined text-[15px]" aria-hidden="true">{{
+                  instructor.activo ? 'person_off' : 'person_check'
+                }}</span>
+                {{ instructor.activo ? 'Desactivar' : 'Activar' }}
+              </button>
+              <button
+                type="button"
+                (click)="abrirEdicion(instructor)"
+                class="px-2.5 py-1 rounded bg-white border border-azul-institucional/40 text-xs font-semibold text-azul-institucional flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[15px]" aria-hidden="true">edit</span>
+                Editar
+              </button>
+            }
+          </div>
+        </article>
+      }
+    </div>
+  }
+</div>
+
+<!-- Detalle: cursos donde es comandante y donde participa -->
+@if (detalle(); as instructor) {
+  <div
+    class="fixed inset-0 z-40 bg-negro-institucional/40 flex items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-detalle-instructor"
+  >
+    <div
+      class="w-full max-w-2xl max-h-[95dvh] overflow-y-auto bg-white rounded-2xl border border-gris-bordes shadow-xl"
+    >
+      <header
+        class="px-6 py-4 border-b border-gris-bordes flex items-start justify-between gap-3 sticky top-0 bg-white"
+      >
+        <div class="flex items-center gap-3">
+          @if (instructor.tiene_foto) {
+            <img
+              [src]="urlFoto(instructor)"
+              [alt]="'Foto de ' + instructor.nombre_completo"
+              class="w-12 h-14 rounded-lg object-cover border border-gris-bordes"
+            />
+          } @else {
+            <div
+              class="w-12 h-14 rounded-lg bg-azul-hielo text-azul-institucional flex items-center justify-center font-headline font-bold"
+              aria-hidden="true"
+            >
+              {{ iniciales(instructor) }}
+            </div>
+          }
+          <div>
+            <h2
+              id="titulo-detalle-instructor"
+              class="font-headline font-bold text-negro-institucional"
+            >
+              {{ instructor.nombre_completo }}
+            </h2>
+            <p class="text-xs text-azul-pizarra/70">
+              {{ instructor.tipo === 'MILITAR' ? 'Instructor militar' : 'Instructor civil' }}
+              @if (instructor.especialidades.length) {
+                · {{ nombresEspecialidades(instructor) }}
+              }
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          (click)="cerrarDetalle()"
+          aria-label="Cerrar"
+          class="text-azul-pizarra/60 hover:text-azul-pizarra"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <div class="px-6 py-5 space-y-5">
+        @if (errorCursos(); as mensaje) {
+          <div
+            class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+            role="alert"
+          >
+            <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+            <span>{{ mensaje }}</span>
+          </div>
+        } @else if (!cursos()) {
+          <p class="text-body-md text-azul-pizarra/70" role="status">Cargando cursos…</p>
+        } @else {
+          @for (
+            seccion of [
+              {
+                titulo: 'Comandante de curso',
+                icono: 'military_tech',
+                lista: cursos()!.comandante,
+                vacio: 'No figura como comandante de ningún curso.',
+              },
+              {
+                titulo: 'Participa en',
+                icono: 'groups',
+                lista: cursos()!.participa,
+                vacio: 'No tiene otros cursos asignados.',
+              },
+            ];
+            track seccion.titulo
+          ) {
+            <section class="space-y-2">
+              <h3 class="flex items-center gap-2 font-headline font-bold text-negro-institucional">
+                <span
+                  class="material-symbols-outlined text-azul-institucional"
+                  aria-hidden="true"
+                  >{{ seccion.icono }}</span
+                >
+                {{ seccion.titulo }}
+                <span class="text-xs font-normal text-azul-pizarra/60"
+                  >({{ seccion.lista.length }})</span
+                >
+              </h3>
+              @if (seccion.lista.length) {
+                <ul class="divide-y divide-gris-bordes border border-gris-bordes rounded-xl">
+                  @for (curso of seccion.lista; track curso.id) {
+                    <li class="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                      <div class="min-w-0">
+                        <p class="font-headline font-semibold text-sm text-negro-institucional">
+                          {{ curso.nombre }}
+                        </p>
+                        <p class="text-xs text-azul-pizarra/70">
+                          {{ curso.tipo_curso }} · Curso {{ curso.codigo }} ·
+                          {{ curso.fecha_inicio | date: 'd MMM y' }} –
+                          {{ curso.fecha_fin | date: 'd MMM y' }} · {{ curso.alumnos }}
+                          {{ curso.alumnos === 1 ? 'alumno' : 'alumnos' }}
+                          @if ($any(curso).rol_en_curso; as rol) {
+                            · Rol: {{ rol }}
+                          }
+                        </p>
+                      </div>
+                      <span
+                        [class]="
+                          'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                          estiloEstado(curso.estado)
+                        "
+                      >
+                        {{ textoEstado(curso.estado) }}
+                      </span>
+                    </li>
+                  }
+                </ul>
+              } @else {
+                <p class="text-body-md text-azul-pizarra/60">{{ seccion.vacio }}</p>
+              }
+            </section>
+          }
+          <p class="text-xs text-azul-pizarra/50">
+            Las materias que dicta se mostrarán cuando se cargue la malla curricular de cada curso.
+          </p>
+        }
+      </div>
+    </div>
+  </div>
+}
+
+<!-- Formulario: nuevo instructor o edición -->
+@if (formularioAbierto()) {
+  <div
+    class="fixed inset-0 z-40 bg-negro-institucional/40 flex items-center justify-center p-4"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-formulario-instructor"
+  >
+    <div
+      class="w-full max-w-2xl max-h-[95dvh] overflow-y-auto bg-white rounded-2xl border border-gris-bordes shadow-xl"
+    >
+      <header
+        class="px-6 py-4 border-b border-gris-bordes flex items-start justify-between gap-3 sticky top-0 bg-white"
+      >
+        <h2
+          id="titulo-formulario-instructor"
+          class="font-headline font-bold text-negro-institucional"
+        >
+          {{ editando() ? 'Editar instructor' : 'Nuevo instructor' }}
+        </h2>
+        <button
+          type="button"
+          (click)="cerrarFormulario()"
+          aria-label="Cerrar"
+          class="text-azul-pizarra/60 hover:text-azul-pizarra"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </header>
+
+      <form class="px-6 py-5 space-y-5" (ngSubmit)="guardar()">
+        <div class="flex flex-col sm:flex-row gap-5">
+          <!-- Foto -->
+          <div class="flex flex-col items-center gap-2 shrink-0">
+            @if (vistaFoto(); as vista) {
+              <img
+                [src]="vista"
+                alt="Vista previa de la foto"
+                class="w-28 h-36 rounded-xl object-cover border border-gris-bordes"
+              />
+            } @else if (editando()?.tiene_foto && !quitarFotoActual()) {
+              <img
+                [src]="urlFoto(editando()!)"
+                alt="Foto actual"
+                class="w-28 h-36 rounded-xl object-cover border border-gris-bordes"
+              />
+            } @else {
+              <div
+                class="w-28 h-36 rounded-xl bg-gris-claro border border-dashed border-gris-bordes flex items-center justify-center text-azul-pizarra/40"
+              >
+                <span class="material-symbols-outlined text-[40px]" aria-hidden="true"
+                  >add_a_photo</span
+                >
+              </div>
+            }
+            <label
+              class="cursor-pointer text-xs font-semibold text-azul-institucional hover:underline"
+            >
+              {{ vistaFoto() || editando()?.tiene_foto ? 'Cambiar foto' : 'Subir foto' }}
+              <input
+                type="file"
+                class="hidden"
+                accept="image/jpeg,image/png,image/webp"
+                (change)="fotoElegida($event)"
+              />
+            </label>
+            @if (vistaFoto() || (editando()?.tiene_foto && !quitarFotoActual())) {
+              <button
+                type="button"
+                (click)="marcarQuitarFoto()"
+                class="text-xs text-azul-pizarra/60 hover:text-error"
+              >
+                Quitar foto
+              </button>
+            }
+            <p class="text-[10px] text-azul-pizarra/50 text-center max-w-28">
+              JPG, PNG o WebP, hasta 5 MB.
+            </p>
+          </div>
+
+          <div class="flex-1 space-y-4">
+            @if (!editando()) {
+              <!-- Tipo de instructor -->
+              <div
+                class="flex gap-1 bg-gris-claro rounded-lg p-1"
+                role="radiogroup"
+                aria-label="Tipo de instructor"
+              >
+                @for (opcion of ['MILITAR', 'CIVIL']; track opcion) {
+                  <button
+                    type="button"
+                    role="radio"
+                    [attr.aria-checked]="tipo() === opcion"
+                    (click)="cambiarTipo($any(opcion))"
+                    [class]="
+                      'flex-1 py-1.5 rounded-md text-xs font-headline transition-colors ' +
+                      (tipo() === opcion
+                        ? 'bg-white shadow-sm font-bold text-azul-institucional'
+                        : 'font-medium text-azul-pizarra/70')
+                    "
+                  >
+                    {{ opcion === 'MILITAR' ? 'Militar' : 'Civil' }}
+                  </button>
+                }
+              </div>
+            }
+
+            @if (tipo() === 'MILITAR') {
+              @if (editando(); as instructor) {
+                <div class="rounded-xl border border-gris-bordes p-3 text-body-md">
+                  <p class="font-headline font-semibold">{{ instructor.nombre_completo }}</p>
+                  <p class="text-xs text-azul-pizarra/70">
+                    Datos de Personal militar · {{ instructor.documento }}
+                  </p>
+                </div>
+              } @else {
+                <div class="space-y-1">
+                  <label for="cedula-instructor" class="block font-headline text-label-md"
+                    >Cédula del militar</label
+                  >
+                  <div class="flex gap-2">
+                    <input
+                      id="cedula-instructor"
+                      name="documento"
+                      inputmode="numeric"
+                      maxlength="20"
+                      [ngModel]="documento()"
+                      (ngModelChange)="documento.set($event); militar.set(null)"
+                      class="flex-1 py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+                    />
+                    <button
+                      type="button"
+                      (click)="buscarMilitar()"
+                      [disabled]="buscando()"
+                      class="py-2 px-3 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline disabled:opacity-50"
+                    >
+                      {{ buscando() ? 'Buscando…' : 'Buscar en Personal militar' }}
+                    </button>
+                  </div>
+                </div>
+                @if (militar(); as encontrado) {
+                  <div
+                    [class]="
+                      'rounded-xl border p-3 text-body-md ' +
+                      (encontrado.activo && !encontrado.ya_es_instructor
+                        ? 'border-success/40 bg-success/5'
+                        : 'border-warning/40 bg-warning/5')
+                    "
+                  >
+                    <p class="font-headline font-semibold">{{ encontrado.nombre_completo }}</p>
+                    <p class="text-xs text-azul-pizarra/70">
+                      {{ encontrado.documento
+                      }}{{ encontrado.unidad ? ' · ' + encontrado.unidad : '' }}
+                    </p>
+                    @if (encontrado.ya_es_instructor) {
+                      <p class="text-xs text-warning font-semibold mt-1">
+                        Ya está registrado como instructor.
+                      </p>
+                    } @else if (!encontrado.activo) {
+                      <p class="text-xs text-warning font-semibold mt-1">
+                        El militar figura como inactivo.
+                      </p>
+                    }
+                  </div>
+                }
+              }
+            } @else {
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div class="space-y-1 sm:col-span-2">
+                  <label for="documento-civil" class="block font-headline text-label-md"
+                    >Documento de identidad</label
+                  >
+                  <input
+                    id="documento-civil"
+                    name="documento"
+                    inputmode="numeric"
+                    maxlength="20"
+                    [disabled]="!!editando()"
+                    [ngModel]="documento()"
+                    (ngModelChange)="documento.set($event)"
+                    class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md disabled:bg-gris-claro"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label for="nombres-civil" class="block font-headline text-label-md"
+                    >Nombres</label
+                  >
+                  <input
+                    id="nombres-civil"
+                    name="nombres"
+                    maxlength="100"
+                    [ngModel]="nombres()"
+                    (ngModelChange)="nombres.set($event)"
+                    class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+                  />
+                </div>
+                <div class="space-y-1">
+                  <label for="apellidos-civil" class="block font-headline text-label-md"
+                    >Apellidos</label
+                  >
+                  <input
+                    id="apellidos-civil"
+                    name="apellidos"
+                    maxlength="100"
+                    [ngModel]="apellidos()"
+                    (ngModelChange)="apellidos.set($event)"
+                    class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+                  />
+                </div>
+              </div>
+            }
+
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div class="space-y-1">
+                <label for="profesion-instructor" class="block font-headline text-label-md"
+                  >Profesión o título
+                  <span class="text-azul-pizarra/50 font-normal">(opcional)</span></label
+                >
+                <input
+                  id="profesion-instructor"
+                  name="profesion"
+                  maxlength="150"
+                  [ngModel]="profesion()"
+                  (ngModelChange)="profesion.set($event)"
+                  class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+                />
+              </div>
+              <div class="space-y-1">
+                <label for="fecha-ingreso" class="block font-headline text-label-md"
+                  >Ingreso a la Escuela</label
+                >
+                <input
+                  id="fecha-ingreso"
+                  name="fecha"
+                  type="date"
+                  [max]="hoy"
+                  [ngModel]="fechaIngreso()"
+                  (ngModelChange)="fechaIngreso.set($event)"
+                  class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <fieldset class="space-y-2">
+          <legend class="font-headline font-bold text-negro-institucional">Especialidades</legend>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            @for (especialidad of especialidades(); track especialidad.codigo) {
+              <label
+                [class]="
+                  'flex items-center gap-2.5 rounded-xl border p-2.5 cursor-pointer transition-colors ' +
+                  (seleccion().includes(especialidad.codigo)
+                    ? 'border-azul-institucional bg-azul-hielo'
+                    : 'border-gris-bordes')
+                "
+              >
+                <input
+                  type="checkbox"
+                  [checked]="seleccion().includes(especialidad.codigo)"
+                  (change)="alternarEspecialidad(especialidad.codigo)"
+                />
+                <span class="text-sm">{{ especialidad.nombre }}</span>
+              </label>
+            }
+          </div>
+        </fieldset>
+
+        @if (errorFormulario(); as mensaje) {
+          <div
+            class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+            role="alert"
+          >
+            <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+            <span>{{ mensaje }}</span>
+          </div>
+        }
+
+        <div class="flex justify-end gap-2 pt-1">
+          <button
+            type="button"
+            (click)="cerrarFormulario()"
+            class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="!puedeGuardar()"
+            class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+            {{
+              guardando() ? 'Guardando…' : editando() ? 'Guardar cambios' : 'Registrar instructor'
+            }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+}

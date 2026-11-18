@@ -398,9 +398,23 @@ async def listar_habilitacion(
     return filas, total or 0, parametros
 
 
-async def resumir_habilitacion(sesion: AsyncSession) -> dict:
-    """Indicadores del panel de Personal militar."""
-    parametros = await cargar_parametros(sesion)
+async def resultados_por_militar(sesion: AsyncSession, parametros: ParametrosHabilitacion) -> dict[int, str]:
+    """
+    APTO / NO_APTO de cada militar con los parámetros dados (los vigentes o unos propuestos).
+    Lo usa la simulación del panel de Parámetros para contar quién cambiaría de resultado.
+    """
+    filas = await sesion.execute(
+        text(CONSULTA_ESTADO + " SELECT id, resultado FROM estado"),  # noqa: S608
+        _parametros_sql(parametros),
+    )
+    return {fila.id: fila.resultado for fila in filas}
+
+
+async def resumir_habilitacion(
+    sesion: AsyncSession, parametros: ParametrosHabilitacion | None = None
+) -> dict:
+    """Indicadores del panel de Personal militar (con los parámetros vigentes, o los indicados)."""
+    parametros = parametros or await cargar_parametros(sesion)
     fila = (
         await sesion.execute(
             text(
