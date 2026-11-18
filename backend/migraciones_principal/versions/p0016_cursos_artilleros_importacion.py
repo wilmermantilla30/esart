@@ -40,6 +40,19 @@ SQL_REPARAR = f"""
 
 
 def upgrade():
+    # El nombre de esta revisión tiene 35 caracteres y Alembic crea version_num como VARCHAR(32):
+    # sin ampliarla, el registro de la versión falla y se revierte toda la migración.
+    # Ampliar a 64 no cambia los valores existentes y no hace nada si ya es más larga.
+    op.execute("""
+        DO $$
+        BEGIN
+          IF (SELECT character_maximum_length FROM information_schema.columns
+              WHERE table_schema = 'esart' AND table_name = 'alembic_version'
+                AND column_name = 'version_num') < 64 THEN
+            ALTER TABLE esart.alembic_version ALTER COLUMN version_num TYPE VARCHAR(64);
+          END IF;
+        END $$;
+    """)
     op.execute(f"""
         DO $$
         BEGIN

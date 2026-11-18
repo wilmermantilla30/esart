@@ -4,11 +4,15 @@ Excel (HU de SV.Valbuena). Solo para desarrollo: se niega a correr con ENTORNO=p
 
 Uso, desde backend/:
     python -m herramientas.cargar_datos_simulados cargar    # crea los datos (si no existen)
+    python -m herramientas.cargar_datos_simulados cursos    # agrega solo los cursos del panel
     python -m herramientas.cargar_datos_simulados borrar    # los elimina
 
 Todo lo simulado se reconoce para poder borrarlo sin tocar datos reales:
-- cédulas que empiezan por 99000000 (nunca son cédulas reales de este sistema);
-- unidades, comités, reentrenamientos y certificados con código que empieza por SIM-.
+- las 10 cédulas 9900000001 a 9900000010 y las de alumnos de cursos 98800000xx (solo esas: el
+  rango 99000000xx restante lo usan los archivos de prueba del cargue por Excel);
+- unidades, comités, reentrenamientos, certificados y CURSOS con código que empieza por SIM-.
+Los cursos simulados (con sus 40 alumnos y 2 instructores) alimentan las estadísticas del
+panel principal: cursos por año y semestre, grados y género por curso, egresados y avance.
 Los tipos de curso NO son simulados: se cargan del seed oficial de SV.Valbuena
 (aplicacion/base_datos/seed_catalogos_academicos.sql) y no se borran.
 
@@ -29,6 +33,9 @@ from aplicacion.base_datos.sesion import cerrar_motor_base_datos, obtener_fabric
 from aplicacion.configuracion import obtener_configuracion
 
 PREFIJO_CEDULA = "99000000"
+# Los alumnos de los cursos simulados usan otro rango: el 99000000xx (11 en adelante) lo usan
+# también los archivos de prueba del cargue por Excel, y 'borrar' no debe tocar esos datos.
+PREFIJO_ALUMNOS = "98800000"
 PREFIJO_CODIGO = "SIM-"
 RUTA_SEED_CURSOS = Path(__file__).resolve().parents[1] / "aplicacion/base_datos/seed_catalogos_academicos.sql"
 
@@ -181,6 +188,150 @@ DATOS_REENTRENAMIENTO = {
     "movilidad": "REMOLCADO",
     "calibre": "105MM",
 }
+
+
+# --- Cursos simulados del panel principal ----------------------------------------------------
+# (código, tipo de curso, días desde hoy al inicio, duración en días, estado, alumnos (números 11-50)).
+CURSOS = [
+    ("SIM-CUR-01", "SACME", -800, 77, "CULMINADO", range(11, 18)),
+    ("SIM-CUR-02", "COOFU", -520, 14, "CULMINADO", range(18, 24)),
+    ("SIM-CUR-03", "SACLI", -400, 70, "CULMINADO", range(24, 34)),
+    ("SIM-CUR-04", "SACME", -250, 77, "CULMINADO", range(34, 42)),
+    ("SIM-CUR-05", "COSET", -150, 70, "CANCELADO", range(42, 46)),
+    ("SIM-CUR-06", "OA", -80, 77, "EN_CURSO", range(11, 17)),  # ya pasó su fecha de fin: alerta
+    ("SIM-CUR-07", "SACME", -60, 77, "EN_CURSO", range(17, 26)),
+    ("SIM-CUR-08", "SACLI", -35, 70, "EN_CURSO", range(26, 38)),
+    ("SIM-CUR-09", "SACLI", 20, 70, "APLAZADO", range(38, 43)),
+]
+# Los dos últimos alumnos simulados son los comandantes (instructores militares) de los cursos.
+COMANDANTES = ("9880000049", "9880000050")
+NOMBRES_M = ("Juan", "Carlos", "Andrés", "Luis", "Jorge", "Diego", "Camilo", "Felipe", "Óscar", "Mauricio")
+NOMBRES_F = ("Laura", "Diana", "Paola", "Marcela", "Natalia", "Carolina")
+APELLIDOS = (
+    "Gómez",
+    "Rodríguez",
+    "Martínez",
+    "López",
+    "Hernández",
+    "Pérez",
+    "Castro",
+    "Vargas",
+    "Rojas",
+    "Moreno",
+)
+# Ciclo de grados: sobre todo suboficiales, algunos oficiales y soldados profesionales.
+GRADOS_ALUMNOS = (
+    ("CS", "SUBOFICIAL"),
+    ("CP", "SUBOFICIAL"),
+    ("SS", "SUBOFICIAL"),
+    ("C3", "SUBOFICIAL"),
+    ("ST", "OFICIAL"),
+    ("SV", "SUBOFICIAL"),
+    ("SLP", "SOLDADO_PROFESIONAL"),
+    ("TE", "OFICIAL"),
+    ("CP", "SUBOFICIAL"),
+    ("SS", "SUBOFICIAL"),
+    ("CT", "OFICIAL"),
+    ("SLP", "SOLDADO_PROFESIONAL"),
+)
+
+
+def alumno_simulado(numero: int, cursos_del_alumno: list) -> dict:
+    """Alumno 11-50 con datos fijos (mismo resultado en cada carga). 1 de cada 5 es mujer."""
+    mujer = numero % 5 == 0
+    grado, categoria = GRADOS_ALUMNOS[numero % len(GRADOS_ALUMNOS)]
+    cedula = f"{PREFIJO_ALUMNOS}{numero:02d}"
+    if cedula in COMANDANTES:
+        grado, categoria = ("MY", "OFICIAL") if cedula == COMANDANTES[0] else ("CT", "OFICIAL")
+    lista_nombres = NOMBRES_F if mujer else NOMBRES_M
+    return {
+        "cedula": cedula,
+        "grado": grado,
+        "nombres": lista_nombres[numero % len(lista_nombres)],
+        "apellidos": f"{APELLIDOS[numero % 10]} {APELLIDOS[(numero // 3) % 10]}",
+        "genero": "F" if mujer else "M",
+        "categoria": categoria,
+        "unidad": UNIDADES[numero % len(UNIDADES)][0],
+        "activo": True,
+        # Coherente con la regla: SACLI/SACME culminado = APTO; en curso = NO APTO (aún no aprueba).
+        "cursos": cursos_del_alumno,
+        "reentrenamiento": None,
+    }
+
+
+async def cargar_cursos(sesion, contexto) -> None:
+    """Crea los alumnos 11-50, los 2 instructores y los 9 cursos simulados (si no existen)."""
+    if await sesion.scalar(text("SELECT count(*) FROM esart.cursos WHERE codigo LIKE 'SIM-CUR-%'")):
+        print("  Los cursos simulados ya existen.")
+        return
+    # Cursos SACLI/SACME de cada alumno, para su historial académico (habilitación).
+    habilitantes: dict[int, list] = {}
+    for _, tipo, inicio, duracion, estado, alumnos in CURSOS:
+        if tipo in ("SACLI", "SACME") and estado in ("CULMINADO", "EN_CURSO"):
+            for numero in alumnos:
+                habilitantes.setdefault(numero, []).append((tipo, inicio + duracion, estado == "CULMINADO"))
+    ids: dict[int, int] = {}
+    for numero in range(11, 51):
+        militar = alumno_simulado(numero, habilitantes.get(numero, []))
+        existe = await sesion.scalar(
+            text("SELECT 1 FROM esart.personal_militar WHERE documento_identidad = :c"),
+            {"c": militar["cedula"]},
+        )
+        if existe:
+            raise SystemExit(f"La cédula {militar['cedula']} ya existe: use 'borrar' y vuelva a cargar.")
+        ids[numero] = await insertar_militar(sesion, contexto, militar)
+
+    comandantes = []
+    for cedula in COMANDANTES:
+        comandantes.append(
+            await sesion.scalar(
+                text("""
+                    INSERT INTO esart.instructores (tipo, personal_id, fecha_ingreso_escuela, activo)
+                    SELECT 'MILITAR', id, :ingreso, true
+                    FROM esart.personal_militar WHERE documento_identidad = :c
+                    RETURNING id
+                """),
+                {"c": cedula, "ingreso": contexto.hoy - timedelta(days=1500)},
+            )
+        )
+
+    for posicion, (codigo, tipo, inicio, duracion, estado, alumnos) in enumerate(CURSOS):
+        fecha_inicio = contexto.hoy + timedelta(days=inicio)
+        curso_id = await sesion.scalar(
+            text("""
+                INSERT INTO esart.cursos
+                  (tipo_curso_id, comandante_id, codigo, nombre, fecha_inicio, fecha_fin, estado,
+                   creado_por_id)
+                VALUES (:tipo, :comandante, :codigo, :nombre, :inicio, :fin, :estado, :creador)
+                RETURNING id
+            """),
+            {
+                "tipo": contexto.tipos_curso[tipo],
+                "comandante": comandantes[posicion % 2],
+                "codigo": codigo,
+                "nombre": f"{tipo} {fecha_inicio.year}-{1 if fecha_inicio.month < 7 else 2} (simulado)",
+                "inicio": fecha_inicio,
+                "fin": fecha_inicio + timedelta(days=duracion),
+                "estado": estado,
+                "creador": contexto.administrador_id,
+            },
+        )
+        for numero in alumnos:
+            alumno = alumno_simulado(numero, [])
+            await sesion.execute(
+                text("""
+                    INSERT INTO esart.hoja_vida_artillero (artillero_id, grado, curso_id, unidad_id)
+                    VALUES (:alumno, :grado, :curso, :unidad)
+                """),
+                {
+                    "alumno": ids[numero],
+                    "grado": alumno["grado"],
+                    "curso": curso_id,
+                    "unidad": contexto.unidades[alumno["unidad"]],
+                },
+            )
+        print(f"  {codigo}  {tipo:5} {estado:9} {len(alumnos):2} alumnos  inicia {fecha_inicio}")
+    print(f"  {len(CURSOS)} cursos simulados con 40 alumnos y {len(COMANDANTES)} instructores.")
 
 
 def exigir_entorno_de_desarrollo() -> None:
@@ -341,8 +492,8 @@ async def insertar_militar(sesion, contexto: ContextoSimulacion, militar: dict) 
 async def cargar() -> None:
     async with obtener_fabrica_sesiones()() as sesion, sesion.begin():
         existentes = await sesion.scalar(
-            text("SELECT count(*) FROM esart.personal_militar WHERE documento_identidad LIKE :prefijo"),
-            {"prefijo": PREFIJO_CEDULA + "%"},
+            text("SELECT count(*) FROM esart.personal_militar WHERE documento_identidad = ANY(:cedulas)"),
+            {"cedulas": [militar["cedula"] for militar in MILITARES]},
         )
         if existentes:
             print(f"Ya hay {existentes} militares simulados. Use 'borrar' antes de volver a cargar.")
@@ -355,58 +506,83 @@ async def cargar() -> None:
                 f"  {militar['cedula']}  {militar['grado']:3} {militar['nombres']} {militar['apellidos']}"
                 f"  ->  {militar['esperado']}"
             )
+        await cargar_cursos(sesion, contexto)
     print(f"Listo: {len(MILITARES)} militares simulados en {len(UNIDADES)} unidades simuladas.")
+
+
+# Solo lo que crea este cargador: las 10 cédulas de MILITARES y el rango de alumnos simulados.
+# (El resto del rango 99000000xx puede ser de archivos de prueba del cargue por Excel.)
+PERSONAL_SIMULADO = (
+    "(SELECT id FROM esart.personal_militar "
+    "WHERE documento_identidad = ANY(:cedulas) OR documento_identidad LIKE :alumnos)"
+)
 
 
 async def borrar() -> None:
     async with obtener_fabrica_sesiones()() as sesion, sesion.begin():
-        valores = {"cedulas": PREFIJO_CEDULA + "%", "codigos": PREFIJO_CODIGO + "%"}
+        valores = {
+            "cedulas": [militar["cedula"] for militar in MILITARES],
+            "alumnos": PREFIJO_ALUMNOS + "%",
+            "codigos": PREFIJO_CODIGO + "%",
+        }
         sentencias = [
             (
                 "certificados_reentrenamiento",
-                "DELETE FROM esart.certificados_reentrenamiento WHERE personal_id IN "
-                "(SELECT id FROM esart.personal_militar WHERE documento_identidad LIKE :cedulas)",
+                f"DELETE FROM esart.certificados_reentrenamiento WHERE personal_id IN {PERSONAL_SIMULADO}",  # noqa: S608
             ),
             (
                 "participantes_reentrenamiento",
-                "DELETE FROM esart.participantes_reentrenamiento WHERE personal_id IN "
-                "(SELECT id FROM esart.personal_militar WHERE documento_identidad LIKE :cedulas)",
+                f"DELETE FROM esart.participantes_reentrenamiento WHERE personal_id IN {PERSONAL_SIMULADO}",  # noqa: S608
             ),
             ("reentrenamientos", "DELETE FROM esart.reentrenamientos WHERE codigo LIKE :codigos"),
             ("comites_moviles", "DELETE FROM esart.comites_moviles WHERE codigo LIKE :codigos"),
             (
                 "artillero_cursos",
-                "DELETE FROM esart.artillero_cursos WHERE hoja_vida_id IN "
-                "(SELECT id FROM esart.hoja_vida_artillero WHERE artillero_id IN "
-                "(SELECT id FROM esart.personal_militar WHERE documento_identidad LIKE :cedulas))",
+                "DELETE FROM esart.artillero_cursos WHERE hoja_vida_id IN "  # noqa: S608
+                f"(SELECT id FROM esart.hoja_vida_artillero WHERE artillero_id IN {PERSONAL_SIMULADO})",  # noqa: S608
             ),
             (
                 "hoja_vida_artillero",
-                "DELETE FROM esart.hoja_vida_artillero WHERE artillero_id IN "
-                "(SELECT id FROM esart.personal_militar WHERE documento_identidad LIKE :cedulas)",
+                f"DELETE FROM esart.hoja_vida_artillero WHERE artillero_id IN {PERSONAL_SIMULADO}",  # noqa: S608
             ),
+            # Cursos simulados y sus comandantes (después del historial que los referencia).
+            ("cursos", "DELETE FROM esart.cursos WHERE codigo LIKE :codigos"),
+            (
+                "instructores_especialidades",
+                "DELETE FROM esart.instructores_especialidades WHERE instructor_id IN "  # noqa: S608
+                f"(SELECT id FROM esart.instructores WHERE personal_id IN {PERSONAL_SIMULADO})",  # noqa: S608
+            ),
+            ("instructores", f"DELETE FROM esart.instructores WHERE personal_id IN {PERSONAL_SIMULADO}"),  # noqa: S608
             (
                 "personal_militar",
-                "DELETE FROM esart.personal_militar WHERE documento_identidad LIKE :cedulas",
+                "DELETE FROM esart.personal_militar "
+                "WHERE documento_identidad = ANY(:cedulas) OR documento_identidad LIKE :alumnos",
             ),
             ("unidades_militares", "DELETE FROM esart_ref.unidades_militares WHERE codigo LIKE :codigos"),
         ]
-        # Las sentencias son constantes de este archivo; los patrones van como parámetros.
+        # Las sentencias son constantes de este archivo; los valores van como parámetros.
         for tabla, sentencia in sentencias:
             resultado = await sesion.execute(text(sentencia), valores)
             print(f"  {tabla}: {resultado.rowcount} filas borradas")
     print("Datos simulados eliminados (los tipos de curso del seed oficial se conservan).")
 
 
+async def solo_cursos() -> None:
+    """Agrega los cursos simulados a una base que ya tiene los 10 militares simulados."""
+    async with obtener_fabrica_sesiones()() as sesion, sesion.begin():
+        await cargar_cursos(sesion, await preparar_contexto(sesion))
+
+
 async def principal(accion: str) -> None:
     exigir_entorno_de_desarrollo()
+    acciones = {"cargar": cargar, "cursos": solo_cursos, "borrar": borrar}
     try:
-        await (cargar() if accion == "cargar" else borrar())
+        await acciones[accion]()
     finally:
         await cerrar_motor_base_datos()
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2 or sys.argv[1] not in ("cargar", "borrar"):
-        raise SystemExit("Uso: python -m herramientas.cargar_datos_simulados cargar|borrar")
+    if len(sys.argv) != 2 or sys.argv[1] not in ("cargar", "cursos", "borrar"):
+        raise SystemExit("Uso: python -m herramientas.cargar_datos_simulados cargar|cursos|borrar")
     asyncio.run(principal(sys.argv[1]))
