@@ -111,6 +111,12 @@ export function tamanoLegible(bytes: number): string {
   selector: 'esart-plantillas-formatos',
   imports: [DatePipe, FormsModule],
   templateUrl: './plantillas-formatos.html',
+  host: {
+    '(dragenter)': 'entrarArrastre($event)',
+    '(dragover)': 'sobre($event)',
+    '(dragleave)': 'salirArrastre()',
+    '(drop)': 'soltar($event)',
+  },
 })
 export class PlantillasFormatosPestana {
   private readonly parametros = inject(ParametrosService);
@@ -273,15 +279,47 @@ export class PlantillasFormatosPestana {
     entrada.value = '';
   }
 
-  protected soltar(evento: DragEvent): void {
+  // --- Arrastrar y soltar en cualquier parte ---
+  // Los eventos se escuchan en el host: la ventana de subida (fondo fijo a pantalla completa) es
+  // hija del host, así que un archivo soltado en cualquier punto de la pantalla llega aquí. Con la
+  // ventana cerrada, soltar sobre la pestaña la abre con el archivo (solo si puede publicar).
+  // dragenter/dragleave se disparan por cada elemento hijo: el contador evita parpadeos.
+  private profundidadArrastre = 0;
+
+  /** Solo interesan arrastres de archivos (no texto ni enlaces) y si se puede recibir uno. */
+  private aceptaArrastre(evento: DragEvent): boolean {
+    const traeArchivos = Array.from(evento.dataTransfer?.types ?? []).includes('Files');
+    return traeArchivos && !this.publicando() && (this.subiendo() || this.puedePublicar());
+  }
+
+  protected entrarArrastre(evento: DragEvent): void {
+    if (!this.aceptaArrastre(evento)) return;
     evento.preventDefault();
-    this.arrastrando.set(false);
-    this.elegir(evento.dataTransfer?.files?.[0] ?? null);
+    this.profundidadArrastre++;
+    this.arrastrando.set(true);
   }
 
   protected sobre(evento: DragEvent): void {
+    if (!this.aceptaArrastre(evento)) return;
+    // Sin preventDefault el navegador no permite soltar (y abriría el archivo en la pestaña).
     evento.preventDefault();
-    this.arrastrando.set(true);
+    if (evento.dataTransfer) evento.dataTransfer.dropEffect = 'copy';
+  }
+
+  protected salirArrastre(): void {
+    if (this.profundidadArrastre > 0) this.profundidadArrastre--;
+    if (this.profundidadArrastre === 0) this.arrastrando.set(false);
+  }
+
+  protected soltar(evento: DragEvent): void {
+    if (!this.aceptaArrastre(evento)) return;
+    evento.preventDefault();
+    this.profundidadArrastre = 0;
+    this.arrastrando.set(false);
+    const archivo = evento.dataTransfer?.files?.[0] ?? null;
+    if (!archivo) return;
+    if (!this.subiendo()) this.abrirSubida();
+    this.elegir(archivo);
   }
 
   protected publicar(): void {

@@ -354,6 +354,15 @@ Del MILITAR, nombre, grado y unidad salen de Personal militar; el CIVIL guarda l
   `comandante` sale de `cursos.comandante_id` (cargue por Excel); `participa`, de `cursos_instructores`. Las materias que dicta quedan
   para cuando exista la malla curricular (segunda entrega). Migración p0014 (solo permisos de lectura).
 
+## 5e. Registro manual de personal militar
+
+Componente `PERSONAL_CARGUE_MANUAL`, operación **crear** (sesión + CSRF). Detalle en `ESART_REGISTRO_MANUAL_PERSONAL.md`.
+
+- `GET /api/personal/opciones-registro` → `{ "categorias": [{ "codigo", "nombre", "grados": [{ "codigo", "nombre" }] }], "unidades": [{ "id", "codigo", "nombre" }] }`.
+- `POST /api/personal` con `{ "documento_identidad", "nombres", "apellidos", "grado", "genero": "M"|"F", "categoria", "unidad_actual_id"?, "especialidad_actual"?, "activo" }`
+  → **201** con el registro + `"nombre_completo"`, `"unidad_nombre"`. **409** `DOCUMENTO_EXISTENTE`, **422** `DATOS_INVALIDOS`
+  (grado fuera de la categoría, unidad inexistente o inactiva), **503** `REGISTRO_NO_DISPONIBLE` (falta p0015). Auditoría `PERSONAL_REGISTRADO`.
+
 ---
 
 ## 6. Salud
@@ -390,3 +399,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.10 | 2026-11-16 | HU-10 web: §5b gestión de usuarios (cédula obligatoria, contraseña temporal, activar/desactivar, desbloquear, restablecer); §2 `requiere_cambio_contrasena`, `POST /auth/cambiar-contrasena` y 403 `CAMBIO_CONTRASENA_REQUERIDO` |
 | 0.11 | 2026-11-17 | §5c panel de Parámetros: regla de habilitación (leer, simular, guardar con TOTP y control de concurrencia), repositorio de plantillas (publicar, descargar, retirar) y parámetros de seguridad (solo consulta). Migración p0012 |
 | 0.12 | 2026-11-17 | §5d panel de instructores (militares y civiles, foto y especialidades) y cursos del instructor. Migraciones p0013 y p0014 |
+| 0.13 | 2026-11-18 | §5e registro manual de personal militar y accesos a Instructores / Usuarios con `?cedula=`. Migración p0015 |

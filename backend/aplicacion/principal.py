@@ -22,6 +22,7 @@ from aplicacion.rutas.autenticacion import enrutador_autenticacion
 from aplicacion.rutas.importaciones import enrutador as enrutador_importaciones
 from aplicacion.rutas.instructores import enrutador_instructores
 from aplicacion.rutas.parametros import enrutador_parametros
+from aplicacion.rutas.personal import enrutador_personal
 from aplicacion.rutas.salud import enrutador_salud
 from aplicacion.rutas.totp import enrutador as enrutador_totp
 from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
@@ -91,6 +92,7 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_administracion, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_parametros, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_instructores, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_personal, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_totp, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_autenticacion, prefix="/api/v1")
     aplicacion.include_router(enrutador_totp, prefix="/api/v1")

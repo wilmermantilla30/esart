@@ -45,6 +45,8 @@ INSTRUCTOR_REGISTRADO = "INSTRUCTOR_REGISTRADO"
 INSTRUCTOR_ACTUALIZADO = "INSTRUCTOR_ACTUALIZADO"
 INSTRUCTOR_ACTIVADO = "INSTRUCTOR_ACTIVADO"
 INSTRUCTOR_DESACTIVADO = "INSTRUCTOR_DESACTIVADO"
+# Registro manual de personal militar (migración p0015).
+PERSONAL_REGISTRADO = "PERSONAL_REGISTRADO"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")
