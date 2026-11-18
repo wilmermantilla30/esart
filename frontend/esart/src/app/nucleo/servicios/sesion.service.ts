@@ -1,0 +1,269 @@
+import { Injectable, computed, inject, signal } from '@angular/core';
+import { Observable, catchError, finalize, map, of, tap, throwError } from 'rxjs';
+import { HttpErrorResponse } from '@angular/common/http';
+
+import {
+  CaptchaLocal,
+  ElementoMenu,
+  DesafioSegundoFactor,
+  EstadoBloqueoPublico,
+  RespuestaInicioSesion,
+  RespuestaUsuarioActual,
+  SolicitudCambioContrasena,
+  SolicitudInicioSesion,
+  UsuarioEnSesion,
+} from '../modelos/sesion';
+import { ClienteApiService } from './cliente-api.service';
+
+/** Rutas de autenticación del backend (contrato de API, §2). */
+export const RUTA_INICIAR_SESION = '/auth/login';
+export const RUTA_USUARIO_ACTUAL = '/auth/yo';
+export const RUTA_CERRAR_SESION = '/auth/cerrar-sesion';
+export const RUTA_CAPTCHA = '/auth/captcha';
+export const RUTA_CAMBIAR_CONTRASENA = '/auth/cambiar-contrasena';
+
+/**
+ * Estado de la sesión en el navegador.
+ *
+ * Solo guarda los datos PÚBLICOS del usuario en memoria (signal). No usa localStorage
+ * ni sessionStorage: la sesión real es la cookie httpOnly y la valida el backend. Si la
+ * página se recarga, el estado se recupera preguntando a /api/auth/yo.
+ */
+@Injectable({ providedIn: 'root' })
+export class SesionService {
+  private readonly clienteApi = inject(ClienteApiService);
+
+  private readonly usuarioActual = signal<UsuarioEnSesion | null>(null);
+  private readonly menuActual = signal<ElementoMenu[] | null>(null);
+  private readonly permisosActuales = signal<ReadonlySet<string>>(new Set());
+  private readonly cambioInicial = signal<DesafioSegundoFactor | null>(null);
+  private readonly pasoMfa = signal<DesafioSegundoFactor | null>(null);
+  readonly cambioInicialPendiente = this.cambioInicial.asReadonly();
+  readonly mfaPendiente = this.pasoMfa.asReadonly();
+
+  /** Usuario en sesión, o null si no hay sesión confirmada. */
+  readonly usuario = this.usuarioActual.asReadonly();
+  readonly haySesion = computed(() => this.usuarioActual() !== null);
+
+  /** La contraseña actual es temporal: hasta cambiarla, el backend no deja usar nada más. */
+  readonly requiereCambioContrasena = computed(
+    () =>
+      this.cambioInicial() !== null || this.usuarioActual()?.requiere_cambio_contrasena === true,
+  );
+
+  /** Menú del usuario (sidebar y pestañas), o null si todavía no se ha cargado. */
+  readonly menu = this.menuActual.asReadonly();
+
+  /**
+   * Indica si el usuario puede acceder a un componente de la malla (HU-09).
+   * Solo sirve para mostrar u ocultar opciones: el backend vuelve a verificar cada petición.
+   */
+  tienePermiso(codigoComponente: string): boolean {
+    return this.permisosActuales().has(codigoComponente);
+  }
+
+  /**
+   * Indica si en un componente el usuario puede hacer una operación ('crear', 'leer',
+   * 'actualizar', 'eliminar'), según el menú de /api/auth/yo. Solo para mostrar u ocultar
+   * botones: el backend vuelve a verificar la operación en cada petición.
+   */
+  puede(codigoComponente: string, operacion: string): boolean {
+    const buscar = (elementos: ElementoMenu[]): ElementoMenu | undefined => {
+      for (const elemento of elementos) {
+        const encontrado =
+          elemento.codigo === codigoComponente ? elemento : buscar(elemento.hijos ?? []);
+        if (encontrado) {
+          return encontrado;
+        }
+      }
+      return undefined;
+    };
+    return buscar(this.menuActual() ?? [])?.operaciones.includes(operacion) ?? false;
+  }
+
+  /**
+   * Cambia la contraseña del usuario en sesión (exige la actual). Si era temporal, desde
+   * ese momento puede usar el sistema. Las reglas de la nueva las valida también el backend.
+   */
+  cambiarContrasena(contrasenaActual: string, contrasenaNueva: string): Observable<void> {
+    const solicitud: SolicitudCambioContrasena = {
+      contrasena_actual: contrasenaActual,
+      contrasena_nueva: contrasenaNueva,
+    };
+    const desafio = this.cambioInicial();
+    if (desafio) {
+      return this.clienteApi
+        .enviar<DesafioSegundoFactor>('/auth/cambiar-contrasena-inicial', {
+          ...solicitud,
+          desafio_id: desafio.desafio_id,
+        })
+        .pipe(
+          tap((siguiente) => {
+            this.cambioInicial.set(null);
+            this.pasoMfa.set(siguiente);
+          }),
+          map(() => undefined),
+        );
+    }
+    return this.clienteApi
+      .enviar<void>(RUTA_CAMBIAR_CONTRASENA, solicitud)
+      .pipe(
+        tap(() =>
+          this.usuarioActual.update((usuario) =>
+            usuario ? { ...usuario, requiere_cambio_contrasena: false } : usuario,
+          ),
+        ),
+      );
+  }
+
+  consultarBloqueo(): Observable<EstadoBloqueoPublico> {
+    return this.clienteApi.obtener<EstadoBloqueoPublico>('/auth/bloqueo');
+  }
+
+  obtenerCaptcha(nombreUsuario: string, anterior: string | null = null): Observable<CaptchaLocal> {
+    const nombre = nombreUsuario.trim();
+    if (nombre.length < 3 || nombre.length > 80 || /[\x00-\x1f\x7f]/.test(nombre)) {
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            error: {
+              error: {
+                codigo: 'DATOS_INVALIDOS',
+                mensaje: 'Escriba un usuario válido antes de solicitar el código.',
+                detalle: null,
+              },
+            },
+          }),
+      );
+    }
+    // Contexto del desafío, nunca identidad autenticada. No requiere token JWT.
+    const cabeceras: Record<string, string> = { 'X-ESART-Usuario': nombre };
+    if (anterior) cabeceras['X-ESART-Captcha-Anterior'] = anterior;
+    return this.clienteApi.obtener<CaptchaLocal>(RUTA_CAPTCHA, cabeceras);
+  }
+
+  /** Envía las credenciales. Si son correctas, el backend deja las cookies y aquí se guarda el usuario. */
+  iniciarSesion(
+    nombreUsuario: string,
+    contrasena: string,
+    captcha: { id: string; respuesta: string } | null = null,
+  ): Observable<UsuarioEnSesion | DesafioSegundoFactor> {
+    const solicitud: SolicitudInicioSesion = {
+      nombre_usuario: nombreUsuario.trim(),
+      contrasena,
+      captcha_id: captcha?.id ?? null,
+      captcha_respuesta: captcha?.respuesta ?? null,
+    };
+    return this.clienteApi
+      .enviar<RespuestaInicioSesion | DesafioSegundoFactor>(RUTA_INICIAR_SESION, solicitud)
+      .pipe(
+        map((respuesta) => ('totp_requerido' in respuesta ? respuesta : respuesta.usuario)),
+        tap((usuario) => {
+          this.olvidarSesion();
+          if ('totp_requerido' in usuario) {
+            if (usuario.cambio_contrasena_requerido) this.cambioInicial.set(usuario);
+          } else this.usuarioActual.set(usuario);
+        }),
+      );
+  }
+
+  confirmarLoginTotp(
+    desafioId: string,
+    codigo: string,
+    recuperacion = false,
+  ): Observable<UsuarioEnSesion> {
+    return this.clienteApi
+      .enviar<RespuestaInicioSesion>('/auth/totp/login/confirmar', {
+        desafio_id: desafioId,
+        codigo,
+        ...(recuperacion ? { recuperacion: true } : {}),
+      })
+      .pipe(
+        map((r) => r.usuario),
+        tap((u) => {
+          this.olvidarSesion();
+          this.usuarioActual.set(u);
+        }),
+      );
+  }
+
+  confirmarVinculacionLogin(desafioId: string, codigo: string) {
+    return this.clienteApi
+      .enviar<
+        RespuestaInicioSesion & {
+          activo: boolean;
+          codigos_recuperacion: string[];
+        }
+      >('/auth/totp/login/vincular', { desafio_id: desafioId, codigo })
+      .pipe(
+        tap((r) => {
+          this.olvidarSesion();
+          this.usuarioActual.set(r.usuario);
+        }),
+      );
+  }
+
+  tomarPasoMfaPendiente(): DesafioSegundoFactor | null {
+    const paso = this.pasoMfa();
+    this.pasoMfa.set(null);
+    return paso;
+  }
+
+  /**
+   * Confirma con el backend si la cookie de sesión sigue siendo válida.
+   * Devuelve true/false y nunca lanza error (lo usan las guardas de ruta).
+   */
+  comprobarSesion(): Observable<boolean> {
+    // Tras el login se conoce el usuario pero no su menú: se pide /api/auth/yo una vez.
+    if (this.usuarioActual() && this.menuActual()) {
+      return of(true);
+    }
+    return this.renovarSesion();
+  }
+
+  /**
+   * Pregunta SIEMPRE al backend (/api/auth/yo) si la sesión sigue vigente. Si lo está,
+   * el backend reinicia la ventana de inactividad (HU-08). Devuelve true/false sin lanzar error.
+   */
+  renovarSesion(): Observable<boolean> {
+    return this.clienteApi.obtener<RespuestaUsuarioActual>(RUTA_USUARIO_ACTUAL).pipe(
+      tap((respuesta) => {
+        this.usuarioActual.set({
+          nombre_usuario: respuesta.nombre_usuario,
+          nombre_completo: respuesta.nombre_completo,
+          rol: respuesta.rol,
+          requiere_cambio_contrasena: respuesta.requiere_cambio_contrasena === true,
+        });
+        this.menuActual.set(respuesta.menu ?? []);
+        this.permisosActuales.set(new Set(respuesta.permisos ?? []));
+      }),
+      map(() => true),
+      catchError(() => {
+        this.olvidarSesion();
+        return of(false);
+      }),
+    );
+  }
+
+  /**
+   * Pide al backend revocar la sesión y borrar las cookies.
+   * El estado local se limpia SIEMPRE, aunque la petición falle (por ejemplo, sin red).
+   */
+  cerrarSesion(): Observable<void> {
+    return this.clienteApi.enviar<void>(RUTA_CERRAR_SESION).pipe(
+      catchError(() => of(undefined)),
+      map(() => undefined),
+      finalize(() => this.olvidarSesion()),
+    );
+  }
+
+  /** Borra el estado local (lo usa el interceptor cuando el backend responde 401). */
+  olvidarSesion(): void {
+    this.usuarioActual.set(null);
+    this.menuActual.set(null);
+    this.permisosActuales.set(new Set());
+    this.cambioInicial.set(null);
+    this.pasoMfa.set(null);
+  }
+}

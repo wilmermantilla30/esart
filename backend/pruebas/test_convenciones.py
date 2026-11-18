@@ -32,7 +32,7 @@ def test_env_esta_excluido_de_git():
     assert ".env" in reglas_gitignore
 
 
-def test_configuracion_lee_el_env_de_la_raiz_del_repositorio():
+def test_configuracion_lee_el_env_del_backend():
     from aplicacion.configuracion import RUTA_ARCHIVO_ENV
 
-    assert RUTA_ARCHIVO_ENV == RAIZ_REPOSITORIO / ".env"
+    assert RUTA_ARCHIVO_ENV == CARPETA_BACKEND / ".env"

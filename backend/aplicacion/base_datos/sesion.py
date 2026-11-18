@@ -11,6 +11,7 @@ from functools import lru_cache
 
 from sqlalchemy.ext.asyncio import AsyncEngine, AsyncSession, async_sessionmaker, create_async_engine
 
+from aplicacion.base_datos.configuracion import opciones_tls_local
 from aplicacion.configuracion import obtener_configuracion
 
 # Segundos tras los cuales una conexión del grupo se renueva. Evita usar
@@ -44,6 +45,7 @@ def obtener_motor_base_datos() -> AsyncEngine:
         echo=False,
         hide_parameters=True,
         connect_args={
+            **opciones_tls_local(configuracion.url_base_datos.get_secret_value()),
             "timeout": configuracion.segundos_espera_conexion,
             "command_timeout": SEGUNDOS_MAXIMOS_POR_CONSULTA,
         },

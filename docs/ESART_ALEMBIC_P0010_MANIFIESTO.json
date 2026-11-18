@@ -1,0 +1,53 @@
+[
+  {
+    "archivo": "backend/migraciones_principal/versions/p0004_captcha_local.py",
+    "sha256": "04063ed4cf83409280b576e4344e5d66c291ffe5b8cb40dba5a9ada258ca3ea9",
+    "revision": "p0004_captcha_local",
+    "down_revision": "p0003_control_intentos"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0005_componentes_y_malla.py",
+    "sha256": "53d20d43613318bfa8d70ef4c0cccc8cd2c9b7ce001bdaf8eb4a22301d54e227",
+    "revision": "p0005_componentes_y_malla",
+    "down_revision": "p0004_captcha_local"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0005_integracion_totp.py",
+    "sha256": "4bac082af783ffb74aee6b949b36c1edebb7e4552648c25d396943ee7efe4d09",
+    "revision": "p0005_integracion_totp",
+    "down_revision": "p0004_captcha_local"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0006_parametros_habilitacion.py",
+    "sha256": "01fdeeb6b215480ad7dd50d3c581bdbf16863394a80c456e3135a8b6ba89f3ce",
+    "revision": "p0006_parametros_habilitacion",
+    "down_revision": "p0005_componentes_y_malla"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0007_auditoria_eventos.py",
+    "sha256": "e33bb78b803df2050c9de1c04224563cbc0dbc07844405625ee89224eae60478",
+    "revision": "p0007_auditoria_eventos",
+    "down_revision": "p0006_parametros_habilitacion"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0008_malla_editable.py",
+    "sha256": "6524d3063db3cffa432f540a1e34d1c5c86d15c2db5c594583cb6d4ac2614bc7",
+    "revision": "p0008_malla_editable",
+    "down_revision": "p0007_auditoria_eventos"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0009_gestion_usuarios.py",
+    "sha256": "a149c9ebb858ab74b18a286ee5188be59c0e4abb8b3d5557cb15ba07c71139e4",
+    "revision": "p0009_gestion_usuarios",
+    "down_revision": "p0008_malla_editable"
+  },
+  {
+    "archivo": "backend/migraciones_principal/versions/p0010_merge_hu10_totp.py",
+    "sha256": "4a170aac5a410f914a39fb85188f880b658bb5efd8be70816152e70a9b055272",
+    "revision": "p0010_merge_hu10_totp",
+    "down_revision": [
+      "p0009_gestion_usuarios",
+      "p0005_integracion_totp"
+    ]
+  }
+]

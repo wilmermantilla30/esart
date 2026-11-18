@@ -1,0 +1,82 @@
+<section class="curso" aria-labelledby="curso-titulo">
+  <header class="curso-cabecera">
+    <h3 id="curso-titulo">
+      <span class="material-symbols-outlined" aria-hidden="true">school</span> DATOS DEL CURSO
+    </h3>
+    @if (cargando()) {
+      <span role="status">Cargando catálogos…</span>
+    } @else if (errorCarga()) {
+      <button type="button" (click)="recargar()">Reintentar</button>
+    }
+  </header>
+  @if (errorCarga()) {
+    <p class="curso-alerta" role="alert">{{ errorCarga() }}</p>
+  }
+  <form class="curso-rejilla" [formGroup]="formulario" (submit)="$event.preventDefault()">
+    <fieldset [disabled]="deshabilitado() || cargando()">
+      <label class="curso-campo">
+        <span>Tipo de curso *</span>
+        <select formControlName="tipo_curso_id" (change)="elegirTipo($any($event.target).value)">
+          <option value="">Seleccione el tipo de curso</option>
+          @for (tipo of tipos(); track tipo.id) {
+            <option [value]="tipo.id">{{ tipo.codigo }} — {{ tipo.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="curso-campo">
+        <span>Nombre del curso *</span>
+        <input type="text" formControlName="nombre_curso" maxlength="200" autocomplete="off" />
+      </label>
+      <label class="curso-campo">
+        <span>Número del curso</span>
+        <input
+          type="text"
+          [value]="siguienteCodigo()"
+          placeholder="Elija el tipo de curso"
+          readonly
+          aria-describedby="curso-numero-ayuda"
+        />
+        <small id="curso-numero-ayuda">Consecutivo por tipo de curso, asignado al guardar.</small>
+      </label>
+      <label class="curso-campo">
+        <span>Comandante del curso *</span>
+        <select formControlName="comandante_id">
+          <option value="">
+            {{ instructores().length ? 'Seleccione un instructor' : 'No hay instructores activos' }}
+          </option>
+          @for (instructor of instructores(); track instructor.id) {
+            <option [value]="instructor.id">{{ instructor.nombre }}</option>
+          }
+        </select>
+      </label>
+      <label class="curso-campo">
+        <span>Fecha inicial *</span>
+        <input type="date" formControlName="fecha_inicio" />
+      </label>
+      <label class="curso-campo">
+        <span>Fecha final *</span>
+        <input
+          type="date"
+          formControlName="fecha_fin"
+          [min]="formulario.controls.fecha_inicio.value"
+          [attr.aria-invalid]="fechasInvalidas()"
+        />
+        @if (fechasInvalidas()) {
+          <small class="curso-error" role="alert">Debe ser igual o posterior a la inicial.</small>
+        }
+      </label>
+      <label class="curso-campo">
+        <span>Estado *</span>
+        <select formControlName="estado_curso">
+          @for (estado of estados; track estado.valor) {
+            <option [value]="estado.valor">{{ estado.texto }}</option>
+          }
+        </select>
+      </label>
+      <label class="curso-campo curso-ancho">
+        <span>Observación</span>
+        <textarea formControlName="observacion_curso" rows="2" maxlength="2000"></textarea>
+      </label>
+    </fieldset>
+  </form>
+</section>

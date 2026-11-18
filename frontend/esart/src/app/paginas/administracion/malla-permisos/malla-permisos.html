@@ -1,0 +1,268 @@
+<div class="space-y-4">
+  <div>
+    <h1 class="font-headline font-bold text-headline-md text-negro-institucional">Malla de permisos</h1>
+    <p class="text-body-md text-azul-pizarra/70">
+      Qué puede hacer cada rol en cada módulo, y excepciones para usuarios puntuales. Cada cambio queda en la auditoría.
+    </p>
+  </div>
+
+  <!-- Pestañas -->
+  <nav class="bg-white rounded-xl border border-gris-bordes p-1.5 flex gap-1" aria-label="Tipo de permiso">
+    @for (opcion of [{ valor: 'ROL', texto: 'Por rol', icono: 'groups' }, { valor: 'USUARIO', texto: 'Por usuario', icono: 'person' }]; track opcion.valor) {
+      <button
+        type="button"
+        (click)="cambiarPestana($any(opcion.valor))"
+        [attr.aria-pressed]="pestana() === opcion.valor"
+        class="inline-flex items-center gap-2 px-3.5 py-2 rounded-lg text-label-lg font-headline transition-colors"
+        [class.bg-azul-institucional]="pestana() === opcion.valor"
+        [class.text-white]="pestana() === opcion.valor"
+        [class.text-azul-pizarra]="pestana() !== opcion.valor"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">{{ opcion.icono }}</span>
+        {{ opcion.texto }}
+      </button>
+    }
+  </nav>
+
+  @if (mensaje(); as texto) {
+    <div class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md" role="status">
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md" role="alert">
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  <!-- ===================== POR ROL ===================== -->
+  @if (pestana() === 'ROL') {
+    <section class="bg-white rounded-xl border border-gris-bordes p-5 space-y-4">
+      <div class="flex flex-wrap items-center gap-2">
+        <span class="text-label-md font-headline text-azul-pizarra/70">Rol:</span>
+        @for (rol of roles(); track rol.codigo) {
+          <button
+            type="button"
+            (click)="seleccionarRol(rol.codigo)"
+            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full border text-label-lg font-headline"
+            [class.bg-azul-hielo]="datosRol()?.rol === rol.codigo"
+            [class.border-azul-institucional]="datosRol()?.rol === rol.codigo"
+            [class.text-azul-institucional]="datosRol()?.rol === rol.codigo"
+            [class.border-gris-bordes]="datosRol()?.rol !== rol.codigo"
+          >
+            {{ rol.nombre }}
+            @if (!rol.editable) {
+              <span class="material-symbols-outlined text-[16px]" aria-label="Fijo">lock</span>
+            }
+          </button>
+        }
+      </div>
+
+      @if (datosRol(); as datos) {
+        @if (!datos.editable) {
+          <p class="p-3 bg-azul-hielo/60 border border-azul-claro/40 rounded-sm text-body-md">
+            El rol <strong>{{ datos.nombre }}</strong> es fijo: siempre tiene todos los permisos y no se edita.
+          </p>
+        }
+        <div class="overflow-x-auto">
+          <table class="w-full text-body-md">
+            <thead class="bg-gris-claro">
+              <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                <th class="py-2.5 px-3">Módulo</th>
+                @for (columna of columnas; track columna.clave) {
+                  <th class="py-2.5 px-3 text-center">{{ columna.titulo }}</th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (fila of datos.filas; track fila.codigo) {
+                <tr class="border-t border-gris-bordes/70">
+                  <td class="py-2 px-3" [class.pl-8]="sangria(fila)">
+                    <span class="font-semibold text-negro-institucional">{{ fila.nombre }}</span>
+                    @if (fila.especial) {
+                      <span class="ml-1 text-[11px] text-azul-institucional font-headline">permiso especial</span>
+                    }
+                  </td>
+                  @for (columna of columnas; track columna.clave) {
+                    <td class="py-2 px-3 text-center">
+                      <input
+                        type="checkbox"
+                        class="w-4 h-4 rounded text-azul-institucional border-gris-bordes focus:ring-azul-institucional disabled:opacity-50"
+                        [attr.aria-label]="columna.titulo + ' en ' + fila.nombre"
+                        [checked]="operacionRol(fila.codigo, columna.clave)"
+                        [disabled]="!datos.editable || guardando()"
+                        (change)="cambiarOperacionRol(fila.codigo, columna.clave, $any($event.target).checked)"
+                      />
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        @if (datos.editable) {
+          <div class="flex items-center justify-end gap-2">
+            <span class="text-xs text-azul-pizarra/60">{{ cambiosRol().length }} módulo(s) con cambios</span>
+            <button
+              type="button"
+              (click)="descartarRol()"
+              [disabled]="cambiosRol().length === 0 || guardando()"
+              class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline disabled:opacity-50"
+            >
+              Descartar
+            </button>
+            <button
+              type="button"
+              (click)="guardarRol()"
+              [disabled]="cambiosRol().length === 0 || guardando()"
+              class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+              {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+            </button>
+          </div>
+        }
+      }
+    </section>
+  }
+
+  <!-- ===================== POR USUARIO ===================== -->
+  @if (pestana() === 'USUARIO') {
+    <div class="grid grid-cols-1 xl:grid-cols-[320px_1fr] gap-4">
+      <!-- Búsqueda de usuarios -->
+      <section class="bg-white rounded-xl border border-gris-bordes p-4 space-y-3 self-start">
+        <form class="flex gap-2" (ngSubmit)="buscarUsuarios()">
+          <label for="buscar-usuario" class="sr-only">Buscar usuario</label>
+          <input
+            id="buscar-usuario"
+            name="texto"
+            type="search"
+            [(ngModel)]="textoUsuario"
+            placeholder="Buscar usuario"
+            class="flex-1 py-2 px-3 border border-gris-bordes rounded-sm text-body-md focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20 outline-none"
+          />
+          <button type="submit" class="px-3 bg-azul-institucional text-white rounded-sm" aria-label="Buscar">
+            <span class="material-symbols-outlined text-[20px]" aria-hidden="true">search</span>
+          </button>
+        </form>
+        <ul class="divide-y divide-gris-bordes/70">
+          @for (usuario of usuarios(); track usuario.id) {
+            <li>
+              <button
+                type="button"
+                (click)="seleccionarUsuario(usuario)"
+                class="w-full text-left py-2 px-2 rounded-sm hover:bg-azul-hielo/50"
+                [class.bg-azul-hielo]="datosUsuario()?.usuario?.id === usuario.id"
+              >
+                <span class="block font-semibold text-negro-institucional">{{ usuario.usuario }}</span>
+                <span class="block text-xs text-azul-pizarra/60">
+                  {{ usuario.rol ?? 'Sin rol' }}{{ usuario.activo ? '' : ' · Inactivo' }}
+                </span>
+              </button>
+            </li>
+          } @empty {
+            <li class="py-2 text-xs text-azul-pizarra/60">No hay usuarios que coincidan.</li>
+          }
+        </ul>
+      </section>
+
+      <!-- Permisos del usuario -->
+      <section class="bg-white rounded-xl border border-gris-bordes p-5 space-y-4 min-w-0">
+        @if (datosUsuario(); as datos) {
+          <div>
+            <h2 class="font-headline text-title-lg text-negro-institucional">{{ datos.usuario.usuario }}</h2>
+            <p class="text-xs text-azul-pizarra/60">{{ datos.usuario.nombre_completo }} · Rol {{ datos.usuario.rol ?? 'sin rol' }}</p>
+          </div>
+          @if (!datos.editable) {
+            <p class="p-3 bg-azul-hielo/60 border border-azul-claro/40 rounded-sm text-body-md">
+              Este usuario es <strong>administrador</strong>: tiene todos los permisos y no admite excepciones.
+            </p>
+          }
+          <div class="overflow-x-auto">
+            <table class="w-full text-body-md">
+              <thead class="bg-gris-claro">
+                <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                  <th class="py-2.5 px-3">Módulo</th>
+                  <th class="py-2.5 px-3">Su rol le da</th>
+                  <th class="py-2.5 px-3">Excepción</th>
+                  @for (columna of columnas.slice(1); track columna.clave) {
+                    <th class="py-2.5 px-2 text-center">{{ columna.titulo }}</th>
+                  }
+                  <th class="py-2.5 px-3">Resultado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of datos.filas; track fila.codigo) {
+                  <tr class="border-t border-gris-bordes/70 align-middle">
+                    <td class="py-2 px-3" [class.pl-8]="sangria(fila)">
+                      <span class="font-semibold text-negro-institucional">{{ fila.nombre }}</span>
+                      @if (fila.especial) {
+                        <span class="ml-1 text-[11px] text-azul-institucional font-headline">especial</span>
+                      }
+                    </td>
+                    <td class="py-2 px-3 text-xs text-azul-pizarra/70">{{ resumir(fila.rol) }}</td>
+                    <td class="py-2 px-3">
+                      <label class="sr-only" [attr.for]="'modo-' + fila.codigo">Excepción en {{ fila.nombre }}</label>
+                      <select
+                        [id]="'modo-' + fila.codigo"
+                        class="py-1.5 pl-2 pr-7 border border-gris-bordes rounded-sm text-body-sm disabled:opacity-50"
+                        [ngModel]="edicionDe(fila.codigo).modo"
+                        (ngModelChange)="cambiarModo(fila.codigo, $event)"
+                        [disabled]="!datos.editable || guardando()"
+                      >
+                        @for (modo of modos; track modo.valor) {
+                          <option [ngValue]="modo.valor">{{ modo.texto }}</option>
+                        }
+                      </select>
+                    </td>
+                    @for (columna of columnas.slice(1); track columna.clave) {
+                      <td class="py-2 px-2 text-center">
+                        <input
+                          type="checkbox"
+                          class="w-4 h-4 rounded text-azul-institucional border-gris-bordes disabled:opacity-40"
+                          [attr.aria-label]="columna.titulo + ' en ' + fila.nombre"
+                          [checked]="edicionDe(fila.codigo).modo === 'CONCEDER' && edicionDe(fila.codigo).operaciones[columna.clave]"
+                          [disabled]="!datos.editable || guardando() || edicionDe(fila.codigo).modo !== 'CONCEDER'"
+                          (change)="cambiarOperacionUsuario(fila.codigo, columna.clave, $any($event.target).checked)"
+                        />
+                      </td>
+                    }
+                    <td class="py-2 px-3 text-xs" [class.text-success]="fila.efectivo.acceder" [class.text-error]="!fila.efectivo.acceder">
+                      {{ resumir(fila.efectivo) }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          @if (datos.editable) {
+            <div class="flex items-center justify-end gap-2">
+              <span class="text-xs text-azul-pizarra/60">{{ cambiosUsuario().length }} módulo(s) con cambios</span>
+              <button
+                type="button"
+                (click)="descartarUsuario()"
+                [disabled]="cambiosUsuario().length === 0 || guardando()"
+                class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline disabled:opacity-50"
+              >
+                Descartar
+              </button>
+              <button
+                type="button"
+                (click)="guardarUsuario()"
+                [disabled]="cambiosUsuario().length === 0 || guardando()"
+                class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+                {{ guardando() ? 'Guardando…' : 'Guardar cambios' }}
+              </button>
+            </div>
+          }
+        } @else {
+          <p class="text-body-md text-azul-pizarra/60">Seleccione un usuario para ver y ajustar sus permisos.</p>
+        }
+      </section>
+    </div>
+  }
+</div>

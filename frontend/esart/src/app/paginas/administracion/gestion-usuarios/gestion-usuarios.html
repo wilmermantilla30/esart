@@ -1,0 +1,345 @@
+<div class="space-y-4">
+  <div class="flex flex-wrap items-end justify-between gap-3">
+    <div>
+      <h1 class="font-headline font-bold text-headline-md text-negro-institucional">Gestión de usuarios</h1>
+      <p class="text-body-md text-azul-pizarra/70">
+        Cada usuario corresponde a un militar de Personal militar. La contraseña inicial es temporal: el usuario la cambia al entrar.
+      </p>
+    </div>
+    @if (puedeCrear() && !creando()) {
+      <button
+        type="button"
+        (click)="abrirAlta()"
+        class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">person_add</span> Nuevo usuario
+      </button>
+    }
+  </div>
+
+  <!-- Credencial para entregar: se muestra una sola vez -->
+  @if (credencial(); as entrega) {
+    <section class="bg-white rounded-xl border-2 border-success/50 p-5 space-y-3" role="status">
+      <div class="flex items-center gap-2 text-success">
+        <span class="material-symbols-outlined" aria-hidden="true">task_alt</span>
+        <h2 class="font-headline text-title-lg">{{ entrega.titulo }}</h2>
+      </div>
+      <p class="text-body-md text-azul-pizarra/80">
+        Entregue estos datos a {{ entrega.nombre || entrega.usuario }} de forma personal. La contraseña
+        <strong>no se volverá a mostrar</strong> y el sistema le pedirá cambiarla al entrar.
+      </p>
+      <dl class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div class="p-3 bg-gris-claro rounded-lg">
+          <dt class="text-label-md font-headline text-azul-pizarra/70">Usuario</dt>
+          <dd class="flex items-center justify-between gap-2 font-mono text-body-lg">
+            {{ entrega.usuario }}
+            <button type="button" (click)="copiar(entrega.usuario)" class="text-azul-institucional" title="Copiar usuario" aria-label="Copiar usuario">
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">content_copy</span>
+            </button>
+          </dd>
+        </div>
+        <div class="p-3 bg-gris-claro rounded-lg">
+          <dt class="text-label-md font-headline text-azul-pizarra/70">Contraseña temporal</dt>
+          <dd class="flex items-center justify-between gap-2 font-mono text-body-lg">
+            {{ entrega.contrasenaTemporal }}
+            <button type="button" (click)="copiar(entrega.contrasenaTemporal)" class="text-azul-institucional" title="Copiar contraseña" aria-label="Copiar contraseña">
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">content_copy</span>
+            </button>
+          </dd>
+        </div>
+      </dl>
+      <div class="flex justify-end">
+        <button type="button" (click)="cerrarCredencial()" class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline">
+          Ya la entregué
+        </button>
+      </div>
+    </section>
+  }
+
+  <!-- Nuevo usuario -->
+  @if (creando()) {
+    <section class="bg-white rounded-xl border border-gris-bordes p-5 space-y-4">
+      <div class="flex items-center justify-between">
+        <h2 class="font-headline text-title-lg text-negro-institucional">Nuevo usuario</h2>
+        <button type="button" (click)="cerrarAlta()" class="text-azul-pizarra/60 hover:text-azul-institucional" aria-label="Cerrar">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+
+      <form class="flex flex-wrap items-end gap-3" (ngSubmit)="buscarMilitar()">
+        <div class="space-y-1">
+          <label for="alta-cedula" class="block font-headline text-label-md">1. Cédula del militar</label>
+          <input
+            id="alta-cedula"
+            name="cedula"
+            inputmode="numeric"
+            maxlength="15"
+            autocomplete="off"
+            [ngModel]="cedula()"
+            (ngModelChange)="cedula.set($event)"
+            class="w-56 py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+          />
+        </div>
+        <button
+          type="submit"
+          [disabled]="buscandoMilitar()"
+          class="inline-flex items-center gap-2 py-2 px-4 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline disabled:opacity-60"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">search</span>
+          {{ buscandoMilitar() ? 'Buscando…' : 'Buscar en Personal militar' }}
+        </button>
+      </form>
+
+      @if (errorAlta(); as fallo) {
+        <div class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md" role="alert">
+          <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+          <span>{{ fallo.mensaje }}</span>
+        </div>
+      }
+
+      @if (militar(); as encontrado) {
+        <div class="p-4 rounded-lg border border-gris-bordes bg-gris-claro/60 flex flex-wrap items-center gap-4">
+          <div class="w-11 h-11 rounded-full bg-azul-pizarra text-white flex items-center justify-center" aria-hidden="true">
+            <span class="material-symbols-outlined">military_tech</span>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="font-headline text-title-lg text-negro-institucional">
+              {{ encontrado.grado }} {{ encontrado.nombres }} {{ encontrado.apellidos }}
+            </div>
+            <div class="text-body-md text-azul-pizarra/70">
+              C.C. {{ encontrado.documento_identidad }} · {{ encontrado.unidad || 'Sin unidad registrada' }}
+            </div>
+          </div>
+          @if (!encontrado.activo) {
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-label-md font-headline bg-error/10 text-error border-error/30">
+              <span class="material-symbols-outlined text-[14px]" aria-hidden="true">block</span> Militar inactivo
+            </span>
+          }
+        </div>
+
+        @if (encontrado.usuario_existente) {
+          <div class="p-3 bg-info/10 border border-info/30 rounded-lg text-body-md" role="status">
+            Este militar ya tiene el usuario <strong class="font-mono">{{ encontrado.usuario_existente }}</strong>. Use las acciones de la tabla para gestionarlo.
+          </div>
+        } @else if (!encontrado.activo) {
+          <div class="p-3 bg-error/10 border border-error/40 rounded-lg text-body-md" role="alert">
+            El militar está inactivo en Personal militar: no se le puede crear usuario.
+          </div>
+        } @else {
+          <form class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start" (ngSubmit)="crear()" autocomplete="off">
+            <div class="space-y-1">
+              <label for="alta-usuario" class="block font-headline text-label-md">2. Nombre de usuario</label>
+              <input
+                id="alta-usuario"
+                name="nombreUsuario"
+                maxlength="80"
+                [ngModel]="nombreUsuario()"
+                (ngModelChange)="nombreUsuario.set($event)"
+                class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md font-mono"
+              />
+              <p class="text-xs text-azul-pizarra/60">Sugerido: {{ encontrado.nombre_usuario_sugerido }}. Puede cambiarlo (sin espacios).</p>
+            </div>
+            <div class="space-y-1">
+              <label for="alta-rol" class="block font-headline text-label-md">3. Rol</label>
+              <select
+                id="alta-rol"
+                name="rol"
+                [ngModel]="rol()"
+                (ngModelChange)="rol.set($event)"
+                class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+              >
+                <option value="USUARIO">Usuario (consulta: Comandante)</option>
+                <option value="ADMINISTRADOR">Administrador (todos los permisos)</option>
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label for="alta-contrasena" class="block font-headline text-label-md">4. Contraseña temporal</label>
+              <div class="flex gap-2">
+                <input
+                  id="alta-contrasena"
+                  name="contrasenaTemporal"
+                  maxlength="72"
+                  autocomplete="new-password"
+                  [ngModel]="contrasenaTemporal()"
+                  (ngModelChange)="contrasenaTemporal.set($event)"
+                  class="flex-1 min-w-0 py-2 px-3 border border-gris-bordes rounded-sm text-body-md font-mono"
+                />
+                <button type="button" (click)="generarParaAlta()" class="px-2.5 border border-gris-bordes rounded-sm text-azul-institucional" title="Generar otra" aria-label="Generar otra contraseña">
+                  <span class="material-symbols-outlined text-[18px]" aria-hidden="true">autorenew</span>
+                </button>
+              </div>
+              <ul class="text-xs space-y-0.5">
+                @for (regla of reglasAlta(); track regla.texto) {
+                  <li [class]="regla.cumple ? 'text-success' : 'text-error'">{{ regla.cumple ? '✓' : '✗' }} {{ regla.texto }}</li>
+                }
+              </ul>
+            </div>
+            <div class="md:col-span-3 flex justify-end gap-2">
+              <button type="button" (click)="cerrarAlta()" class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline">Cancelar</button>
+              <button
+                type="submit"
+                [disabled]="!puedeGuardarAlta() || guardando()"
+                class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-60"
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">person_add</span>
+                {{ guardando() ? 'Creando…' : 'Crear usuario' }}
+              </button>
+            </div>
+          </form>
+        }
+      }
+    </section>
+  }
+
+  <!-- Restablecer contraseña -->
+  @if (restableciendo(); as objetivo) {
+    <section class="bg-white rounded-xl border border-warning/50 p-5 space-y-3">
+      <div class="flex items-center justify-between">
+        <h2 class="font-headline text-title-lg text-negro-institucional">
+          Restablecer contraseña de <span class="font-mono">{{ objetivo.usuario }}</span>
+        </h2>
+        <button type="button" (click)="cerrarRestablecer()" class="text-azul-pizarra/60 hover:text-azul-institucional" aria-label="Cerrar">
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+      <p class="text-body-md text-azul-pizarra/70">
+        Se pondrá esta contraseña temporal, se quitará el bloqueo por intentos y se cerrarán sus sesiones abiertas. Deberá cambiarla al entrar.
+      </p>
+      <div class="flex flex-wrap items-center gap-2">
+        <label for="restablecer-contrasena" class="sr-only">Contraseña temporal</label>
+        <input
+          id="restablecer-contrasena"
+          maxlength="72"
+          autocomplete="new-password"
+          [ngModel]="contrasenaRestablecida()"
+          (ngModelChange)="contrasenaRestablecida.set($event)"
+          class="w-64 py-2 px-3 border border-gris-bordes rounded-sm text-body-md font-mono"
+        />
+        <button type="button" (click)="generarParaRestablecer()" class="px-2.5 py-2 border border-gris-bordes rounded-sm text-azul-institucional" title="Generar otra" aria-label="Generar otra contraseña">
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">autorenew</span>
+        </button>
+        <button
+          type="button"
+          (click)="confirmarRestablecer()"
+          [disabled]="ocupado() === objetivo.id"
+          class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-60"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">lock_reset</span> Restablecer
+        </button>
+      </div>
+      @if (errorRestablecer(); as fallo) {
+        <div class="p-3 bg-error/10 border border-error/40 rounded-lg text-body-md" role="alert">{{ fallo.mensaje }}</div>
+      }
+    </section>
+  }
+
+  @if (aviso(); as mensaje) {
+    <div class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-center gap-2.5 text-body-md" role="status">
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ mensaje }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md" role="alert">
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  <!-- Lista -->
+  <section class="bg-white rounded-xl border border-gris-bordes overflow-hidden">
+    <div class="px-5 py-3 border-b border-gris-bordes flex flex-wrap items-center justify-between gap-3">
+      <h2 class="font-headline text-title-lg text-negro-institucional">Usuarios</h2>
+      <form class="flex gap-2" (ngSubmit)="cargar()">
+        <label for="buscar-usuario" class="sr-only">Buscar por usuario o cédula</label>
+        <input
+          id="buscar-usuario"
+          name="texto"
+          type="search"
+          maxlength="80"
+          placeholder="Usuario o cédula"
+          [(ngModel)]="texto"
+          class="w-56 py-1.5 px-3 border border-gris-bordes rounded-sm text-body-md"
+        />
+        <button type="submit" class="px-3 border border-gris-bordes rounded-sm text-azul-institucional" aria-label="Buscar">
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">search</span>
+        </button>
+      </form>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-body-md">
+        <thead class="bg-gris-claro">
+          <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+            <th class="py-2.5 px-4">Usuario</th>
+            <th class="py-2.5 px-4">Militar</th>
+            <th class="py-2.5 px-4">Rol</th>
+            <th class="py-2.5 px-4">Estado</th>
+            <th class="py-2.5 px-4">Último acceso</th>
+            @if (puedeActualizar()) {
+              <th class="py-2.5 px-4 text-right">Acciones</th>
+            }
+          </tr>
+        </thead>
+        <tbody>
+          @for (usuario of usuarios(); track usuario.id) {
+            <tr class="border-t border-gris-bordes/70 align-middle">
+              <td class="py-2 px-4 font-mono">
+                {{ usuario.usuario }}
+                @if (usuario.usuario === miUsuario()) {
+                  <span class="ml-1 text-xs text-azul-pizarra/60 font-sans">(usted)</span>
+                }
+              </td>
+              <td class="py-2 px-4">
+                @if (usuario.nombre_completo) {
+                  <div>{{ usuario.nombre_completo }}</div>
+                  <div class="text-xs text-azul-pizarra/60">C.C. {{ usuario.documento_identidad }}</div>
+                } @else {
+                  <span class="text-azul-pizarra/60">Sin militar asociado</span>
+                }
+              </td>
+              <td class="py-2 px-4">{{ usuario.rol === 'ADMINISTRADOR' ? 'Administrador' : usuario.rol === 'USUARIO' ? 'Usuario' : 'Sin rol' }}</td>
+              <td class="py-2 px-4">
+                <span [class]="'inline-flex items-center gap-1 rounded-full border font-headline whitespace-nowrap px-2 py-0.5 text-label-md ' + estadoDeUsuario(usuario).clases">
+                  <span class="material-symbols-outlined text-[14px]" aria-hidden="true">{{ estadoDeUsuario(usuario).icono }}</span>
+                  {{ estadoDeUsuario(usuario).texto }}
+                </span>
+              </td>
+              <td class="py-2 px-4 whitespace-nowrap">{{ fecha(usuario.ultimo_acceso_en) }}</td>
+              @if (puedeActualizar()) {
+                <td class="py-2 px-4">
+                  <div class="flex justify-end gap-1.5">
+                    @if (usuario.bloqueado) {
+                      <button type="button" (click)="aplicar(usuario, 'desbloquear')" [disabled]="ocupado() === usuario.id" class="py-1 px-2 border border-gris-bordes rounded-sm text-xs font-semibold hover:border-azul-institucional" title="Quitar el bloqueo por intentos fallidos">
+                        Desbloquear
+                      </button>
+                    }
+                    @if (usuario.usuario !== miUsuario()) {
+                      <button type="button" (click)="abrirRestablecer(usuario)" [disabled]="ocupado() === usuario.id" class="py-1 px-2 border border-gris-bordes rounded-sm text-xs font-semibold hover:border-azul-institucional">
+                        Restablecer contraseña
+                      </button>
+                      @if (usuario.activo) {
+                        <button type="button" (click)="aplicar(usuario, 'desactivar')" [disabled]="ocupado() === usuario.id" class="py-1 px-2 border border-error/40 text-error rounded-sm text-xs font-semibold hover:bg-error/5">
+                          Desactivar
+                        </button>
+                      } @else {
+                        <button type="button" (click)="aplicar(usuario, 'activar')" [disabled]="ocupado() === usuario.id" class="esart-boton-verde py-1 px-2 border rounded-sm text-xs font-semibold">
+                          Activar
+                        </button>
+                      }
+                    }
+                  </div>
+                </td>
+              }
+            </tr>
+          } @empty {
+            <tr>
+              <td colspan="6" class="py-6 px-4 text-center text-azul-pizarra/60">
+                {{ cargando() ? 'Consultando…' : 'No hay usuarios que coincidan.' }}
+              </td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+</div>

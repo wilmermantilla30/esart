@@ -1,0 +1,376 @@
+{
+  "estado": "propuesta_pendiente_de_respaldo_y_autorizacion",
+  "origen": "esart_hu03_pruebas",
+  "revision_origen": "0002",
+  "destino_propuesto": "esart_db",
+  "regla_ids": "Generar UUID en destino solo para codigos ausentes; reutilizar correspondencias verificadas, nunca UUID de pruebas",
+  "tipos_unidad": [
+    {
+      "codigo": "BAACA",
+      "nombre": "Batallón de Artillería",
+      "activo": true
+    },
+    {
+      "codigo": "BAADA",
+      "nombre": "Batallón de Artillería de Defensa Aérea",
+      "activo": true
+    },
+    {
+      "codigo": "BATAR",
+      "nombre": "Batería de Artillería",
+      "activo": true
+    },
+    {
+      "codigo": "BR",
+      "nombre": "Brigada",
+      "activo": true
+    },
+    {
+      "codigo": "CECFU",
+      "nombre": "Centro de Coordinación de Fuegos",
+      "activo": true
+    },
+    {
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "activo": true
+    },
+    {
+      "codigo": "CEM",
+      "nombre": "Centro de Educación Militar",
+      "activo": true
+    },
+    {
+      "codigo": "DIV",
+      "nombre": "División",
+      "activo": true
+    },
+    {
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "activo": true
+    }
+  ],
+  "unidades_militares": [
+    {
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "CEDOC"
+    },
+    {
+      "codigo": "DAAVA",
+      "nombre": "División de Aviación y Asalto Aéreo",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV01",
+      "nombre": "Primera División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV02",
+      "nombre": "Segunda División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV03",
+      "nombre": "Tercera División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV04",
+      "nombre": "Cuarta División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV05",
+      "nombre": "Quinta División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV06",
+      "nombre": "Sexta División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV07",
+      "nombre": "Séptima División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIV08",
+      "nombre": "Octava División",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "DIVFE",
+      "nombre": "División de Fuerzas Especiales",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": "DIV"
+    },
+    {
+      "codigo": "FUTOM",
+      "nombre": "Fuerza de Tarea Omega",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": null,
+      "tipo_codigo": null
+    },
+    {
+      "codigo": "BR01",
+      "nombre": "Primera Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR03",
+      "nombre": "Tercera Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV03",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR04",
+      "nombre": "Cuarta Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV07",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR05",
+      "nombre": "Quinta Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV02",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR08",
+      "nombre": "Octava Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR09",
+      "nombre": "Novena Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR10",
+      "nombre": "Décima Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV01",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR13",
+      "nombre": "Décimo Tercera Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV05",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR18",
+      "nombre": "Décimo Octava Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV08",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR27",
+      "nombre": "Vigésimo Séptima Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV06",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "BR30",
+      "nombre": "Trigésima Brigada",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "DIV02",
+      "tipo_codigo": "BR"
+    },
+    {
+      "codigo": "CEMIL",
+      "nombre": "Centro de Educación Militar",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "CEDOC",
+      "tipo_codigo": "CEM"
+    },
+    {
+      "codigo": "BAACA1",
+      "nombre": "Batallón de Artillería de Campaña N°1",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR01",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA10",
+      "nombre": "Batallón de Artillería de Campaña N°10",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR10",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA13",
+      "nombre": "Batallón de Artillería de Campaña N°13",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR13",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA18",
+      "nombre": "Batallón de Artillería de Campaña N°18",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR18",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA2",
+      "nombre": "Batallón de Artillería de Campaña N°2",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR10",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA27",
+      "nombre": "Batallón de Artillería de Campaña N°27",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR27",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA3",
+      "nombre": "Batallón de Artillería de Campaña N°3",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR03",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA30",
+      "nombre": "Batallón de Artillería de Campaña N°30",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR30",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA4",
+      "nombre": "Batallón de Artillería de Campaña N°4",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR04",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA5",
+      "nombre": "Batallón de Artillería de Campaña N°5",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR05",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA6",
+      "nombre": "Batallón de Artillería de Campaña N°6",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR05",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA8",
+      "nombre": "Batallón de Artillería de Campaña N°8",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR08",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAACA9",
+      "nombre": "Batallón de Artillería de Campaña N°9",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR09",
+      "tipo_codigo": "BAACA"
+    },
+    {
+      "codigo": "BAADA1",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR10",
+      "tipo_codigo": "BAADA"
+    },
+    {
+      "codigo": "BAADA2",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "BR05",
+      "tipo_codigo": "BAADA"
+    },
+    {
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "sigla": null,
+      "activa": true,
+      "superior_codigo": "CEMIL",
+      "tipo_codigo": "ESART"
+    }
+  ]
+}

@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 0.1 (borrador para acordar entre Dev 1 y Dev 2)
+**Versión del contrato:** 1.4 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -250,7 +250,8 @@ Si falla cualquiera, es **NO APTO** y se devuelve cada motivo, por ejemplo:
 ## 7. Seguridad
 
 ### 7.1 `roles`, `permisos`, `roles_permisos`
-- `roles`: `id`, `codigo` (único: `ADMINISTRADOR`, `COMANDANTE`, `CONSULTA`), `nombre`, `activo`.
+- `roles`: `id`, `codigo` (único: `ADMINISTRADOR`, `USUARIO`; CHECK `ck_esart_roles_codigo`), `nombre`, `activo`.
+  Lo que cada rol puede hacer lo definen sus permisos, no el código del rol.
 - `permisos`: `id`, `codigo` (único), `descripcion`. Permisos iniciales:
   `VERIFICAR_ARTILLERO`, `VER_DOCUMENTO_COMPLETO`, `LISTAR_HABILITACION`, `IMPORTAR_EXCEL`,
   `GESTIONAR_USUARIOS`, `CONSULTAR_AUDITORIA`.
@@ -335,16 +336,21 @@ siempre **paginados**.
 
 ---
 
-## 10. Puntos abiertos (deben cerrarse antes de la migración inicial)
+## 10. Puntos abiertos y decisiones
+
+Al cerrar HU-02 el contrato se aprobó **tal como está escrito**. Las decisiones de esta tabla
+reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a este archivo.
 
 | # | Punto | Responsable | Estado |
 |---|---|---|---|
 | 1 | Requisitos reales de habilitación (cursos y certificaciones obligatorios) | Escuela / Product owner | Pendiente |
-| 2 | Tipo de PK en Vulcano (UUID vs entero) para garantizar compatibilidad | Dev 2 | Pendiente |
-| 3 | Escala de notas de la Escuela (0–5, 0–100) | Product owner | Pendiente |
-| 4 | Catálogo oficial de grados | Product owner | Pendiente |
-| 5 | Nombres exactos de columnas en Vulcano para estas tablas (si difieren, se ajusta aquí) | Dev 2 | Pendiente |
-| 6 | Quién escribe modelos SQLAlchemy y migraciones Alembic (propuesta: Dev 2 migraciones, Dev 1 modelos, revisión cruzada) | Ambos | Pendiente |
+| 2 | Tipo de PK en Vulcano (UUID vs entero) para garantizar compatibilidad | SV.Valbuena | **Cerrado:** UUID, como define el contrato |
+| 3 | Escala de notas de la Escuela (0–5, 0–100) | Product owner | **Cerrado:** 0.00 – 5.00, como define el contrato |
+| 4 | Catálogo oficial de grados | Product owner | **Cerrado por ahora:** `grado` como texto (`VARCHAR(40)`); un catálogo formal puede venir en otra entrega |
+| 5 | Nombres exactos de columnas en Vulcano para estas tablas (si difieren, se ajusta aquí) | SV.Valbuena | **Cerrado:** se usan los nombres de este contrato |
+| 6 | Quién escribe modelos SQLAlchemy y migraciones Alembic | Ambos | **Cerrado (actualizado en v1.3):** el modelo vigente es el de HU-04 (`modelos/persistencia.py`, BIGINT, esquemas `esart`/`esart_ref`). Alembic principal: `p0000` (instalación desde cero) → `p0001_real` (validación) → `p0002` (sesiones, intentos y bloqueo, HU-05). Todo cambio de estructura va en una revisión nueva; revisión cruzada por Pull Request |
+| 7 | Códigos de rol: el contrato definía `ADMINISTRADOR`, `COMANDANTE`, `CONSULTA`; la base solo admite `ADMINISTRADOR`, `USUARIO` | SS.Mantilla y SV.Valbuena | **Cerrado (opción B, 2026-11-15):** se conservan `ADMINISTRADOR` y `USUARIO` de la base; se corrige el contrato (§7.1) |
+| 8 | Permisos: por código o por componente | SS.Mantilla | **Cerrado (v1.4, 2026-11-16):** por **componente** (`componentes` + `rol_permisos` + `usuario_permisos`). La excepción del usuario sustituye a su rol; sin fila se niega. Los permisos finos sin menú son componentes sin ruta (`VER_DOCUMENTO_COMPLETO`). Malla inicial en la migración `p0005`; se puede modificar y ampliar |
 
 ---
 
@@ -352,3 +358,8 @@ siempre **paginados**.
 | Versión | Fecha | Cambio |
 |---|---|---|
 | 0.1 | 2026-11-14 | Borrador inicial |
+| 1.0 | 2026-11-14 | Aprobado en HU-02. Decisiones del §10 cerradas, salvo los requisitos de habilitación (pendientes de la Escuela) |
+| 1.1 | 2026-11-14 | §10: la migración `0001` (HU-03) incluye las tablas de seguridad; HU-05 ya no crea migración. Nuevos puntos 7 (códigos de rol) y 8 (permisos por componente) |
+| 1.2 | 2026-11-15 | Punto 7 cerrado: códigos de rol `ADMINISTRADOR` y `USUARIO` (§7.1) |
+| 1.3 | 2026-11-15 | Modelo vigente de HU-04 y cadena Alembic p0000→p0001→p0002 (§10 punto 6). Login: usuario por `esart_ref.usuarios.usuario`; rol informado ADMINISTRADOR si lo tiene, si no USUARIO; nombre visible desde `personal_militar` |
+| 1.4 | 2026-11-16 | Punto 8 cerrado: permisos por componente. `p0005`: componentes (Personal militar con pestañas hijas), módulos de segunda entrega inactivos y malla inicial ADMINISTRADOR/USUARIO (USUARIO ve la cédula completa) |

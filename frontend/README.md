@@ -1,77 +1,48 @@
-# Frontend de ESART (Angular)
+# Frontend ESART
 
-Dashboard del comandante, construido en **Angular** con TypeScript.
+El proyecto Angular **ya existe** en [esart/](esart/). No es una carpeta reservada. Desde frontend/esart:
 
-> **Estado:** carpeta reservada. El proyecto Angular se genera aquí (historia FE-01) con la
-> misma versión de Angular que usa Vulcano, para que la integración posterior sea directa.
+```powershell
+npm ci
+npm start
+npm run build
+npm test -- --watch=false
+```
 
-Todo lo que el front pide al backend está definido en
-[docs/contrato_api.md](../docs/contrato_api.md). Si algo no está en el contrato, se agrega primero
-al contrato (por Pull Request) y después se programa.
+Abrir http://localhost:4200/unidades. npm start usa proxy.conf.json: /api hacia http://127.0.0.1:8081. Las cookies y rutas relativas mantienen el mismo origen en desarrollo. El build genera esart/dist/esart; su publicación/servicio estático desde FastAPI es trabajo pendiente, no comportamiento ya implementado.
 
----
+La interfaz usa UnidadesService/HttpClient, identificadores string, búsqueda por código/nombre, filtro por tipo/pendiente y actividad, superior y ruta jerárquica. Incluye carga, errores y reintento; no contiene arrays institucionales simulados. app.config.ts configura CSRF según contrato.
 
-## Cómo trabaja con el backend
+Faltan proveedor de identidad, login/guardas, integración de negocio y validación visual autenticada. Un 401 no se evita con datos ficticios. Los nombres nucleo/compartido/paginas describían una arquitectura propuesta anterior; la implementación actual está en src/app/unidades.ts y unidades.service.ts.
 
-| Momento | Cómo llega el front al navegador | Cómo llega a la API |
-|---|---|---|
-| **Desarrollo** | `ng serve` en <http://localhost:4200> | `proxy.conf.json` redirige `/api` a <http://127.0.0.1:8081>. Para el navegador todo es el mismo origen, así la cookie de sesión funciona sin CORS |
-| **Producción** | `ng build` genera `dist/`; FastAPI sirve esos archivos (historia HU-21) | Mismo servidor, mismo origen. **No hace falta Node.js en el servidor** |
+Consultar [README general](../README.md), [estado](../docs/ESART_ESTADO_DESARROLLO.md) y [contrato API](../docs/contrato_api.md). No presentar la compilación o el test HTTP en memoria como una prueba visual con datos reales.
 
----
+## Inicio de sesión (HU-18)
 
-## Estructura propuesta dentro de `src/app/`
+Rutas: `/inicio-sesion` (solo sin sesión), `/inicio` (provisional, con sesión) y `/unidades` (con sesión).
+Diseño: plantilla institucional de Stitch, traducida a Angular con Tailwind compilado localmente.
 
 ```
 src/app/
-├── nucleo/                 # Servicios únicos de toda la aplicación (se crean una sola vez)
-│   ├── servicios/          # cliente-api.service.ts (ÚNICO acceso al backend), sesion.service.ts
-│   ├── interceptores/      # manejo-errores.interceptor.ts (formato único de error del contrato)
-│   ├── guardas/            # sesion-activa.guard.ts, permiso.guard.ts
-│   └── modelos/            # Interfaces TypeScript que copian las respuestas del contrato de API
-├── compartido/             # Componentes reutilizables: tabla-paginada, tarjeta-resultado, alerta, cargando
-├── paginas/                # Una carpeta por pantalla
-│   ├── inicio-sesion/
-│   ├── verificacion/
-│   ├── habilitacion/       # Listados de habilitados / no habilitados
-│   └── importacion/
-└── datos-simulados/        # Interceptor + JSON de ejemplo para trabajar sin backend (solo desarrollo)
+├── nucleo/
+│   ├── modelos/        # sesion.ts (contrato §2), error-api.ts (formato único de error)
+│   ├── servicios/      # cliente-api.service.ts (único acceso a /api), sesion.service.ts
+│   ├── interceptores/  # sesion-expirada: 401 -> login con aviso de inactividad
+│   ├── guardas/        # exigirSesion, soloSinSesion
+│   └── rutas-paginas.ts
+├── compartido/         # encabezado y pie institucionales
+└── paginas/            # inicio-sesion/, inicio/
 ```
 
-Nombres de archivos en `kebab-case` según la convención de Angular; nombres de clases, métodos,
-variables y comentarios en **español descriptivo**, igual que en el backend.
+Reglas aplicadas:
 
----
+- **Sin CDN:** Tailwind 4 (`@tailwindcss/postcss`, `.postcssrc.json`), fuentes `@fontsource/*` e íconos
+  `material-symbols` salen de `node_modules` y viajan en el build. Los tokens del diseño están en `src/styles.css` (`@theme`).
+- **Sin estilos en línea:** `inlineCritical` desactivado en producción; sin `innerHTML` ni `bypassSecurityTrust`.
+- **Sesión:** el token vive solo en la cookie httpOnly. El front guarda en memoria los datos públicos del
+  usuario y los recupera con `/api/auth/yo` al recargar. No usa localStorage.
+- **Errores:** todo error pasa por `leerErrorApi`; nunca se muestran detalles técnicos.
+- El escudo está en `public/imagenes/escudo-esart.png`. La foto de la Escuela se agregará después.
 
-## Reglas del front
-
-1. **Nada desde internet.** Ni CDN ni Google Fonts: tipografías e íconos dentro del proyecto
-   (`src/assets` o `public/`). El servidor puede estar en una red sin internet.
-2. **Un solo acceso a la API:** `ClienteApiService`. Ningún componente usa `HttpClient` directamente.
-   Así el manejo de sesión, CSRF y errores es igual en todo el sistema.
-3. **El front nunca toca el token.** La sesión va en una cookie `httpOnly`. La protección CSRF usa
-   el soporte propio de Angular (`withXsrfConfiguration`), ver contrato §1.1.
-4. **Errores centralizados** en un interceptor que traduce los códigos del contrato
-   (`SESION_EXPIRADA` → ir a inicio de sesión, `SIN_PERMISO`, `USUARIO_BLOQUEADO`, …).
-5. **Rutas protegidas con guardas** según sesión y permisos (`/api/auth/yo`).
-   Ocultar una opción no reemplaza la validación del backend.
-6. **Sin `innerHTML` con datos de la API** ni `bypassSecurityTrust*`: se usa la interpolación de
-   Angular, que escapa el contenido.
-7. **Compatible con la CSP del servidor:** sin estilos ni scripts en línea en la versión compilada
-   (desactivar `inlineCritical` en `angular.json`).
-8. **No guardar datos de artilleros** en `localStorage` ni `sessionStorage`. Al cerrar sesión se
-   limpia el estado.
-9. **Nada de `console.log`** con respuestas, cédulas o datos personales.
-10. **Reutilizar antes de crear:** si un componente o servicio ya existe en `nucleo/` o
-    `compartido/`, se usa ese.
-
----
-
-## Comandos (cuando el proyecto esté generado)
-
-```powershell
-npm install
-npm start          # ng serve con proxy hacia el backend
-npm run build      # compilación de producción en dist/
-npm test
-```
+Pendiente del backend: `POST /api/auth/login`, `GET /api/auth/yo` y `POST /api/auth/cerrar-sesion`
+sobre el modelo de HU-04. El captcha (HU-07) se agrega cuando exista `GET /api/auth/captcha`.

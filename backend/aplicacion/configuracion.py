@@ -18,6 +18,8 @@ from typing import Literal
 from pydantic import Field, SecretStr, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
+from aplicacion.base_datos.configuracion import validar_url_base_datos
+
 # Longitud mínima de la clave del JWT. HS256 usa una clave de 256 bits;
 # 32 caracteres aleatorios es el mínimo razonable.
 LONGITUD_MINIMA_CLAVE_JWT = 32
@@ -25,11 +27,11 @@ LONGITUD_MINIMA_CLAVE_JWT = 32
 # Forma de un hash bcrypt: $2a$, $2b$ o $2y$, costo de dos dígitos y 53 caracteres.
 PATRON_HASH_BCRYPT = re.compile(r"^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$")
 
-# Ruta del archivo .env: está en la raíz del repositorio (junto a backend/ y frontend/).
+# Ruta operativa única: backend/.env, independiente del directorio de ejecución.
 # Se calcula desde la ubicación de este archivo para que funcione sin importar
 # desde qué carpeta se ejecute uvicorn o pytest.
-# backend/aplicacion/configuracion.py -> parents[0]=aplicacion, [1]=backend, [2]=raíz
-RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[2] / ".env"
+# backend/aplicacion/configuracion.py -> parents[1]=backend.
+RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[1] / ".env"
 
 # Textos de los valores de ejemplo de .env.ejemplo. Si siguen presentes,
 # significa que alguien copió el archivo sin reemplazar los secretos.
@@ -46,6 +48,7 @@ class Configuracion(BaseSettings):
         env_file_encoding="utf-8",
         case_sensitive=False,
         extra="ignore",
+        hide_input_in_errors=True,
     )
 
     # --- Generales ---
@@ -61,7 +64,14 @@ class Configuracion(BaseSettings):
     # --- Sesión ---
     jwt_clave_secreta: SecretStr
     minutos_inactividad_sesion: int = Field(default=30, ge=1, le=480)
+    limite_intentos_ip: int = Field(default=30, ge=1, le=1000)
+    ventana_intentos_ip_segundos: int = Field(default=900, ge=60, le=86400)
+    limite_generacion_captcha_ip: int = Field(default=20, ge=1, le=100)
+    ventana_generacion_captcha_segundos: int = Field(default=300, ge=60, le=3600)
     cookie_segura: bool = True
+    # Activar únicamente tras revisar permisos/políticas y aportar una clave externa.
+    totp_habilitado: bool = False
+    totp_clave_cifrado: SecretStr | None = None
 
     # --- Administrador inicial ---
     admin_usuario: str = Field(min_length=3, max_length=60)
@@ -96,16 +106,8 @@ class Configuracion(BaseSettings):
                     f"{nombre_variable} todavía tiene el valor de ejemplo de .env.ejemplo. Reemplácelo."
                 )
 
-        if not url_base_datos.startswith("postgresql+asyncpg://"):
-            raise ValueError(
-                "URL_BASE_DATOS debe empezar por 'postgresql+asyncpg://' "
-                "(la aplicación usa el controlador asíncrono asyncpg)."
-            )
-
         if len(clave_jwt) < LONGITUD_MINIMA_CLAVE_JWT:
-            raise ValueError(
-                f"JWT_CLAVE_SECRETA debe tener al menos {LONGITUD_MINIMA_CLAVE_JWT} caracteres."
-            )
+            raise ValueError(f"JWT_CLAVE_SECRETA debe tener al menos {LONGITUD_MINIMA_CLAVE_JWT} caracteres.")
 
         # El administrador se configura con el HASH, nunca con la contraseña
         # en texto plano. Si el valor no tiene forma de hash bcrypt, se rechaza.
@@ -118,6 +120,8 @@ class Configuracion(BaseSettings):
         # En producción la cookie de sesión solo puede viajar por HTTPS.
         if self.es_produccion and not self.cookie_segura:
             raise ValueError("En producción COOKIE_SEGURA debe ser true.")
+
+        validar_url_base_datos(url_base_datos, self.entorno)
 
         return self
 

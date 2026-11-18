@@ -1,0 +1,18 @@
+{
+  "modo": "solo_lectura",
+  "conexion": {
+    "base": "esart_db",
+    "cuenta": "esart_aplicacion"
+  },
+  "objetos": [
+    {
+      "esquema": "esart",
+      "tabla": "intentos_inicio_sesion"
+    }
+  ],
+  "permisos_contadores": {
+    "intentos_fallidos_consecutivos": true,
+    "bloqueado_hasta": true
+  },
+  "principal_modificada": false
+}

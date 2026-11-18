@@ -1,101 +1,93 @@
-# Backend de ESART (FastAPI)
+# Backend ESART
 
-API de verificación de habilitación de artilleros. Python 3.11 · FastAPI · SQLAlchemy 2 (async) +
-asyncpg · Alembic · PostgreSQL. Sin Docker.
+Python **3.12**, FastAPI, SQLAlchemy 2 async, asyncpg, Alembic y PostgreSQL 18, sin Docker. La configuración efectiva es **backend/.env**; la base operativa es exclusivamente esart_db, usuario esart_aplicacion.
 
-## Estructura
+El [README principal](../README.md) contiene instalación, variables y pruebas. La [guía PostgreSQL](../docs/ESART_INSTALACION_BASE_DATOS.md) distingue instalación existente, base vacía y población; La instalación desde cero ya está disponible con Alembic (ver abajo). No ejecutar stamp ni los cargadores heredados.
 
-```
-backend/
-├── aplicacion/
-│   ├── principal.py        # Punto de entrada: crea la aplicación FastAPI
-│   ├── configuracion.py    # Lee y valida el .env de la raíz (no arranca si es inseguro)
-│   ├── nucleo/             # Transversal: logs con filtro de datos sensibles, errores únicos
-│   ├── base_datos/         # Motor async, sesiones y clase base de los modelos
-│   ├── modelos/            # Modelos SQLAlchemy (tablas)
-│   ├── esquemas/           # Esquemas Pydantic (entrada/salida de la API)
-│   ├── servicios/          # Lógica de negocio reutilizable (habilitación, importación, auditoría)
-│   ├── seguridad/          # bcrypt, JWT, sesiones, captcha, permisos
-│   └── rutas/              # Endpoints; solo reciben, llaman a servicios y responden
-├── migraciones/            # Migraciones de Alembic (historia HU-03)
-├── datos_iniciales/        # Catálogos y datos semilla (historia HU-04)
-├── pruebas/                # Pruebas automáticas (pytest)
-├── pyproject.toml          # Configuración de pytest y ruff
-├── requirements.txt        # Dependencias de producción (ASCII puro)
-└── requirements-desarrollo.txt
-```
-
-## Instalación local (Windows)
-
-**Requisitos:** Python 3.11 y PostgreSQL 13 o superior.
-
-### 1. Base de datos
-
-En `psql` (o pgAdmin), como superusuario:
-
-```sql
-CREATE USER esart_aplicacion WITH PASSWORD 'una-contrasena-segura';
-CREATE DATABASE esart_db OWNER esart_aplicacion;
-```
-
-La aplicación **nunca** se conecta con el superusuario `postgres`.
-
-### 2. Entorno de Python (desde la carpeta `backend/`)
+Desde backend, con .venv 3.12 y configuración válida:
 
 ```powershell
-python -m venv .venv
-.\.venv\Scripts\Activate.ps1
-pip install -r requirements-desarrollo.txt
+.venv/Scripts/python.exe -m herramientas.verificar_persistencia_principal
+.venv/Scripts/python.exe -m uvicorn aplicacion.principal:aplicacion --reload --host 127.0.0.1 --port 8081
+.venv/Scripts/python.exe -m pytest -o addopts='' -q
+.venv/Scripts/python.exe -m ruff check .
 ```
 
-En producción se instala solo `requirements.txt`.
+## Organización
 
-### 3. Variables de entorno
+- aplicacion/principal.py registra salud, autenticación y catálogos; prefijo /api. Al arrancar crea el administrador del .env si no existe.
+- aplicacion/configuracion.py valida secretos; base_datos/configuracion.py permite diagnóstico sin JWT.
+- base_datos/sesion.py centraliza motor y sesiones asíncronas; no crear motores en rutas.
+- modelos/persistencia.py representa tablas reales; modelos/historico conserva el contrato UUID anterior.
+- seguridad/: contrasenas.py (bcrypt), tokens.py (JWT), sesion_http.py (cookies, CSRF y `obtener_usuario_actual`), permisos.py (malla CRUD).
+- servicios/autenticacion.py: login, sesión vigente (30 min de inactividad), cierre y administrador inicial.
+- modelos/seguridad.py: sesiones_usuario e intentos_inicio_sesion (revisión p0002).
+- rutas/autenticacion.py: POST /api/auth/login, GET /api/auth/yo, POST /api/auth/cerrar-sesion.
+- rutas/unidades.py implementa consultas de catálogos; exigen sesión válida.
+- migraciones_principal se selecciona mediante alembic.ini; migraciones históricas mediante alembic_historico.ini.
+- seeds contiene referencias/evidencias históricas, no un instalador de la principal. Ver [inventario](../docs/HU04_INVENTARIO_SCRIPTS.md).
 
-El `.env` vive en la **raíz del repositorio** (no dentro de `backend/`):
+El estado y los bloqueos actuales están en [ESART_ESTADO_DESARROLLO.md](../docs/ESART_ESTADO_DESARROLLO.md). Los contratos describen también funciones futuras: no confundir una ruta diseñada con implementada. Mantener español descriptivo, requirements ASCII, bcrypt directo y secretos fuera de logs/Git. No crear administradores con contraseñas predeterminadas.
+
+## Alembic (migraciones_principal)
+
+Cadena: `p0000_instalacion_inicial` → `p0001_real` → `p0002_seguridad_sesiones`.
+
+| Revisión | Qué hace |
+|---|---|
+| p0000 | Base vacía: crea las 43 tablas de HU-04 desde `estructura_p0000.sql` (congelado, 0 diferencias con `estructura_p0001.json`). Base existente: no hace nada |
+| p0001_real | Valida que la estructura coincida con la fotografía real |
+| p0002 | Sesiones, intentos de inicio de sesión, campos de bloqueo y permisos de `esart_aplicacion` |
+
+Las bases que ya estaban en `p0001_real` solo aplican `p0002`. La URL de migraciones se pasa por
+`ESART_MIGRACIONES_URL` (no se lee del .env), sin dejarla en el historial:
 
 ```powershell
-Copy-Item ..\.env.ejemplo ..\.env
+$conexionProtegida = Read-Host 'URL asyncpg de esart_db para migrar' -AsSecureString
+try {
+    $env:ESART_MIGRACIONES_URL = [System.Net.NetworkCredential]::new('', $conexionProtegida).Password
+    .venv/Scripts/python.exe -m alembic upgrade head
+    .venv/Scripts/python.exe -m alembic current
+} finally {
+    Remove-Item Env:ESART_MIGRACIONES_URL -ErrorAction SilentlyContinue
+}
 ```
 
-Edite `.env` y reemplace **todos** los valores de ejemplo. La aplicación se niega a arrancar si
-encuentra un valor de ejemplo, una clave JWT corta o una contraseña en texto plano.
+## Pruebas con PostgreSQL
 
-Clave del JWT:
+Las pruebas del login (`pruebas/test_login_hu05.py`) usan la base real si se define
+`ESART_URL_BD_INTEGRACION` (base con la migración p0002). Todo se revierte al final.
+Sin la variable, esas pruebas se omiten.
+
+## Datos simulados (solo desarrollo)
+
+Mientras llega la importación por Excel, hay 10 militares de prueba que cubren cada caso de la
+regla APTO / NO APTO (cédulas `99000000xx`, unidades `SIM-…`). No corre en producción.
 
 ```powershell
-python -c "import secrets; print(secrets.token_urlsafe(48))"
+.venv/Scripts/python.exe -m herramientas.cargar_datos_simulados cargar
+.venv/Scripts/python.exe -m herramientas.cargar_datos_simulados borrar
 ```
 
-Hash de la contraseña del administrador (la contraseña se escribe sin mostrarse):
+Los tipos de curso se cargan del seed oficial (`seed_catalogos_academicos.sql`) y no se borran.
+
+## Administración de usuarios por consola (HU-10)
+
+Lo mismo se hace en la web (Administración > Gestión de usuarios); la consola sirve cuando nadie
+puede entrar. Usa la conexión del `.env` y cada acción queda en la auditoría como `consola`, con el
+usuario del sistema operativo que la ejecutó.
 
 ```powershell
-python -c "import bcrypt, getpass; print(bcrypt.hashpw(getpass.getpass('Contrasena: ').encode(), bcrypt.gensalt(12)).decode())"
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios listar
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios crear --usuario jperez.esart --rol USUARIO --cedula 1234567890
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios desbloquear --usuario jperez.esart
+.venv/Scripts/python.exe -m herramientas.administrar_usuarios desbloquear-ip --ip 10.1.2.3
 ```
 
-Pegue el hash entre comillas simples: `ADMIN_HASH_CONTRASENA='$2b$12$...'`.
-
-### 4. Arrancar (desde `backend/`)
-
-```powershell
-uvicorn aplicacion.principal:aplicacion --reload --port 8081
-```
-
-- Salud: <http://127.0.0.1:8081/api/salud> → `{"estado": "ok", "base_datos": "ok"}`
-- Documentación de la API (solo fuera de producción): <http://127.0.0.1:8081/api/documentacion>
-
-### 5. Pruebas y revisión de estilo (desde `backend/`)
-
-```powershell
-pytest
-ruff check .
-```
-
-Las pruebas no usan el `.env` ni una base de datos real.
-
-## Reglas propias del backend
-
-- Las sesiones de BD se obtienen siempre con `obtener_sesion_base_datos()`; la configuración con
-  `obtener_configuracion()`; los errores de negocio se lanzan con `ErrorAplicacion`.
-- Las rutas no contienen lógica de negocio: llaman a `servicios/`.
-- Todas las rutas de la API van bajo `/api`.
+- `crear` pide la contraseña **oculta** dos veces (mínimo 10 caracteres, letras y números) y
+  nunca la acepta como argumento. Con rol `ADMINISTRADOR` pide confirmación.
+- `--cedula` es **obligatoria**: el militar debe existir y estar activo en `personal_militar`.
+- La contraseña es **temporal**: el usuario debe cambiarla la primera vez que entre (migración
+  `p0009_gestion_usuarios`: permisos de la API sobre esas columnas y acciones de auditoría nuevas).
+- `desbloquear` pone en cero los intentos y quita el bloqueo de 3 horas; `desbloquear-ip` pone en
+  cero el contador de una IP.

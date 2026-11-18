@@ -1,0 +1,60 @@
+{
+  "esart_hu04_fase3_temporal": {
+    "identidad": {
+      "base": "esart_hu04_fase3_temporal",
+      "usuario": "esart_aplicacion",
+      "propietario": "esart_aplicacion",
+      "version": 18,
+      "superusuario": false,
+      "revision": "0002"
+    },
+    "validacion": {
+      "tipos": 9,
+      "unidades": 40,
+      "huerfanas": 0,
+      "ciclos": 0,
+      "fk_opcional": true
+    },
+    "conteos": {
+      "roles": 2,
+      "permisos": 36,
+      "unidades_militares": 40,
+      "tipos_unidad": 9
+    },
+    "sin_clasificar": 40,
+    "fk": {
+      "accion_eliminacion": "r",
+      "definicion": "FOREIGN KEY (tipo_unidad_id) REFERENCES tipos_unidad(id) ON DELETE RESTRICT"
+    },
+    "consulta_posterior_commit": true
+  },
+  "esart_hu03_pruebas": {
+    "identidad": {
+      "base": "esart_hu03_pruebas",
+      "usuario": "esart_aplicacion",
+      "propietario": "esart_aplicacion",
+      "version": 18,
+      "superusuario": false,
+      "revision": "0002"
+    },
+    "validacion": {
+      "tipos": 9,
+      "unidades": 40,
+      "huerfanas": 0,
+      "ciclos": 0,
+      "fk_opcional": true
+    },
+    "conteos": {
+      "roles": 2,
+      "permisos": 36,
+      "unidades_militares": 40,
+      "tipos_unidad": 9
+    },
+    "sin_clasificar": 40,
+    "fk": {
+      "accion_eliminacion": "r",
+      "definicion": "FOREIGN KEY (tipo_unidad_id) REFERENCES tipos_unidad(id) ON DELETE RESTRICT"
+    },
+    "consulta_posterior_commit": true
+  }
+}

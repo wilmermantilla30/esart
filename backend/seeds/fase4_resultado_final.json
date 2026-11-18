@@ -1,0 +1,652 @@
+{
+  "fecha_utc": "2026-11-15T04:51:28.437240+00:00",
+  "destino": "esart_hu03_pruebas",
+  "revision": "0002",
+  "total_unidades": 40,
+  "clasificadas": 39,
+  "pendiente": "FUTOM",
+  "pendientes": 1,
+  "tipos_huerfanos": 0,
+  "distribucion": [
+    {
+      "tipo": "BAACA",
+      "unidades": 13
+    },
+    {
+      "tipo": "BAADA",
+      "unidades": 2
+    },
+    {
+      "tipo": "BR",
+      "unidades": 11
+    },
+    {
+      "tipo": "CEDOC",
+      "unidades": 1
+    },
+    {
+      "tipo": "CEM",
+      "unidades": 1
+    },
+    {
+      "tipo": "DIV",
+      "unidades": 10
+    },
+    {
+      "tipo": "ESART",
+      "unidades": 1
+    },
+    {
+      "tipo": null,
+      "unidades": 1
+    }
+  ],
+  "columnas_modificadas_por_unidad": {
+    "BAACA1": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA10": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA13": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA18": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA2": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA27": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA3": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA30": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA4": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA5": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA6": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA8": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAACA9": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAADA1": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BAADA2": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR01": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR03": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR04": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR05": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR08": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR09": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR10": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR13": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR18": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR27": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "BR30": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "CEDOC": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "CEMIL": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DAAVA": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV01": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV02": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV03": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV04": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV05": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV06": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV07": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIV08": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "DIVFE": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "ESART": [
+      "fecha_actualizacion",
+      "tipo_unidad_id"
+    ],
+    "FUTOM": []
+  },
+  "segunda_carga_identica_incluidas_fechas": true,
+  "migraciones_intactas": true,
+  "trigger": {
+    "habilitado": "O",
+    "definicion": "CREATE TRIGGER tr_unidades_militares_fecha BEFORE UPDATE ON public.unidades_militares FOR EACH ROW EXECUTE FUNCTION actualizar_fecha_actualizacion()"
+  },
+  "unidades": [
+    {
+      "id": "436d2ead-7833-4eb8-ac9b-7dacf2ed2ee0",
+      "codigo": "BAACA1",
+      "nombre": "Batallón de Artillería de Campaña N°1",
+      "sigla": null,
+      "unidad_superior_id": "646a26b2-7604-4cda-8b25-b597f449a44c",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "4714cbcb-37bb-457b-b76f-becff7b304b5",
+      "codigo": "BAACA10",
+      "nombre": "Batallón de Artillería de Campaña N°10",
+      "sigla": null,
+      "unidad_superior_id": "ad80aca1-4680-42b5-a584-556f13925e96",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "16449069-6ba3-4d94-ad3f-f3cd29d551e5",
+      "codigo": "BAACA13",
+      "nombre": "Batallón de Artillería de Campaña N°13",
+      "sigla": null,
+      "unidad_superior_id": "e7660c15-1096-49a4-b683-3369ecf56149",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "36f8269a-1a1c-4b6c-9aea-d8e44596b0c0",
+      "codigo": "BAACA18",
+      "nombre": "Batallón de Artillería de Campaña N°18",
+      "sigla": null,
+      "unidad_superior_id": "a913edff-8d61-49e6-a526-82bd5bf57442",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "2015bcc8-c365-4dc8-b062-f13332e3c7a3",
+      "codigo": "BAACA2",
+      "nombre": "Batallón de Artillería de Campaña N°2",
+      "sigla": null,
+      "unidad_superior_id": "ad80aca1-4680-42b5-a584-556f13925e96",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "9e489c5f-e273-4621-94cc-737bd553f761",
+      "codigo": "BAACA27",
+      "nombre": "Batallón de Artillería de Campaña N°27",
+      "sigla": null,
+      "unidad_superior_id": "68b449e8-c769-4e3d-bf95-684f42ed246c",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "8e14ef42-9caf-4f97-bda3-8169d5af2d76",
+      "codigo": "BAACA3",
+      "nombre": "Batallón de Artillería de Campaña N°3",
+      "sigla": null,
+      "unidad_superior_id": "6b999048-84fe-440c-920f-2a071bb3c292",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "23f6e2d9-878b-4295-a41c-a34bdd062498",
+      "codigo": "BAACA30",
+      "nombre": "Batallón de Artillería de Campaña N°30",
+      "sigla": null,
+      "unidad_superior_id": "29b41607-f315-40b3-959e-3efe7f869547",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "66d87618-d2ff-44ce-b3e1-2169f3b91659",
+      "codigo": "BAACA4",
+      "nombre": "Batallón de Artillería de Campaña N°4",
+      "sigla": null,
+      "unidad_superior_id": "9316d833-1b44-43c6-8334-be763bf1490c",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "d6c98975-dd20-4fcb-861e-427be801ea9a",
+      "codigo": "BAACA5",
+      "nombre": "Batallón de Artillería de Campaña N°5",
+      "sigla": null,
+      "unidad_superior_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "59b7036d-63e6-4e68-80e8-2a1ae5f26878",
+      "codigo": "BAACA6",
+      "nombre": "Batallón de Artillería de Campaña N°6",
+      "sigla": null,
+      "unidad_superior_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "4d60740b-be42-42ab-b75c-4e7404c607af",
+      "codigo": "BAACA8",
+      "nombre": "Batallón de Artillería de Campaña N°8",
+      "sigla": null,
+      "unidad_superior_id": "ecb57edc-09a9-4c39-8240-a62328e0e2cf",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "c90ba0ef-c6ed-4377-94eb-bc930111fa9a",
+      "codigo": "BAACA9",
+      "nombre": "Batallón de Artillería de Campaña N°9",
+      "sigla": null,
+      "unidad_superior_id": "59be8c03-6cde-435b-a96b-4a5da2ef4059",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "c972a066-c778-442c-907e-391efcbe2e3f"
+    },
+    {
+      "id": "e8eb52ab-ecb3-429d-81e5-fc3cb9125cdc",
+      "codigo": "BAADA1",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+      "sigla": null,
+      "unidad_superior_id": "ad80aca1-4680-42b5-a584-556f13925e96",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "64646d69-58a6-4fbe-8088-09c02733724d"
+    },
+    {
+      "id": "a060b899-78e9-42c2-8bf7-2f5d73b6d2cb",
+      "codigo": "BAADA2",
+      "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+      "sigla": null,
+      "unidad_superior_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "64646d69-58a6-4fbe-8088-09c02733724d"
+    },
+    {
+      "id": "646a26b2-7604-4cda-8b25-b597f449a44c",
+      "codigo": "BR01",
+      "nombre": "Primera Brigada",
+      "sigla": null,
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "6b999048-84fe-440c-920f-2a071bb3c292",
+      "codigo": "BR03",
+      "nombre": "Tercera Brigada",
+      "sigla": null,
+      "unidad_superior_id": "a2f8d4cc-5487-4840-a002-72ad9eb2501b",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "9316d833-1b44-43c6-8334-be763bf1490c",
+      "codigo": "BR04",
+      "nombre": "Cuarta Brigada",
+      "sigla": null,
+      "unidad_superior_id": "4e228fab-9f24-4ed1-a054-69bf2e462dc2",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8",
+      "codigo": "BR05",
+      "nombre": "Quinta Brigada",
+      "sigla": null,
+      "unidad_superior_id": "d58588fc-41fd-42a1-8700-6ecee2e4df76",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "ecb57edc-09a9-4c39-8240-a62328e0e2cf",
+      "codigo": "BR08",
+      "nombre": "Octava Brigada",
+      "sigla": null,
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "59be8c03-6cde-435b-a96b-4a5da2ef4059",
+      "codigo": "BR09",
+      "nombre": "Novena Brigada",
+      "sigla": null,
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "ad80aca1-4680-42b5-a584-556f13925e96",
+      "codigo": "BR10",
+      "nombre": "Décima Brigada",
+      "sigla": null,
+      "unidad_superior_id": "97a6eaa8-129f-4cf1-a63e-ac958d6329a3",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "e7660c15-1096-49a4-b683-3369ecf56149",
+      "codigo": "BR13",
+      "nombre": "Décimo Tercera Brigada",
+      "sigla": null,
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "a913edff-8d61-49e6-a526-82bd5bf57442",
+      "codigo": "BR18",
+      "nombre": "Décimo Octava Brigada",
+      "sigla": null,
+      "unidad_superior_id": "e5c773a1-aa22-477d-a993-d883fdfc5aa0",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "68b449e8-c769-4e3d-bf95-684f42ed246c",
+      "codigo": "BR27",
+      "nombre": "Vigésimo Séptima Brigada",
+      "sigla": null,
+      "unidad_superior_id": "5ac32b2e-d803-47b2-9aae-ffc682332aa4",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "29b41607-f315-40b3-959e-3efe7f869547",
+      "codigo": "BR30",
+      "nombre": "Trigésima Brigada",
+      "sigla": null,
+      "unidad_superior_id": "d58588fc-41fd-42a1-8700-6ecee2e4df76",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7f23fa81-63f4-4c92-ab39-663142bdae02"
+    },
+    {
+      "id": "af79e876-4bf3-4511-9db9-42dd2cce20cb",
+      "codigo": "CEDOC",
+      "nombre": "Centro de Educación y Doctrina",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "eec5e83e-5350-4274-b3af-3aa1e4197e43"
+    },
+    {
+      "id": "89dabbad-48b8-497c-b738-be5e73887d6d",
+      "codigo": "CEMIL",
+      "nombre": "Centro de Educación Militar",
+      "sigla": null,
+      "unidad_superior_id": "af79e876-4bf3-4511-9db9-42dd2cce20cb",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "3158448c-3c5e-44fc-8262-5f394f7d9447"
+    },
+    {
+      "id": "bb2bb1ee-d783-4291-809e-b0b7d0c6c333",
+      "codigo": "DAAVA",
+      "nombre": "División de Aviación y Asalto Aéreo",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "97a6eaa8-129f-4cf1-a63e-ac958d6329a3",
+      "codigo": "DIV01",
+      "nombre": "Primera División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "d58588fc-41fd-42a1-8700-6ecee2e4df76",
+      "codigo": "DIV02",
+      "nombre": "Segunda División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "a2f8d4cc-5487-4840-a002-72ad9eb2501b",
+      "codigo": "DIV03",
+      "nombre": "Tercera División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "55b02e51-65c1-4fe9-9d22-d8a10612c5e8",
+      "codigo": "DIV04",
+      "nombre": "Cuarta División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "4f33788b-472c-41ed-816c-53725a97bb3a",
+      "codigo": "DIV05",
+      "nombre": "Quinta División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "5ac32b2e-d803-47b2-9aae-ffc682332aa4",
+      "codigo": "DIV06",
+      "nombre": "Sexta División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "4e228fab-9f24-4ed1-a054-69bf2e462dc2",
+      "codigo": "DIV07",
+      "nombre": "Séptima División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "e5c773a1-aa22-477d-a993-d883fdfc5aa0",
+      "codigo": "DIV08",
+      "nombre": "Octava División",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "511aa4eb-c2ca-41a2-ae0b-1970185ca451",
+      "codigo": "DIVFE",
+      "nombre": "División de Fuerzas Especiales",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "7118fd34-31cc-4c32-b20d-d725e9b009d0"
+    },
+    {
+      "id": "3ae74fa4-0eab-43db-94c1-de89e656c2e1",
+      "codigo": "ESART",
+      "nombre": "Escuela de Artillería",
+      "sigla": null,
+      "unidad_superior_id": "89dabbad-48b8-497c-b738-be5e73887d6d",
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:50:48.384056+00:00",
+      "tipo_unidad_id": "dc9e549a-66d9-424d-8c31-b0af4f7a2605"
+    },
+    {
+      "id": "5c491bf2-fdcd-46e4-86d7-7a5fbbf1c858",
+      "codigo": "FUTOM",
+      "nombre": "Fuerza de Tarea Omega",
+      "sigla": null,
+      "unidad_superior_id": null,
+      "activa": true,
+      "fecha_creacion": "2026-11-15 04:16:35.655252+00:00",
+      "fecha_actualizacion": "2026-11-15 04:16:35.655252+00:00",
+      "tipo_unidad_id": null
+    }
+  ],
+  "estado": "validado_solo_lectura"
+}

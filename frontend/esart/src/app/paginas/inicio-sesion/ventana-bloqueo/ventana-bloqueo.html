@@ -1,0 +1,336 @@
+
+<!-- FONDO MODAL -->
+<div
+  class="fixed inset-0 z-[9999]
+         flex items-center justify-center
+         bg-slate-950/60 backdrop-blur-md p-4"
+>
+  <!-- VENTANA -->
+  <section
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="titulo-bloqueo"
+    class="w-full max-w-[560px]
+           overflow-hidden rounded-xl
+           border border-sky-200
+           bg-white shadow-2xl"
+  >
+
+    <!-- BARRA SUPERIOR -->
+    <header
+      class="flex items-center justify-between
+             bg-gradient-to-r from-sky-200 to-sky-400
+             px-5 py-3 text-slate-800"
+    >
+      <div class="flex items-center gap-2">
+        <span class="text-lg">♢</span>
+
+        <h2
+          id="titulo-bloqueo"
+          class="text-sm font-bold leading-tight"
+        >
+          Seguridad Telemática — Cuenta Institucional
+          <span class="block">Bloqueada</span>
+        </h2>
+      </div>
+
+      <button
+        type="button"
+        (click)="volverLogin()"
+        class="rounded px-2 py-1 hover:bg-white/30"
+        aria-label="Cerrar ventana"
+      >
+        ✕
+      </button>
+    </header>
+
+    <div class="space-y-4 p-5">
+
+      <!-- IDENTIFICACIÓN INSTITUCIONAL -->
+
+<!-- IDENTIFICACIÓN INSTITUCIONAL -->
+<div
+  class="relative flex items-center gap-3
+         overflow-hidden rounded-lg
+         bg-[url('/imagenes/escuela.jpg')]
+         bg-cover bg-center bg-no-repeat
+         p-4 text-white min-h-[90px]"
+>
+  <!-- Capa oscura para mejorar la lectura -->
+  <div
+    class="absolute inset-0
+           bg-gradient-to-r
+           from-slate-950/95
+           via-slate-900/75
+           to-sky-950/70">
+  </div>
+
+  <!-- Escudo institucional -->
+  <img
+    src="/imagenes/escudo-esart.png"
+    alt="Escudo Escuela de Artillería"
+    class="relative z-10 h-14 w-12
+           object-contain rounded
+           bg-white/10 p-1"
+  />
+
+  <!-- Información institucional -->
+  <div class="relative z-10 flex-1">
+    <p class="text-[10px] font-bold uppercase
+              tracking-wider text-sky-300">
+      Seguridad perimetral militar
+    </p>
+
+    <p class="text-sm font-extrabold">
+      ESCUELA DE ARTILLERÍA
+    </p>
+
+    <p class="text-[10px] italic text-white/80">
+      “General Carlos Julio Gil Colorado”
+    </p>
+  </div>
+
+  <!-- Estado de bloqueo -->
+  <div class="relative z-10 text-right">
+    <p class="text-[10px] font-bold
+              uppercase text-white/80">
+      TERMINAL
+    </p>
+
+    <p class="text-[10px] font-bold text-red-300">
+      BLOQUEADA
+    </p>
+
+    <span
+      class="mt-1 inline-block h-2 w-2
+             rounded-full bg-red-500
+             shadow-[0_0_8px_rgba(239,68,68,0.8)]">
+    </span>
+  </div>
+</div>
+
+
+      <!-- ALERTA -->
+      <div
+        role="alert"
+        class="rounded-lg border border-amber-300
+               bg-amber-50 p-4"
+      >
+        <div class="flex items-start gap-3">
+
+          <span class="text-2xl">🔒</span>
+
+          <div>
+            <span
+              class="rounded bg-amber-500
+                     px-2 py-0.5 text-[10px]
+                     font-bold uppercase text-white"
+            >
+              Bloqueo preventivo
+            </span>
+
+            @if (codigoBloqueo()) {
+              <span class="ml-2 text-[10px] text-slate-500">
+                Cód: {{ codigoBloqueo() }}
+              </span>
+            }
+
+            <h3
+              class="mt-1 text-sm font-extrabold text-slate-900"
+            >
+              Acceso suspendido temporalmente
+            </h3>
+
+            <p class="mt-1 text-xs leading-relaxed text-slate-600">
+              Se detectaron múltiples intentos fallidos
+              consecutivos de autenticación para este
+              usuario militar.
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <!-- REGISTRO DE LA TERMINAL -->
+      <div
+        class="rounded-xl border border-sky-200
+               bg-sky-50/70 p-4"
+      >
+        <div
+          class="mb-3 flex items-center justify-between"
+        >
+          <h3
+            class="text-[11px] font-extrabold
+                   uppercase tracking-wider text-slate-600"
+          >
+            Registro de la terminal
+          </h3>
+
+          <span
+            class="text-[10px] font-bold
+                   uppercase text-sky-600"
+          >
+            Red operativa CEMIL
+          </span>
+        </div>
+
+        <!-- DATOS -->
+        <div class="grid grid-cols-2 gap-2">
+
+          <div class="rounded-md border border-slate-200 bg-white p-3">
+            <p class="text-[10px] text-slate-500">
+              Usuario ingresado:
+            </p>
+            <p class="break-all text-xs font-bold text-slate-800">
+              {{ usuario() || 'No disponible' }}
+            </p>
+          </div>
+
+          <div class="rounded-md border border-slate-200 bg-white p-3">
+            <p class="text-[10px] text-slate-500">
+                {{ enviosActuales() !== null ? 'Intento de este envío:' : 'Intentos Fallidos:' }}
+            </p>
+              <p class="text-xs font-extrabold text-red-600"
+                 [attr.title]="fechaEnvio() ? 'Registro de este envío: ' + fechaEnvio() : null">
+                @if (enviosActuales() !== null) {
+                  {{ enviosActuales() }} registrado (este envío). Histórico restringido: requiere verificar titularidad.
+                } @else if (intentosVisibles() !== null) {
+                {{ intentosVisibles() }} registrados
+                } @else if (detallesAdministrativos()) {
+                  No se recibió un contador válido.
+                } @else {
+                  Histórico restringido. Este comprobante no incluye datos del envío.
+              }
+            </p>
+          </div>
+
+          <div class="rounded-md border border-slate-200 bg-white p-3">
+            <p class="text-[10px] text-slate-500">
+                {{ enviosActuales() !== null ? 'IP observada en este envío:' : 'Dirección IP registrada:' }}
+            </p>
+              <p class="break-all font-mono text-xs font-bold text-slate-800"
+                 [attr.title]="detallesAdministrativos() || enviosActuales() !== null ? ipObservacion() : null"
+                 [attr.aria-description]="detallesAdministrativos() || enviosActuales() !== null ? ipObservacion() : null">
+                {{ (detallesAdministrativos() || enviosActuales() !== null) && direccionIp()
+                    ? direccionIp() : enviosActuales() !== null ? 'Origen no verificable por el backend'
+                    : detallesAdministrativos() ? 'No hay IP registrada' : 'No incluida en este comprobante' }}
+            </p>
+          </div>
+
+          <div class="rounded-md border border-slate-200 bg-white p-3">
+            <p class="text-[10px] text-slate-500">
+              Desbloqueo estimado:
+            </p>
+            <p class="text-xs font-bold text-slate-800">
+              {{ fechaBloqueo() }}
+            </p>
+          </div>
+
+        </div>
+
+        <!-- CONTADOR -->
+        <div
+          class="mt-3 flex items-center justify-between
+                 rounded-lg border border-sky-100
+                 bg-white p-3"
+        >
+          <span class="text-xs font-medium text-slate-600">
+            ◷ Reintento disponible en:
+          </span>
+
+          <span
+            class="rounded-md bg-sky-100 px-3 py-1
+                   font-mono text-sm font-bold
+                   text-sky-700"
+          >
+            @if (desbloqueoEstimado()) {
+              {{ tiempoFormateado() }}
+            } @else {
+              No disponible
+            }
+          </span>
+        </div>
+      </div>
+
+      <!-- CANALES DE DESBLOQUEO -->
+      <div>
+        <h3
+          class="mb-3 text-[11px] font-extrabold
+                 uppercase tracking-wider text-slate-600"
+        >
+          Canales autorizados de desbloqueo
+        </h3>
+
+        <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+
+          <div
+            class="rounded-lg border border-slate-200
+                   bg-white p-3"
+          >
+            <p class="text-xs font-bold text-slate-800">
+              ✉ Enviar Token al Correo
+            </p>
+            <p class="mt-1 text-[10px] text-slate-500">
+              Código OTP al buzón institucional
+            </p>
+          </div>
+
+          <div
+            class="rounded-lg border border-slate-200
+                   bg-white p-3"
+          >
+            <p class="text-xs font-bold text-slate-800">
+              ◉ Oficial de Seguridad
+            </p>
+            <p class="mt-1 text-[10px] text-slate-500">
+              Contactar al responsable autorizado
+            </p>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- ADVERTENCIA INSTITUCIONAL -->
+      <div
+        class="rounded-md border border-slate-200
+               bg-slate-100 p-3"
+      >
+        <p class="text-[10px] leading-relaxed text-slate-500">
+          Los intentos de acceso no autorizados
+          pueden ser registrados y auditados
+          conforme a las políticas institucionales
+          de seguridad de la información.
+        </p>
+      </div>
+
+    </div>
+
+    <!-- PIE DE LA VENTANA -->
+    <footer
+      class="flex items-center justify-between gap-3
+             border-t border-slate-200
+             bg-slate-50 px-5 py-3"
+    >
+      <button
+        type="button"
+        (click)="volverLogin()"
+        class="rounded-md border border-slate-200
+               bg-white px-4 py-2 text-xs
+               font-semibold text-slate-700
+               hover:bg-slate-100"
+      >
+        ← Volver al Login
+      </button>
+
+      <button
+        type="button"
+        (click)="desbloquearToken()"
+        class="rounded-md bg-sky-500 px-4 py-2
+               text-xs font-bold text-white
+               hover:bg-sky-600"
+      >
+        🔑 Desbloquear con autenticador
+      </button>
+    </footer>
+
+  </section>
+</div>

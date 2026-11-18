@@ -1,0 +1,364 @@
+<div class="space-y-5">
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex flex-wrap items-center gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span class="flex-1">{{ fallo.mensaje }}</span>
+      @if (fallo.codigo === 'PARAMETROS_DESACTUALIZADOS') {
+        <button
+          type="button"
+          (click)="cargar()"
+          class="px-3 py-1.5 rounded-lg border border-error/40 text-label-lg font-headline text-error bg-white"
+        >
+          Recargar valores
+        </button>
+      }
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">
+      Cargando la regla de habilitación…
+    </p>
+  } @else if (regla(); as vigente) {
+    <!-- Regla vigente en palabras y su efecto actual -->
+    <section class="bg-white rounded-2xl border border-gris-bordes p-5 space-y-4">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="space-y-1">
+          <h2 class="font-headline font-bold text-negro-institucional">
+            Regla de habilitación vigente
+          </h2>
+          <p class="text-body-md text-azul-pizarra/80">
+            Un artillero está <strong class="text-success">APTO</strong> si está
+            <strong>activo</strong> y tiene <strong>un curso habilitante aprobado</strong> o
+            <strong>un reentrenamiento vigente</strong>.
+          </p>
+        </div>
+        <p class="text-xs text-azul-pizarra/60">
+          Último cambio:
+          @if (vigente.actualizado_en) {
+            <span class="font-semibold text-azul-pizarra">{{
+              vigente.actualizado_en | date: 'd MMM y, h:mm a'
+            }}</span>
+            @if (vigente.actualizado_por) {
+              por <span class="font-mono">{{ vigente.actualizado_por }}</span>
+            } @else {
+              (valores iniciales)
+            }
+          } @else {
+            sin registro
+          }
+        </p>
+      </div>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-3">
+        <div class="rounded-xl border border-gris-bordes p-3">
+          <p class="text-xs text-azul-pizarra/60">Militares registrados</p>
+          <p class="font-headline font-bold text-xl text-negro-institucional">
+            {{ vigente.resumen.total }}
+          </p>
+        </div>
+        <div class="rounded-xl border border-success/30 bg-success/5 p-3">
+          <p class="text-xs text-azul-pizarra/60">APTO</p>
+          <p class="font-headline font-bold text-xl text-success">{{ vigente.resumen.aptos }}</p>
+        </div>
+        <div class="rounded-xl border border-error/30 bg-error/5 p-3">
+          <p class="text-xs text-azul-pizarra/60">NO APTO</p>
+          <p class="font-headline font-bold text-xl text-error">{{ vigente.resumen.no_aptos }}</p>
+        </div>
+        <div class="rounded-xl border border-warning/30 bg-warning/5 p-3">
+          <p class="text-xs text-azul-pizarra/60">Reentrenamiento por vencer</p>
+          <p class="font-headline font-bold text-xl text-warning">
+            {{ vigente.resumen.reentrenamiento_por_vencer }}
+          </p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Formulario de la regla -->
+    <section class="bg-white rounded-2xl border border-gris-bordes p-5 space-y-5">
+      <fieldset class="space-y-2" [disabled]="!puedeEditar()">
+        <legend class="font-headline font-bold text-negro-institucional">
+          Cursos habilitantes
+        </legend>
+        <p class="text-xs text-azul-pizarra/70">
+          Aprobado cualquiera de estos cursos, el artillero queda APTO (los cursos no vencen). Sin
+          ninguno marcado, solo el reentrenamiento vigente habilita.
+        </p>
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+          @for (curso of vigente.cursos_disponibles; track curso.codigo) {
+            <label
+              class="flex items-start gap-2.5 rounded-xl border p-3 cursor-pointer transition-colors"
+              [class.border-azul-institucional]="cursos().includes(curso.codigo)"
+              [class.bg-azul-hielo]="cursos().includes(curso.codigo)"
+              [class.border-gris-bordes]="!cursos().includes(curso.codigo)"
+            >
+              <input
+                type="checkbox"
+                class="mt-0.5"
+                [checked]="cursos().includes(curso.codigo)"
+                (change)="alternarCurso(curso.codigo)"
+              />
+              <span>
+                <span class="block font-headline font-semibold text-sm text-negro-institucional">{{
+                  curso.codigo
+                }}</span>
+                <span class="block text-xs text-azul-pizarra/70">{{ curso.nombre }}</span>
+              </span>
+            </label>
+          }
+        </div>
+      </fieldset>
+
+      <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+        <div class="space-y-1">
+          <label for="meses-vigencia" class="block font-headline text-label-md"
+            >Vigencia del reentrenamiento (meses)</label
+          >
+          <input
+            id="meses-vigencia"
+            type="number"
+            min="1"
+            max="60"
+            [disabled]="!puedeEditar()"
+            [ngModel]="meses()"
+            (ngModelChange)="meses.set($event)"
+            class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+          />
+          <p class="text-xs text-azul-pizarra/60">
+            Desde la fecha de expedición del certificado (1 a 60).
+          </p>
+        </div>
+        <div class="space-y-1">
+          <label for="dias-alerta" class="block font-headline text-label-md"
+            >Alerta "por vencer" (días antes)</label
+          >
+          <input
+            id="dias-alerta"
+            type="number"
+            min="1"
+            max="365"
+            [disabled]="!puedeEditar()"
+            [ngModel]="dias()"
+            (ngModelChange)="dias.set($event)"
+            class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+          />
+          <p class="text-xs text-azul-pizarra/60">
+            Debe empezar antes de que el certificado venza.
+          </p>
+        </div>
+        <div class="space-y-1">
+          <span class="block font-headline text-label-md">Certificado "apto para disparar"</span>
+          <label class="inline-flex items-center gap-2.5 py-2 cursor-pointer">
+            <input
+              type="checkbox"
+              [disabled]="!puedeEditar()"
+              [checked]="exigeApto()"
+              (change)="exigeApto.set(!exigeApto())"
+            />
+            <span class="text-body-md">{{ exigeApto() ? 'Se exige' : 'No se exige' }}</span>
+          </label>
+          <p class="text-xs text-azul-pizarra/60">
+            Si se exige, solo cuentan los certificados marcados aptos.
+          </p>
+        </div>
+      </div>
+
+      @if (puedeEditar()) {
+        <div class="flex flex-wrap items-center justify-end gap-2 border-t border-gris-bordes pt-4">
+          @if (hayCambios()) {
+            <button
+              type="button"
+              (click)="descartar()"
+              class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+            >
+              Descartar cambios
+            </button>
+          }
+          <button
+            type="button"
+            (click)="simular()"
+            [disabled]="!hayCambios() || simulando()"
+            class="inline-flex items-center gap-2 py-2 px-4 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+              >query_stats</span
+            >
+            {{ simulando() ? 'Calculando…' : 'Simular impacto' }}
+          </button>
+          <button
+            type="button"
+            (click)="confirmando.set(true)"
+            [disabled]="!puedeGuardar()"
+            [title]="
+              hayCambios() && !simulacionVigente()
+                ? 'Primero simule el impacto de los valores actuales'
+                : ''
+            "
+            class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+          >
+            <span class="material-symbols-outlined text-[18px]" aria-hidden="true">save</span>
+            {{ guardando() ? 'Guardando…' : 'Guardar regla' }}
+          </button>
+        </div>
+      } @else {
+        <p class="text-xs text-azul-pizarra/60 border-t border-gris-bordes pt-3">
+          Solo consulta: no tiene permiso para modificar la regla.
+        </p>
+      }
+    </section>
+
+    <!-- Resultado de la simulación -->
+    @if (simulacion(); as datos) {
+      <section
+        [class]="
+          'rounded-2xl border p-5 space-y-3 ' +
+          (datos.pasan_a_no_apto > 0
+            ? 'border-warning bg-warning/5'
+            : 'border-gris-bordes bg-white')
+        "
+        aria-live="polite"
+      >
+        <div class="flex items-center gap-2">
+          <span class="material-symbols-outlined text-azul-institucional" aria-hidden="true"
+            >query_stats</span
+          >
+          <h2 class="font-headline font-bold text-negro-institucional">Impacto de la propuesta</h2>
+          @if (!simulacionVigente()) {
+            <span class="text-xs text-warning font-semibold"
+              >(los valores cambiaron: vuelva a simular)</span
+            >
+          }
+        </div>
+        <div class="overflow-x-auto">
+          <table class="w-full text-body-md">
+            <thead>
+              <tr class="text-left text-xs text-azul-pizarra/60">
+                <th class="py-1 pr-4 font-medium"></th>
+                <th class="py-1 pr-4 font-medium">Hoy</th>
+                <th class="py-1 pr-4 font-medium">Con la propuesta</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td class="py-1 pr-4">APTO</td>
+                <td class="py-1 pr-4 font-semibold">{{ datos.actual.aptos }}</td>
+                <td class="py-1 pr-4 font-semibold text-success">{{ datos.propuesto.aptos }}</td>
+              </tr>
+              <tr>
+                <td class="py-1 pr-4">NO APTO</td>
+                <td class="py-1 pr-4 font-semibold">{{ datos.actual.no_aptos }}</td>
+                <td class="py-1 pr-4 font-semibold text-error">{{ datos.propuesto.no_aptos }}</td>
+              </tr>
+              <tr>
+                <td class="py-1 pr-4">Reentrenamiento por vencer</td>
+                <td class="py-1 pr-4 font-semibold">
+                  {{ datos.actual.reentrenamiento_por_vencer }}
+                </td>
+                <td class="py-1 pr-4 font-semibold text-warning">
+                  {{ datos.propuesto.reentrenamiento_por_vencer }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+        <ul class="text-body-md space-y-1">
+          <li class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-error" aria-hidden="true"
+              >trending_down</span
+            >
+            <strong>{{ datos.pasan_a_no_apto }}</strong> militares pasarían de APTO a NO APTO.
+          </li>
+          <li class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-[18px] text-success" aria-hidden="true"
+              >trending_up</span
+            >
+            <strong>{{ datos.pasan_a_apto }}</strong> militares pasarían de NO APTO a APTO.
+          </li>
+        </ul>
+      </section>
+    }
+
+    <!-- Confirmación antes de pedir el código del autenticador -->
+    @if (confirmando()) {
+      <div
+        class="fixed inset-0 z-40 bg-negro-institucional/40 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-confirmar-regla"
+      >
+        <div
+          class="w-full max-w-md bg-white rounded-2xl border border-gris-bordes shadow-xl p-6 space-y-4"
+        >
+          <h2 id="titulo-confirmar-regla" class="font-headline font-bold text-negro-institucional">
+            ¿Aplicar la nueva regla?
+          </h2>
+          <ul class="text-body-md space-y-1 text-azul-pizarra">
+            <li>
+              Cursos habilitantes:
+              <strong>{{
+                cursos().length ? cursos().join(', ') : 'ninguno (solo reentrenamiento)'
+              }}</strong>
+            </li>
+            <li>
+              Vigencia del reentrenamiento: <strong>{{ meses() }} meses</strong>
+            </li>
+            <li>
+              Alerta: <strong>{{ dias() }} días antes</strong>
+            </li>
+            <li>
+              Apto para disparar: <strong>{{ exigeApto() ? 'se exige' : 'no se exige' }}</strong>
+            </li>
+          </ul>
+          @if (simulacion(); as datos) {
+            <p class="text-body-md">
+              Cambia de inmediato el resultado de
+              <strong>{{ datos.pasan_a_no_apto + datos.pasan_a_apto }}</strong> militares. Se le
+              pedirá el código de su autenticador y el cambio quedará en la auditoría.
+            </p>
+          }
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              (click)="confirmando.set(false)"
+              class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              (click)="guardar()"
+              class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<dialog #ventanaTotp class="ventana-totp" (cancel)="$event.preventDefault()">
+  @if (requiereTotp()) {
+    <app-totp
+      modo="CODIGO_OPERACION"
+      operacionEtiqueta="Cambio de la regla de habilitación"
+      moduloEtiqueta="Parámetros"
+      [verificarCodigo]="verificarCodigoTotp"
+      [errorInicial]="errorTotp()"
+      (cancelar)="cancelarTotp()"
+      (completado)="cerrarTotp()"
+    />
+  }
+</dialog>

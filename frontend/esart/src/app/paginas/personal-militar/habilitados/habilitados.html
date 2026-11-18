@@ -1,0 +1,154 @@
+<div class="space-y-4">
+  <!-- Filtros -->
+  <section class="bg-white rounded-xl border border-gris-bordes p-5">
+    <form class="grid grid-cols-1 md:grid-cols-[220px_1fr_auto] gap-3 items-end" (ngSubmit)="buscar()">
+      <div class="space-y-1">
+        <label for="filtro-estado" class="block font-headline text-label-md text-azul-pizarra">Estado</label>
+        <select
+          id="filtro-estado"
+          name="estado"
+          [(ngModel)]="estado"
+          (ngModelChange)="buscar()"
+          class="w-full py-2.5 px-3 bg-white border border-gris-bordes rounded-sm text-body-md text-azul-pizarra focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20"
+        >
+          @for (opcion of opcionesEstado; track opcion.valor) {
+            <option [value]="opcion.valor">{{ opcion.texto }}</option>
+          }
+        </select>
+      </div>
+      <div class="space-y-1">
+        <label for="filtro-texto" class="block font-headline text-label-md text-azul-pizarra">Buscar</label>
+        <input
+          id="filtro-texto"
+          name="texto"
+          type="search"
+          maxlength="100"
+          [(ngModel)]="texto"
+          placeholder="Cédula, nombres o apellidos"
+          class="w-full py-2.5 px-3 bg-white border border-gris-bordes rounded-sm text-body-md text-azul-pizarra placeholder:text-azul-pizarra/40 focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20 outline-none"
+        />
+      </div>
+      <div class="flex gap-2">
+        <button
+          type="submit"
+          class="inline-flex items-center gap-2 py-2.5 px-4 bg-azul-institucional hover:bg-[#1A8FB3] text-white rounded-sm font-headline text-label-lg focus:outline-none focus:ring-2 focus:ring-azul-institucional/40"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">search</span> Buscar
+        </button>
+        <button
+          type="button"
+          (click)="limpiarFiltros()"
+          class="py-2.5 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline text-azul-pizarra hover:border-azul-institucional"
+        >
+          Limpiar
+        </button>
+      </div>
+    </form>
+  </section>
+
+  @if (error(); as fallo) {
+    <div class="p-4 bg-error/10 border border-error/40 rounded-lg flex items-start gap-3 text-body-md" role="alert">
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  <!-- Tabla -->
+  <section class="bg-white rounded-xl border border-gris-bordes overflow-hidden">
+    <div class="px-5 py-3 border-b border-gris-bordes flex items-center justify-between">
+      <h2 class="font-headline text-title-lg text-negro-institucional">Artilleros</h2>
+      <span class="text-xs text-azul-pizarra/60" aria-live="polite">
+        @if (cargando()) {
+          Consultando…
+        } @else if (datos(); as pagina) {
+          {{ pagina.total_elementos }} resultado(s)
+        }
+      </span>
+    </div>
+    <div class="overflow-x-auto">
+      <table class="w-full text-body-md">
+        <thead class="bg-gris-claro">
+          <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+            <th class="py-2.5 px-4">Cédula</th>
+            <th class="py-2.5 px-4">Grado</th>
+            <th class="py-2.5 px-4">Nombre</th>
+            <th class="py-2.5 px-4">Unidad</th>
+            <th class="py-2.5 px-4">Resultado</th>
+            <th class="py-2.5 px-4">Curso</th>
+            <th class="py-2.5 px-4">Reentrenamiento</th>
+            <th class="py-2.5 px-4"><span class="sr-only">Acciones</span></th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (fila of datos()?.elementos ?? []; track fila.numero_documento) {
+            <tr class="border-t border-gris-bordes/70 align-top hover:bg-azul-hielo/30">
+              <td class="py-2.5 px-4 font-code text-code-md whitespace-nowrap">{{ fila.numero_documento }}</td>
+              <td class="py-2.5 px-4">{{ fila.grado }}</td>
+              <td class="py-2.5 px-4">
+                <span class="font-semibold text-negro-institucional">{{ fila.nombre_completo }}</span>
+                @if (!fila.activo) {
+                  <span class="block text-xs text-error">Inactivo</span>
+                }
+                @for (motivo of fila.motivos; track motivo) {
+                  <span class="block text-xs text-azul-pizarra/70">• {{ motivo }}</span>
+                }
+              </td>
+              <td class="py-2.5 px-4 whitespace-nowrap">{{ fila.unidad_militar_sigla ?? '—' }}</td>
+              <td class="py-2.5 px-4"><esart-insignia-estado [estado]="fila.resultado" /></td>
+              <td class="py-2.5 px-4">{{ fila.curso_habilitante ?? '—' }}</td>
+              <td class="py-2.5 px-4 whitespace-nowrap">
+                <esart-insignia-estado [estado]="fila.estado_reentrenamiento" />
+                @if (fila.reentrenamiento_vence) {
+                  <span class="block text-xs text-azul-pizarra/60 mt-0.5">Vence {{ fecha(fila.reentrenamiento_vence) }}</span>
+                }
+              </td>
+              <td class="py-2.5 px-4">
+                <a
+                  routerLink="/personal/verificar"
+                  [queryParams]="{ cedula: fila.numero_documento }"
+                  [attr.aria-label]="'Ver detalle de ' + fila.nombre_completo"
+                  class="inline-flex items-center gap-1 text-azul-institucional text-xs font-semibold hover:underline"
+                >
+                  Detalle <span class="material-symbols-outlined text-[16px]" aria-hidden="true">chevron_right</span>
+                </a>
+              </td>
+            </tr>
+          } @empty {
+            @if (!cargando()) {
+              <tr>
+                <td colspan="8" class="py-8 px-4 text-center text-azul-pizarra/60">
+                  No hay artilleros que coincidan con los filtros.
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Paginación -->
+    @if (datos(); as pagina) {
+      @if (pagina.total_paginas > 1) {
+        <nav class="px-5 py-3 border-t border-gris-bordes flex items-center justify-between text-body-md" aria-label="Paginación">
+          <button
+            type="button"
+            (click)="irAPagina(pagina.pagina - 1)"
+            [disabled]="pagina.pagina <= 1 || cargando()"
+            class="py-1.5 px-3 border border-gris-bordes rounded-sm disabled:opacity-50"
+          >
+            Anterior
+          </button>
+          <span>Página {{ pagina.pagina }} de {{ pagina.total_paginas }}</span>
+          <button
+            type="button"
+            (click)="irAPagina(pagina.pagina + 1)"
+            [disabled]="pagina.pagina >= pagina.total_paginas || cargando()"
+            class="py-1.5 px-3 border border-gris-bordes rounded-sm disabled:opacity-50"
+          >
+            Siguiente
+          </button>
+        </nav>
+      }
+    }
+  </section>
+</div>

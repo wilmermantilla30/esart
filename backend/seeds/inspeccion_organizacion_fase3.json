@@ -1,0 +1,1547 @@
+{
+  "destino": "esart_hu03_pruebas",
+  "modo": "solo_lectura",
+  "revision": "0001",
+  "columnas": [
+    {
+      "table_name": "alembic_version",
+      "column_name": "version_num",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "hoja_vida_artillero_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "tipo_cargo_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "unidad_militar_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "fecha_inicio",
+      "data_type": "date",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "fecha_fin",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "numero_resolucion",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "observaciones",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cargos",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "hoja_vida_artillero_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "tipo_certificacion_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "numero_certificado",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "fecha_expedicion",
+      "data_type": "date",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "fecha_vencimiento",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "estado",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "importacion_excel_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_certificaciones",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "hoja_vida_artillero_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "tipo_curso_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "numero_cohorte",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "fecha_inicio",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "fecha_fin",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "estado",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "nota_final",
+      "data_type": "numeric",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "numero_acta",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "institucion",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "importacion_excel_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "artillero_cursos",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "fecha",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "usuario_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "nombre_usuario",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "accion",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "numero_documento_consultado",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "resultado",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "direccion_ip",
+      "data_type": "inet",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "agente_usuario",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "auditoria_eventos",
+      "column_name": "detalle",
+      "data_type": "jsonb",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "ruta_angular",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "descripcion",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "componente_padre_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "orden",
+      "data_type": "integer",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "componentes",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "personal_militar_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "especialidad",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "fecha_ingreso_arma",
+      "data_type": "date",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "observaciones",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "hoja_vida_artillero",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "usuario_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "nombre_archivo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "hash_sha256_archivo",
+      "data_type": "character",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "fecha",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "filas_totales",
+      "data_type": "integer",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "filas_validas",
+      "data_type": "integer",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "filas_rechazadas",
+      "data_type": "integer",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "estado",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "errores",
+      "data_type": "jsonb",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "importaciones_excel",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "id",
+      "data_type": "bigint",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "nombre_usuario_intentado",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "usuario_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "direccion_ip",
+      "data_type": "inet",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "exitoso",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "motivo_fallo",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "intentos_inicio_sesion",
+      "column_name": "fecha",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "permisos",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "permisos",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "permisos",
+      "column_name": "descripcion",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "permisos",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "permisos",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "numero_documento",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "primer_nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "segundo_nombre",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "primer_apellido",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "segundo_apellido",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "grado",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "categoria",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "arma",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "unidad_militar_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "estado_servicio",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "personal_militar",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "sistema_artilleria_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "tipo_requisito",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "tipo_curso_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "tipo_certificacion_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "descripcion",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "requisitos_habilitacion",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "rol_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "componente_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "puede_acceder",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "puede_crear",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "puede_leer",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "puede_actualizar",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "puede_eliminar",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "rol_permisos",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles_permisos",
+      "column_name": "rol_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles_permisos",
+      "column_name": "permiso_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles_permisos",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "roles_permisos",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "usuario_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "fecha_inicio",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "fecha_ultima_actividad",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "direccion_ip",
+      "data_type": "inet",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "agente_usuario",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "revocada",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sesiones_usuario",
+      "column_name": "fecha_revocacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "tipo_sistema",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "calibre_milimetros",
+      "data_type": "numeric",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "verificacion_habilitada",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "sistemas_artilleria",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "descripcion",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_cargo",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "entidad_emisora",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "tipo_sistema",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_certificacion",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "descripcion",
+      "data_type": "text",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "tipo_sistema",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "vigencia_meses",
+      "data_type": "integer",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "nota_minima_aprobacion",
+      "data_type": "numeric",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "tipos_curso",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "codigo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "nombre",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "sigla",
+      "data_type": "character varying",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "unidad_superior_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "activa",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "unidades_militares",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "usuario_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "componente_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "puede_acceder",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "puede_crear",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "puede_leer",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "puede_actualizar",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "puede_eliminar",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "actualizado_por_id",
+      "data_type": "uuid",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuario_permisos",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "nombre_usuario",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "nombre_completo",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "hash_contrasena",
+      "data_type": "character varying",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "rol_id",
+      "data_type": "uuid",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "activo",
+      "data_type": "boolean",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "intentos_fallidos_consecutivos",
+      "data_type": "integer",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "bloqueado_hasta",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "fecha_ultimo_acceso",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "YES"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "fecha_creacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    },
+    {
+      "table_name": "usuarios",
+      "column_name": "fecha_actualizacion",
+      "data_type": "timestamp with time zone",
+      "is_nullable": "NO"
+    }
+  ],
+  "relaciones": [
+    {
+      "tabla": "artillero_cargos",
+      "definicion": "FOREIGN KEY (hoja_vida_artillero_id) REFERENCES hoja_vida_artillero(id)"
+    },
+    {
+      "tabla": "artillero_cargos",
+      "definicion": "FOREIGN KEY (tipo_cargo_id) REFERENCES tipos_cargo(id)"
+    },
+    {
+      "tabla": "artillero_cargos",
+      "definicion": "FOREIGN KEY (unidad_militar_id) REFERENCES unidades_militares(id)"
+    },
+    {
+      "tabla": "artillero_certificaciones",
+      "definicion": "FOREIGN KEY (hoja_vida_artillero_id) REFERENCES hoja_vida_artillero(id)"
+    },
+    {
+      "tabla": "artillero_certificaciones",
+      "definicion": "FOREIGN KEY (importacion_excel_id) REFERENCES importaciones_excel(id)"
+    },
+    {
+      "tabla": "artillero_certificaciones",
+      "definicion": "FOREIGN KEY (tipo_certificacion_id) REFERENCES tipos_certificacion(id)"
+    },
+    {
+      "tabla": "artillero_cursos",
+      "definicion": "FOREIGN KEY (hoja_vida_artillero_id) REFERENCES hoja_vida_artillero(id)"
+    },
+    {
+      "tabla": "artillero_cursos",
+      "definicion": "FOREIGN KEY (importacion_excel_id) REFERENCES importaciones_excel(id)"
+    },
+    {
+      "tabla": "artillero_cursos",
+      "definicion": "FOREIGN KEY (tipo_curso_id) REFERENCES tipos_curso(id)"
+    },
+    {
+      "tabla": "auditoria_eventos",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES usuarios(id)"
+    },
+    {
+      "tabla": "componentes",
+      "definicion": "FOREIGN KEY (componente_padre_id) REFERENCES componentes(id) ON DELETE RESTRICT"
+    },
+    {
+      "tabla": "hoja_vida_artillero",
+      "definicion": "FOREIGN KEY (personal_militar_id) REFERENCES personal_militar(id)"
+    },
+    {
+      "tabla": "importaciones_excel",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES usuarios(id)"
+    },
+    {
+      "tabla": "intentos_inicio_sesion",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES usuarios(id)"
+    },
+    {
+      "tabla": "personal_militar",
+      "definicion": "FOREIGN KEY (unidad_militar_id) REFERENCES unidades_militares(id)"
+    },
+    {
+      "tabla": "requisitos_habilitacion",
+      "definicion": "FOREIGN KEY (sistema_artilleria_id) REFERENCES sistemas_artilleria(id)"
+    },
+    {
+      "tabla": "requisitos_habilitacion",
+      "definicion": "FOREIGN KEY (tipo_certificacion_id) REFERENCES tipos_certificacion(id)"
+    },
+    {
+      "tabla": "requisitos_habilitacion",
+      "definicion": "FOREIGN KEY (tipo_curso_id) REFERENCES tipos_curso(id)"
+    },
+    {
+      "tabla": "rol_permisos",
+      "definicion": "FOREIGN KEY (componente_id) REFERENCES componentes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "rol_permisos",
+      "definicion": "FOREIGN KEY (rol_id) REFERENCES roles(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "roles_permisos",
+      "definicion": "FOREIGN KEY (permiso_id) REFERENCES permisos(id)"
+    },
+    {
+      "tabla": "roles_permisos",
+      "definicion": "FOREIGN KEY (rol_id) REFERENCES roles(id)"
+    },
+    {
+      "tabla": "sesiones_usuario",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES usuarios(id)"
+    },
+    {
+      "tabla": "unidades_militares",
+      "definicion": "FOREIGN KEY (unidad_superior_id) REFERENCES unidades_militares(id)"
+    },
+    {
+      "tabla": "usuario_permisos",
+      "definicion": "FOREIGN KEY (actualizado_por_id) REFERENCES usuarios(id) ON DELETE SET NULL"
+    },
+    {
+      "tabla": "usuario_permisos",
+      "definicion": "FOREIGN KEY (componente_id) REFERENCES componentes(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "usuario_permisos",
+      "definicion": "FOREIGN KEY (usuario_id) REFERENCES usuarios(id) ON DELETE CASCADE"
+    },
+    {
+      "tabla": "usuarios",
+      "definicion": "FOREIGN KEY (rol_id) REFERENCES roles(id)"
+    }
+  ],
+  "unidades": [
+    {
+      "codigo": "BAACA1",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°1",
+      "unidad_superior_id": "646a26b2-7604-4cda-8b25-b597f449a44c"
+    },
+    {
+      "codigo": "BAACA10",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°10",
+      "unidad_superior_id": "ad80aca1-4680-42b5-a584-556f13925e96"
+    },
+    {
+      "codigo": "BAACA13",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°13",
+      "unidad_superior_id": "e7660c15-1096-49a4-b683-3369ecf56149"
+    },
+    {
+      "codigo": "BAACA18",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°18",
+      "unidad_superior_id": "a913edff-8d61-49e6-a526-82bd5bf57442"
+    },
+    {
+      "codigo": "BAACA2",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°2",
+      "unidad_superior_id": "ad80aca1-4680-42b5-a584-556f13925e96"
+    },
+    {
+      "codigo": "BAACA27",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°27",
+      "unidad_superior_id": "68b449e8-c769-4e3d-bf95-684f42ed246c"
+    },
+    {
+      "codigo": "BAACA3",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°3",
+      "unidad_superior_id": "6b999048-84fe-440c-920f-2a071bb3c292"
+    },
+    {
+      "codigo": "BAACA30",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°30",
+      "unidad_superior_id": "29b41607-f315-40b3-959e-3efe7f869547"
+    },
+    {
+      "codigo": "BAACA4",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°4",
+      "unidad_superior_id": "9316d833-1b44-43c6-8334-be763bf1490c"
+    },
+    {
+      "codigo": "BAACA5",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°5",
+      "unidad_superior_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8"
+    },
+    {
+      "codigo": "BAACA6",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°6",
+      "unidad_superior_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8"
+    },
+    {
+      "codigo": "BAACA8",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°8",
+      "unidad_superior_id": "ecb57edc-09a9-4c39-8240-a62328e0e2cf"
+    },
+    {
+      "codigo": "BAACA9",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Campaña N°9",
+      "unidad_superior_id": "59be8c03-6cde-435b-a96b-4a5da2ef4059"
+    },
+    {
+      "codigo": "BAADA1",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+      "unidad_superior_id": "ad80aca1-4680-42b5-a584-556f13925e96"
+    },
+    {
+      "codigo": "BAADA2",
+      "sigla": null,
+      "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+      "unidad_superior_id": "89c60ace-894b-42c5-9ed9-ce03ee72a3f8"
+    },
+    {
+      "codigo": "BR01",
+      "sigla": null,
+      "nombre": "Primera Brigada",
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a"
+    },
+    {
+      "codigo": "BR03",
+      "sigla": null,
+      "nombre": "Tercera Brigada",
+      "unidad_superior_id": "a2f8d4cc-5487-4840-a002-72ad9eb2501b"
+    },
+    {
+      "codigo": "BR04",
+      "sigla": null,
+      "nombre": "Cuarta Brigada",
+      "unidad_superior_id": "4e228fab-9f24-4ed1-a054-69bf2e462dc2"
+    },
+    {
+      "codigo": "BR05",
+      "sigla": null,
+      "nombre": "Quinta Brigada",
+      "unidad_superior_id": "d58588fc-41fd-42a1-8700-6ecee2e4df76"
+    },
+    {
+      "codigo": "BR08",
+      "sigla": null,
+      "nombre": "Octava Brigada",
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a"
+    },
+    {
+      "codigo": "BR09",
+      "sigla": null,
+      "nombre": "Novena Brigada",
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a"
+    },
+    {
+      "codigo": "BR10",
+      "sigla": null,
+      "nombre": "Décima Brigada",
+      "unidad_superior_id": "97a6eaa8-129f-4cf1-a63e-ac958d6329a3"
+    },
+    {
+      "codigo": "BR13",
+      "sigla": null,
+      "nombre": "Décimo Tercera Brigada",
+      "unidad_superior_id": "4f33788b-472c-41ed-816c-53725a97bb3a"
+    },
+    {
+      "codigo": "BR18",
+      "sigla": null,
+      "nombre": "Décimo Octava Brigada",
+      "unidad_superior_id": "e5c773a1-aa22-477d-a993-d883fdfc5aa0"
+    },
+    {
+      "codigo": "BR27",
+      "sigla": null,
+      "nombre": "Vigésimo Séptima Brigada",
+      "unidad_superior_id": "5ac32b2e-d803-47b2-9aae-ffc682332aa4"
+    },
+    {
+      "codigo": "BR30",
+      "sigla": null,
+      "nombre": "Trigésima Brigada",
+      "unidad_superior_id": "d58588fc-41fd-42a1-8700-6ecee2e4df76"
+    },
+    {
+      "codigo": "CEDOC",
+      "sigla": null,
+      "nombre": "Centro de Educación y Doctrina",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "CEMIL",
+      "sigla": null,
+      "nombre": "Centro de Educación Militar",
+      "unidad_superior_id": "af79e876-4bf3-4511-9db9-42dd2cce20cb"
+    },
+    {
+      "codigo": "DAAVA",
+      "sigla": null,
+      "nombre": "División de Aviación y Asalto Aéreo",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV01",
+      "sigla": null,
+      "nombre": "Primera División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV02",
+      "sigla": null,
+      "nombre": "Segunda División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV03",
+      "sigla": null,
+      "nombre": "Tercera División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV04",
+      "sigla": null,
+      "nombre": "Cuarta División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV05",
+      "sigla": null,
+      "nombre": "Quinta División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV06",
+      "sigla": null,
+      "nombre": "Sexta División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV07",
+      "sigla": null,
+      "nombre": "Séptima División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIV08",
+      "sigla": null,
+      "nombre": "Octava División",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "DIVFE",
+      "sigla": null,
+      "nombre": "División de Fuerzas Especiales",
+      "unidad_superior_id": null
+    },
+    {
+      "codigo": "ESART",
+      "sigla": null,
+      "nombre": "Escuela de Artillería",
+      "unidad_superior_id": "89dabbad-48b8-497c-b738-be5e73887d6d"
+    },
+    {
+      "codigo": "FUTOM",
+      "sigla": null,
+      "nombre": "Fuerza de Tarea Omega",
+      "unidad_superior_id": null
+    }
+  ],
+  "clasificacion_equivalente": false,
+  "justificacion": "Sin tipos_unidad ni columna/FK de tipo; sigla identifica unidad, superior expresa jerarquia."
+}

@@ -1,0 +1,393 @@
+<div class="totp-fondo">
+  <section class="totp-panel" role="dialog" aria-modal="true" aria-labelledby="totp-titulo">
+    <!-- ENCABEZADO INSTITUCIONAL -->
+    <header class="totp-encabezado">
+      <button
+        type="button"
+        class="totp-cerrar"
+        aria-label="Cerrar ventana"
+        (click)="cerrar()"
+        [disabled]="procesando()"
+      >
+        ×
+      </button>
+
+      <div class="totp-escudo">
+        <img src="/imagenes/escudo-esart.png" alt="Escudo ESART" width="46" height="56" />
+      </div>
+
+      <div class="totp-identidad">
+        <span class="totp-etiqueta">
+          <span aria-hidden="true">♢</span>
+          AUTENTICACIÓN DE DOS FACTORES
+        </span>
+
+        <h1 id="totp-titulo">
+          {{
+            modo() === 'CONFIGURAR'
+              ? activo() ? 'ADMINISTRAR AUTENTICADOR' : 'CONFIGURAR AUTENTICADOR'
+              : modo() === 'DESBLOQUEO'
+                ? 'RECUPERAR ACCESO'
+                : modo() === 'LOGIN'
+                  ? 'VERIFICAR IDENTIDAD'
+                  : 'VERIFICACIÓN DE SEGURIDAD'
+          }}
+        </h1>
+
+        <p>
+          {{
+            modo() === 'CONFIGURAR'
+              ? activo() ? 'Consulte y administre la protección de su cuenta institucional' : 'Vincule su dispositivo para proteger su cuenta institucional'
+              : 'Confirme su identidad para continuar con esta operación'
+          }}
+        </p>
+      </div>
+    </header>
+
+    <form class="totp-formulario" [formGroup]="formulario" (ngSubmit)="verificar()">
+      <!-- CONTEXTO DE LA SOLICITUD -->
+      <div class="totp-contexto">
+        <div class="totp-contexto-cabecera">
+          <span>♧ CONTEXTO DE LA SOLICITUD</span>
+
+          <span class="totp-estado">
+            {{
+              modo() === 'CONFIGURAR'
+                ? activo()
+                  ? 'Autenticador activo'
+                  : 'Pendiente de vinculación'
+                : modo() === 'AUTORIZAR_ACCION' || modo() === 'CODIGO_OPERACION'
+                  ? 'Pendiente de autorización'
+                  : 'Verificación requerida'
+            }}
+          </span>
+        </div>
+
+        @switch (modo()) {
+          @case ('CONFIGURAR') {
+            <div class="totp-contexto-detalle">
+              <div>
+                <small>Operación solicitada:</small>
+                <strong>{{ activo() ? 'Administración del autenticador' : 'Vinculación de autenticador' }}</strong>
+              </div>
+              <div>
+                <small>Módulo:</small>
+                <strong>Seguridad de la cuenta</strong>
+              </div>
+            </div>
+          }
+          @case ('LOGIN') {
+            <div class="totp-contexto-detalle">
+              <div>
+                <small>Operación solicitada:</small>
+                <strong>Inicio de sesión</strong>
+              </div>
+              <div>
+                <small>Módulo:</small>
+                <strong>Acceso institucional</strong>
+              </div>
+            </div>
+          }
+          @case ('DESBLOQUEO') {
+            <div class="totp-contexto-detalle">
+              <div>
+                <small>Operación solicitada:</small>
+                <strong>Desbloqueo de cuenta</strong>
+              </div>
+              <div>
+                <small>Módulo:</small>
+                <strong>Seguridad institucional</strong>
+              </div>
+            </div>
+            <p class="totp-contexto-nota">El desbloqueo no inicia sesión automáticamente.</p>
+          }
+          @case ('AUTORIZAR_ACCION') {
+            <div class="totp-contexto-detalle">
+              <div>
+                <small>Operación solicitada:</small>
+                <strong>{{ operacion()?.codigo_politica }}</strong>
+              </div>
+              <div>
+                <small>Recurso:</small>
+                <strong>{{ operacion()?.recurso_id || 'No especificado' }}</strong>
+              </div>
+            </div>
+            <p class="totp-contexto-nota">Confirme la operación mediante su autenticador.</p>
+          }
+          @case ('CODIGO_OPERACION') {
+            <div class="totp-contexto-detalle">
+              <div>
+                <small>Operación solicitada:</small>
+                <strong>{{ operacionEtiqueta() }}</strong>
+              </div>
+              <div>
+                <small>Módulo:</small>
+                <strong>{{ moduloEtiqueta() }}</strong>
+              </div>
+            </div>
+            <p class="totp-contexto-nota">Confirme la operación mediante su autenticador.</p>
+          }
+        }
+      </div>
+
+      <!-- MENSAJES -->
+      @if (error()) {
+        <div class="totp-error" role="alert">
+          {{ error() }}
+        </div>
+      }
+
+      @if (mensaje()) {
+        <div class="totp-mensaje" role="status">
+          {{ mensaje() }}
+        </div>
+      }
+
+      <!-- CONFIGURACIÓN DEL AUTENTICADOR -->
+      @if (codigosRecuperacion().length) {
+        <div class="totp-manual" role="status">
+          <h3>GUARDE SUS CÓDIGOS DE RECUPERACIÓN</h3>
+          <p>
+            Se muestran una sola vez. Guárdelos en un lugar privado, separado del dispositivo. Cada
+            código permite un único acceso después de validar su contraseña.
+          </p>
+          @for (codigo of codigosRecuperacion(); track codigo) {
+            <div>
+              <code>{{ codigo }}</code>
+            </div>
+          }
+          <button type="button" (click)="confirmarGuardado()">He guardado los códigos</button>
+        </div>
+      }
+      @if (
+        modo() === 'LOGIN' ||
+        (modo() === 'CONFIGURAR' && activo() && estadoVinculacion() !== 'EXITOSA')
+      ) {
+        <p class="totp-ayuda">Método disponible: código TOTP de su autenticador.</p>
+        <button
+          type="button"
+          (click)="usarRecuperacion.set(!usarRecuperacion())"
+          [disabled]="procesando()"
+        >
+          {{
+            usarRecuperacion()
+              ? 'Usar código TOTP'
+              : 'Perdí mi dispositivo: usar código de recuperación'
+          }}
+        </button>
+        @if (usarRecuperacion()) {
+          <label for="totp-recuperacion">Código de recuperación</label>
+          <input
+            id="totp-recuperacion"
+            type="text"
+            [formControl]="codigoRecuperacion"
+            maxlength="32"
+            autocomplete="off"
+            spellcheck="false"
+          />
+          @if (modo() === 'LOGIN') {
+            <button
+              type="submit"
+              class="totp-principal"
+              [disabled]="procesando() || codigoRecuperacion.invalid"
+            >
+              Recuperar acceso
+            </button>
+          } @else {
+            <p>
+              Revocar el dispositivo cierra todas sus sesiones. Use un código distinto del que
+              utilizó para entrar.
+            </p>
+            <button
+              type="button"
+              (click)="revocarConRecuperacion()"
+              [disabled]="
+                procesando() || codigoRecuperacion.invalid || formulario.controls.contrasena.invalid
+              "
+            >
+              Revocar dispositivo perdido
+            </button>
+          }
+        }
+      }
+      @if (modo() === 'CONFIGURAR') {
+        @if (
+          !vinculacionInicial() &&
+          ((!activo() && !pendiente()) || (activo() && estadoVinculacion() !== 'EXITOSA'))
+        ) {
+          <div class="totp-campo">
+            <label for="totp-contrasena"> Confirme su contraseña actual </label>
+
+            <input
+              id="totp-contrasena"
+              type="password"
+              formControlName="contrasena"
+              autocomplete="current-password"
+              maxlength="72"
+            />
+          </div>
+        }
+
+        @if (!activo() && !pendiente()) {
+          <div class="totp-configuracion-inicial">
+            <p>
+              Configure Google Authenticator, Microsoft Authenticator u otra aplicación compatible
+              con TOTP.
+            </p>
+
+            <button
+              type="button"
+              class="totp-principal"
+              (click)="configurar()"
+              [disabled]="
+                procesando() ||
+                (!vinculacionInicial() &&
+                  (!sesionValida() || formulario.controls.contrasena.invalid))
+              "
+            >
+              {{
+                estadoVinculacion() === 'GENERANDO_QR'
+                  ? 'GENERANDO CÓDIGO QR…'
+                  : 'CONFIGURAR AUTENTICADOR'
+              }}
+            </button>
+          </div>
+        }
+
+        @if (qr()) {
+          <div class="totp-qr-contenedor">
+            <div class="totp-qr-titulo">ESCANEE EL CÓDIGO QR</div>
+
+            <div class="totp-qr-marco">
+              <img
+                class="totp-qr"
+                [src]="qr()"
+                alt="Código QR para vincular el autenticador ESART"
+                width="220"
+                height="220"
+              />
+            </div>
+
+            <p>Abra su aplicación autenticadora, añada una cuenta y escanee este código QR.</p>
+
+            <p class="totp-ayuda">
+              Válido hasta:
+              {{ expiraEn() ? fechaExpiracion() : '' }}
+            </p>
+          </div>
+        }
+
+        @if (pendiente() && claveManual()) {
+          <div class="totp-manual">
+            <h3>CONFIGURACIÓN MANUAL</h3>
+
+            <p>Si no puede escanear el QR, introduzca esta clave en su aplicación autenticadora.</p>
+
+            <code aria-label="Clave de configuración manual">
+              {{ mostrarClave() ? claveManual() : '•••• •••• •••• ••••' }}
+            </code>
+
+            <div class="totp-acciones-clave">
+              <button
+                type="button"
+                (click)="mostrarClave.set(!mostrarClave())"
+                [attr.aria-pressed]="mostrarClave()"
+              >
+                {{ mostrarClave() ? 'Ocultar clave' : 'Mostrar clave' }}
+              </button>
+
+              <button type="button" (click)="copiarClave()">
+                {{ copiado() ? 'Copiada' : 'Copiar clave' }}
+              </button>
+            </div>
+
+            <p class="totp-ayuda">Esta clave es confidencial. No la comparta.</p>
+          </div>
+        }
+      }
+
+      <!-- CÓDIGO DE SEIS DÍGITOS -->
+      @if (
+        (modo() !== 'CONFIGURAR' && !usarRecuperacion()) ||
+        pendiente() ||
+        (activo() && estadoVinculacion() !== 'EXITOSA' && !usarRecuperacion())
+      ) {
+        <div class="totp-verificacion">
+          <label class="totp-instruccion">
+            Ingrese el código de seis dígitos generado por su aplicación autenticadora.
+          </label>
+
+          <p class="totp-subinstruccion">
+            Compatible con Google Authenticator, Microsoft Authenticator o FreeOTP.
+          </p>
+
+          <div class="totp-digitos" (paste)="pegar($event)">
+            @for (control of digitos.controls; track $index) {
+              <input
+                [id]="'totp-' + $index"
+                type="text"
+                inputmode="numeric"
+                maxlength="1"
+                [formControl]="control"
+                (input)="avanzar($index, $event)"
+                [attr.autocomplete]="$index === 0 ? 'one-time-code' : 'off'"
+                [attr.aria-label]="'Dígito ' + ($index + 1)"
+              />
+            }
+          </div>
+
+          <p class="totp-tiempo">
+            <span class="totp-tiempo-icono">◷</span>
+            El código cambia cada 30 segundos en su autenticador.
+          </p>
+        </div>
+
+        @if (modo() === 'CONFIGURAR' && activo()) {
+          <button
+            type="button"
+            class="totp-principal"
+            (click)="desactivar()"
+            [disabled]="procesando() || digitos.invalid || formulario.controls.contrasena.invalid"
+          >
+            REVOCAR AUTENTICADOR
+          </button>
+          <button
+            type="button"
+            (click)="renovarRecuperacion()"
+            [disabled]="procesando() || digitos.invalid || formulario.controls.contrasena.invalid"
+          >
+            Renovar códigos de recuperación
+          </button>
+        } @else {
+          <button type="submit" class="totp-principal" [disabled]="procesando() || digitos.invalid">
+            <span aria-hidden="true">♢</span>
+            {{
+              procesando()
+                ? 'VERIFICANDO…'
+                : modo() === 'CONFIGURAR'
+                  ? 'VERIFICAR Y ACTIVAR'
+                  : modo() === 'AUTORIZAR_ACCION' || modo() === 'CODIGO_OPERACION'
+                    ? 'VERIFICAR Y AUTORIZAR'
+                    : 'VERIFICAR CÓDIGO'
+            }}
+          </button>
+        }
+      }
+
+      <button type="button" class="totp-cancelar" (click)="cerrar()" [disabled]="procesando()">
+        CANCELAR OPERACIÓN
+      </button>
+
+      <div class="totp-soporte">
+        <span aria-hidden="true">ⓘ</span>
+        ¿Problemas con su autenticador?
+      </div>
+    </form>
+
+    <!-- PIE INSTITUCIONAL -->
+    <footer class="totp-pie">
+      <span>Ciberdefensa ESART · RFC 6238 TOTP</span>
+      <span>♙ 256-bit SSL</span>
+    </footer>
+  </section>
+</div>

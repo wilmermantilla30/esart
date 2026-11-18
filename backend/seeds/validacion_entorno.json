@@ -1,0 +1,12 @@
+{
+  "fecha_utc": "2026-11-15T03:42:27.698929+00:00",
+  "destino": "esart_hu03_pruebas",
+  "modo": "inspeccionar",
+  "errores": [
+    {
+      "tipo": "ModuleNotFoundError",
+      "sqlstate": null
+    }
+  ],
+  "estado": "error"
+}

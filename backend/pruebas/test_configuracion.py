@@ -55,3 +55,34 @@ def test_error_de_configuracion_no_revela_el_secreto(monkeypatch):
         crear_configuracion_con(monkeypatch, JWT_CLAVE_SECRETA=secreto_corto)
 
     assert secreto_corto not in str(error.value)
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "postgresql+asyncpg://postgres:clave@localhost/esart_db",
+        "postgresql+asyncpg://otro:clave@localhost/esart_db",
+        "postgresql+asyncpg://esart_aplicacion:clave@localhost/otra_db",
+        "postgresql+asyncpg://esart_aplicacion:clave@localhost:invalido/esart_db",
+        "postgresql+asyncpg://esart_aplicacion@localhost/esart_db",
+    ],
+)
+def test_rechaza_conexion_insegura_o_incorrecta(monkeypatch, url):
+    with pytest.raises(ValidationError):
+        crear_configuracion_con(monkeypatch, ENTORNO="desarrollo", URL_BASE_DATOS=url)
+
+
+def test_acepta_cuenta_aplicacion_en_desarrollo(monkeypatch):
+    configuracion = crear_configuracion_con(
+        monkeypatch,
+        ENTORNO="desarrollo",
+        URL_BASE_DATOS="postgresql+asyncpg://esart_aplicacion:clave@localhost:5432/esart_db",
+    )
+    assert configuracion.entorno == "desarrollo"
+
+
+def test_error_de_campo_no_revela_entradas(monkeypatch):
+    valor_invalido = "valor-privado-no-valido"
+    with pytest.raises(ValidationError) as error:
+        crear_configuracion_con(monkeypatch, COOKIE_SEGURA=valor_invalido)
+    assert valor_invalido not in str(error.value)

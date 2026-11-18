@@ -1,0 +1,124 @@
+<div class="min-h-screen flex flex-col bg-azul-hielo/40">
+  <!-- Encabezado institucional con el usuario en sesión -->
+  <header
+    class="sticky top-0 z-30 h-[68px] px-4 md:px-6 flex items-center justify-between gap-4 bg-white border-b border-gris-bordes"
+  >
+    <div class="flex items-center gap-3 min-w-0">
+      <button
+        type="button"
+        (click)="alternarSidebar()"
+        [attr.aria-expanded]="sidebarAbierto()"
+        aria-controls="sidebar-modulos"
+        aria-label="Abrir o cerrar el menú de módulos"
+        class="md:hidden inline-flex items-center justify-center w-10 h-10 rounded-sm text-azul-pizarra hover:bg-azul-hielo focus:outline-none focus:ring-2 focus:ring-azul-institucional/40"
+      >
+        <span class="material-symbols-outlined text-[24px]" aria-hidden="true">menu</span>
+      </button>
+      <img src="imagenes/escudo-esart.png" alt="Escudo de la Escuela de Artillería" class="h-10 w-auto object-contain" />
+      <div class="hidden sm:block w-px h-9 bg-gris-bordes"></div>
+      <div class="min-w-0">
+        <div class="flex items-center gap-2">
+          <span class="font-headline font-bold text-sm tracking-tight text-negro-institucional truncate"
+            >ESCUELA DE ARTILLERÍA</span
+          >
+          <span
+            class="px-1.5 py-0.5 rounded-xs bg-azul-institucional text-white font-headline text-label-sm tracking-wider"
+            >ESART</span
+          >
+        </div>
+        <p class="hidden sm:block text-xs text-azul-pizarra/60 truncate">
+          “General Carlos Julio Gil Colorado” • Ejército Nacional de Colombia
+        </p>
+      </div>
+    </div>
+
+    <div class="flex items-center gap-3 shrink-0">
+      <span
+        class="hidden lg:inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success/10 text-success text-xs font-semibold"
+      >
+        <span class="w-2 h-2 rounded-full bg-success" aria-hidden="true"></span> Conectado • CEMIL
+      </span>
+      <div class="hidden lg:block w-px h-9 bg-gris-bordes"></div>
+      @if (usuario(); as usuarioEnSesion) {
+        <div class="flex items-center gap-2.5">
+          <div
+            class="w-9 h-9 rounded-full bg-azul-pizarra text-white flex items-center justify-center font-headline text-label-lg"
+            aria-hidden="true"
+          >
+            {{ iniciales() }}
+          </div>
+          <div class="hidden md:block leading-tight">
+            <div class="text-sm font-semibold text-negro-institucional">
+              {{ usuarioEnSesion.nombre_completo || usuarioEnSesion.nombre_usuario }}
+            </div>
+            <div class="text-xs text-azul-pizarra/60">{{ nombreRol() }}</div>
+          </div>
+        </div>
+      }
+      <esart-menu-seguridad />
+      <button
+        type="button"
+        (click)="cerrarSesion()"
+        [disabled]="cerrandoSesion()"
+        aria-label="Cerrar sesión"
+        title="Cerrar sesión"
+        class="inline-flex items-center gap-2 py-2 px-2.5 md:px-3 border border-gris-bordes rounded-sm text-xs font-semibold text-azul-pizarra bg-white hover:border-azul-institucional hover:text-azul-institucional transition-all duration-150 ease-state-change focus:outline-none focus:ring-2 focus:ring-azul-institucional/40 disabled:opacity-70"
+      >
+        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">logout</span>
+        <span class="hidden md:inline">{{ cerrandoSesion() ? 'Cerrando…' : 'Cerrar sesión' }}</span>
+      </button>
+    </div>
+  </header>
+
+  <div class="flex-1 flex min-h-[calc(100vh-68px)]">
+    <!-- Fondo oscuro detrás del sidebar en celular -->
+    @if (sidebarAbierto()) {
+      <div class="md:hidden fixed inset-0 top-[68px] z-20 bg-azul-pizarra/40" (click)="alternarSidebar()"></div>
+    }
+
+    <!-- Sidebar: solo los módulos que la malla de permisos le concede al usuario -->
+    <aside
+      id="sidebar-modulos"
+      class="fixed md:sticky top-[68px] z-20 h-[calc(100vh-68px)] w-64 shrink-0 bg-white border-r border-gris-bordes flex flex-col justify-between transition-transform duration-200 ease-state-change md:translate-x-0"
+      [class.-translate-x-full]="!sidebarAbierto()"
+      [class.translate-x-0]="sidebarAbierto()"
+    >
+      <nav class="p-4 overflow-y-auto" aria-label="Módulos ESART">
+        <span class="block px-3 mb-2 font-headline text-label-sm uppercase tracking-wider text-azul-pizarra/50"
+          >Módulos ESART</span
+        >
+        <ul class="space-y-1">
+          @for (modulo of menu(); track modulo.codigo) {
+            <li>
+              <a
+                [routerLink]="modulo.ruta"
+                routerLinkActive="bg-azul-hielo text-azul-institucional border-azul-institucional font-semibold"
+                [routerLinkActiveOptions]="{ exact: false }"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-sm border-l-[3px] border-transparent text-body-md text-azul-pizarra hover:bg-gris-claro transition-colors duration-150"
+              >
+                <span class="material-symbols-outlined text-[20px]" aria-hidden="true">{{
+                  iconoDeComponente(modulo.codigo)
+                }}</span>
+                <span>{{ modulo.nombre }}</span>
+              </a>
+            </li>
+          } @empty {
+            <li class="px-3 py-2 text-xs text-azul-pizarra/60">Su rol no tiene módulos asignados.</li>
+          }
+        </ul>
+      </nav>
+      <div class="px-6 py-3 border-t border-gris-bordes flex items-center justify-between text-[11px] text-azul-pizarra/50">
+        <span>ESART</span>
+        <span class="font-code">v0.1</span>
+      </div>
+    </aside>
+
+    <!-- Contenido del módulo activo -->
+    <div class="flex-1 min-w-0 flex flex-col">
+      <main class="flex-1 w-full max-w-[1440px] mx-auto p-4 md:p-6">
+        <router-outlet />
+      </main>
+      <esart-pie-institucional />
+    </div>
+  </div>
+</div>

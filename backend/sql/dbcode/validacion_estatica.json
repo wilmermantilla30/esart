@@ -1,0 +1,25 @@
+{
+  "parser_postgresql": "(18, 6)",
+  "ejecutado_en_postgresql": false,
+  "archivos": {
+    "01_integrar_esart_db.sql": {
+      "sha256": "8e5d8f31fb654c59326917166930987c9f973738cc6c9fcd239367c99bdddda4",
+      "sentencias": 81,
+      "bloques_plpgsql": 13
+    },
+    "02_verificar_esart_db.sql": {
+      "sha256": "51af87053a0893b5d64b743c660f5149b2be7c68c75b6e1085424ee2772197d3",
+      "sentencias": 20,
+      "bloques_plpgsql": 4
+    },
+    "_ddl_generado.sql": {
+      "sha256": "42ef9f176dbf78ff0231e9d99c8f3270e52d3b48ae106e203ad1d27c84355560",
+      "sentencias": 112,
+      "bloques_plpgsql": 0
+    }
+  },
+  "funciones_internas": {
+    "sentencias": 24,
+    "bloques_plpgsql": 2
+  }
+}

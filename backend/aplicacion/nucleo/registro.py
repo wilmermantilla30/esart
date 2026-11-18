@@ -63,9 +63,7 @@ class FiltroDatosSensibles(logging.Filter):
         if isinstance(registro.args, tuple):
             registro.args = tuple(_ocultar_si_es_texto(argumento) for argumento in registro.args)
         elif isinstance(registro.args, dict):
-            registro.args = {
-                clave: _ocultar_si_es_texto(valor) for clave, valor in registro.args.items()
-            }
+            registro.args = {clave: _ocultar_si_es_texto(valor) for clave, valor in registro.args.items()}
         # Siempre devuelve True: el filtro modifica el registro, no lo descarta.
         return True
 

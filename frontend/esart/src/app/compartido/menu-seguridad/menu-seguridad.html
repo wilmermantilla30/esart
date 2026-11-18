@@ -1,0 +1,58 @@
+<button
+  #llave
+  type="button"
+  class="seguridad-llave"
+  aria-label="Seguridad de la cuenta"
+  title="Seguridad de la cuenta"
+  aria-controls="seguridad-opciones"
+  [attr.aria-expanded]="abierto()"
+  (click)="alternar()"
+>
+  <span class="icono icono-llave" aria-hidden="true"></span>
+  <span class="icono icono-flecha" aria-hidden="true"></span>
+</button>
+@if (abierto()) {
+  <section id="seguridad-opciones" class="seguridad-menu" aria-label="Seguridad de la cuenta">
+    <div class="seguridad-cabecera">
+      <span class="icono icono-escudo" aria-hidden="true"></span>
+      <div>
+        <strong>Seguridad de la cuenta</strong>
+        <p>Proteja su acceso institucional</p>
+      </div>
+    </div>
+    <p
+      class="seguridad-estado"
+      role="status"
+      [class.estado-activo]="estado()?.activo && !error()"
+      [class.estado-error]="error() || estado()?.estado === 'BLOQUEADO'"
+    >
+      <span class="indicador" aria-hidden="true"></span>{{ etiqueta() }}
+    </p>
+    <a [routerLink]="rutaContrasena" (click)="cerrarMenu()" class="seguridad-opcion">
+      <span class="icono icono-llave" aria-hidden="true"></span>Cambiar contraseña
+    </a>
+    @if (error()) {
+      <p class="seguridad-aviso">No fue posible consultar el autenticador. Intente nuevamente.</p>
+      <button type="button" class="seguridad-opcion" (click)="consultar()">
+        Volver a consultar
+      </button>
+    } @else if (estado()?.estado === 'BLOQUEADO') {
+      <p class="seguridad-aviso">
+        La configuración no está disponible. Contacte al administrador para conocer las opciones de
+        recuperación autorizadas.
+      </p>
+    } @else {
+      <button
+        type="button"
+        class="seguridad-opcion"
+        [disabled]="cargando() || !estado()"
+        (click)="abrirAutenticador()"
+      >
+        <span class="icono icono-dispositivo" aria-hidden="true"></span>{{ accion() }}
+      </button>
+    }
+  </section>
+}
+@if (dialogo()) {
+  <app-totp [volverAlInicioAlCerrar]="false" (cancelar)="cerrarDialogo()" />
+}

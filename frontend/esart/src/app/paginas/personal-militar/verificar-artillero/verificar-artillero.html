@@ -1,0 +1,242 @@
+<div class="space-y-4">
+  <!-- Búsqueda por cédula -->
+  <section class="bg-white rounded-xl border border-gris-bordes p-5">
+    <form class="flex flex-col sm:flex-row sm:items-end gap-3" [formGroup]="formulario" (ngSubmit)="verificar()" novalidate>
+      <div class="flex-1 space-y-1">
+        <label for="cedula" class="block font-headline text-label-md text-azul-pizarra">Cédula del artillero</label>
+        <div class="relative flex items-center">
+          <span class="material-symbols-outlined absolute left-3.5 text-azul-pizarra/50 text-[20px]" aria-hidden="true"
+            >badge</span
+          >
+          <input
+            id="cedula"
+            type="text"
+            inputmode="numeric"
+            autocomplete="off"
+            formControlName="cedula"
+            placeholder="Ej: 1.234.567.890"
+            [attr.aria-invalid]="campoInvalido()"
+            aria-describedby="ayuda-cedula"
+            class="w-full pl-10 pr-3.5 py-2.5 bg-white border border-gris-bordes rounded-sm text-body-md text-azul-pizarra placeholder:text-azul-pizarra/40 focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20 outline-none aria-invalid:border-error"
+          />
+        </div>
+        @if (campoInvalido()) {
+          <p id="ayuda-cedula" class="text-xs text-error">Escriba solo números (puede usar puntos o espacios).</p>
+        } @else {
+          <p id="ayuda-cedula" class="text-xs text-azul-pizarra/60">Puede escribirla con o sin puntos.</p>
+        }
+      </div>
+      <div class="flex gap-2 sm:pb-6">
+        <button
+          type="submit"
+          [disabled]="consultando()"
+          class="inline-flex items-center justify-center gap-2 py-2.5 px-5 bg-azul-institucional hover:bg-[#1A8FB3] text-white rounded-sm font-headline text-label-lg focus:outline-none focus:ring-2 focus:ring-azul-institucional/40 disabled:opacity-70"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">{{
+            consultando() ? 'progress_activity' : 'person_search'
+          }}</span>
+          {{ consultando() ? 'Verificando…' : 'Verificar' }}
+        </button>
+        @if (resultado() || error()) {
+          <button
+            type="button"
+            (click)="limpiar()"
+            class="py-2.5 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline text-azul-pizarra hover:border-azul-institucional"
+          >
+            Limpiar
+          </button>
+        }
+      </div>
+    </form>
+  </section>
+
+  <!-- Error (no encontrado, sin permiso, sin conexión…) -->
+  @if (error(); as fallo) {
+    <div class="p-4 bg-error/10 border border-error/40 rounded-lg flex items-start gap-3 text-body-md text-azul-pizarra" role="alert">
+      <span class="material-symbols-outlined text-error" aria-hidden="true">{{
+        fallo.codigo === 'ARTILLERO_NO_ENCONTRADO' ? 'person_off' : 'error'
+      }}</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  @if (resultado(); as verificado) {
+    <!-- Resultado principal -->
+    <section
+      class="rounded-xl border-2 p-5 md:p-6 bg-white"
+      [class.border-success]="verificado.resultado === 'APTO'"
+      [class.border-error]="verificado.resultado === 'NO_APTO'"
+      aria-live="polite"
+    >
+      <div class="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+        <div>
+          <p class="text-xs uppercase tracking-wider text-azul-pizarra/60 font-headline">{{ verificado.artillero.grado }}</p>
+          <h2 class="font-headline font-bold text-headline-md text-negro-institucional">
+            {{ verificado.artillero.nombre_completo }}
+          </h2>
+          <dl class="mt-2 grid grid-cols-[auto_1fr] gap-x-4 gap-y-0.5 text-body-md">
+            <dt class="text-azul-pizarra/60">Cédula</dt>
+            <dd class="font-code text-code-md">{{ verificado.artillero.numero_documento }}</dd>
+            <dt class="text-azul-pizarra/60">Categoría</dt>
+            <dd>{{ verificado.artillero.categoria }}</dd>
+            <dt class="text-azul-pizarra/60">Unidad</dt>
+            <dd>{{ verificado.artillero.unidad_militar?.nombre ?? 'Sin unidad asignada' }}</dd>
+            <dt class="text-azul-pizarra/60">Servicio</dt>
+            <dd>{{ verificado.artillero.estado_servicio === 'ACTIVO' ? 'Activo' : 'Inactivo' }}</dd>
+          </dl>
+        </div>
+        <div class="flex flex-col items-start md:items-end gap-1">
+          <esart-insignia-estado [estado]="verificado.resultado" [grande]="true" />
+          <span class="text-xs text-azul-pizarra/60">Verificado el {{ fecha(verificado.fecha_verificacion) }}</span>
+          <!-- Generar documento PDF (script maestro del backend con ReportLab) -->
+          <div class="mt-3 flex flex-wrap items-center gap-2 md:justify-end">
+            <label for="tipo-documento" class="sr-only">Tipo de documento</label>
+            <select
+              id="tipo-documento"
+              [value]="tipoDocumento()"
+              (change)="elegirDocumento($any($event.target).value)"
+              [disabled]="generando()"
+              class="py-2 pl-3 pr-8 bg-white border border-gris-bordes rounded-sm text-body-md text-azul-pizarra focus:border-azul-institucional focus:ring-2 focus:ring-azul-institucional/20 outline-none"
+            >
+              @for (documento of documentos; track documento.codigo) {
+                <option [value]="documento.codigo">{{ documento.nombre }}</option>
+              }
+            </select>
+            <button
+              type="button"
+              (click)="generarDocumento()"
+              [disabled]="generando()"
+              class="inline-flex items-center gap-2 py-2 px-4 bg-azul-institucional hover:bg-[#1A8FB3] text-white rounded-sm font-headline text-label-lg focus:outline-none focus:ring-2 focus:ring-azul-institucional/40 disabled:opacity-70"
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">{{
+                generando() ? 'progress_activity' : 'picture_as_pdf'
+              }}</span>
+              {{ generando() ? 'Generando…' : 'Generar documento' }}
+            </button>
+          </div>
+          @if (errorDocumento(); as mensaje) {
+            <p class="text-xs text-error max-w-xs md:text-right" role="alert">{{ mensaje }}</p>
+          }
+        </div>
+      </div>
+
+      @if (verificado.alerta) {
+        <div class="mt-4 p-3 bg-warning/10 border border-warning/40 rounded-sm flex items-start gap-2.5 text-body-md text-azul-pizarra" role="status">
+          <span class="material-symbols-outlined text-warning" aria-hidden="true">notification_important</span>
+          <span>{{ verificado.alerta }}</span>
+        </div>
+      }
+    </section>
+
+    <!-- Criterios -->
+    <section class="bg-white rounded-xl border border-gris-bordes p-5">
+      <h3 class="font-headline text-title-lg text-negro-institucional">Criterios de habilitación</h3>
+      <p class="text-xs text-azul-pizarra/60 mt-0.5">
+        Debe cumplir el obligatorio y al menos uno de los alternativos.
+      </p>
+      <ul class="mt-4 space-y-2">
+        @for (criterio of obligatorios(); track criterio.descripcion) {
+          <ng-container *ngTemplateOutlet="filaCriterio; context: { $implicit: criterio, etiqueta: 'Obligatorio' }" />
+        }
+      </ul>
+      <p class="mt-4 mb-2 text-label-md font-headline uppercase tracking-wider text-azul-pizarra/50">Basta con uno</p>
+      <ul class="space-y-2">
+        @for (criterio of alternativos(); track criterio.descripcion) {
+          <ng-container *ngTemplateOutlet="filaCriterio; context: { $implicit: criterio, etiqueta: 'Alternativo' }" />
+        }
+      </ul>
+    </section>
+
+    <ng-template #filaCriterio let-criterio let-etiqueta="etiqueta">
+      <li class="flex items-start gap-3 p-3 rounded-lg border border-gris-bordes">
+        <span
+          class="material-symbols-outlined text-[22px] shrink-0"
+          [class.text-success]="criterio.cumple"
+          [class.text-error]="!criterio.cumple"
+          [attr.aria-label]="criterio.cumple ? 'Cumple' : 'No cumple'"
+          role="img"
+          >{{ criterio.cumple ? 'check_circle' : 'cancel' }}</span
+        >
+        <div class="min-w-0">
+          <p class="font-semibold text-body-md text-negro-institucional">{{ criterio.descripcion }}</p>
+          @if (criterio.detalle) {
+            <p class="text-body-md text-azul-pizarra/80">{{ criterio.detalle }}</p>
+          }
+          @if (criterio.motivo) {
+            <p class="text-body-md text-error">{{ criterio.motivo }}</p>
+          }
+        </div>
+      </li>
+    </ng-template>
+
+    <!-- Cursos y reentrenamientos -->
+    <div class="grid grid-cols-1 xl:grid-cols-2 gap-4">
+      <section class="bg-white rounded-xl border border-gris-bordes p-5">
+        <h3 class="font-headline text-title-lg text-negro-institucional">Cursos</h3>
+        @if (verificado.cursos.length) {
+          <div class="mt-3 overflow-x-auto">
+            <table class="w-full text-body-md">
+              <thead>
+                <tr class="text-left text-label-md font-headline text-azul-pizarra/60 border-b border-gris-bordes">
+                  <th class="py-2 pr-3">Curso</th>
+                  <th class="py-2 pr-3">Finalizó</th>
+                  <th class="py-2">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (curso of verificado.cursos; track $index) {
+                  <tr class="border-b border-gris-bordes/60 last:border-0">
+                    <td class="py-2 pr-3">
+                      <span class="font-semibold">{{ curso.codigo ?? '—' }}</span>
+                      @if (curso.habilitante) {
+                        <span class="ml-1 text-[11px] text-azul-institucional font-headline">habilitante</span>
+                      }
+                      <span class="block text-xs text-azul-pizarra/60">{{ curso.nombre }}</span>
+                    </td>
+                    <td class="py-2 pr-3 whitespace-nowrap">{{ fecha(curso.fecha_fin) }}</td>
+                    <td class="py-2"><esart-insignia-estado [estado]="curso.estado" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="mt-3 text-body-md text-azul-pizarra/60">No tiene cursos registrados.</p>
+        }
+      </section>
+
+      <section class="bg-white rounded-xl border border-gris-bordes p-5">
+        <h3 class="font-headline text-title-lg text-negro-institucional">Reentrenamientos</h3>
+        @if (verificado.reentrenamientos.length) {
+          <div class="mt-3 overflow-x-auto">
+            <table class="w-full text-body-md">
+              <thead>
+                <tr class="text-left text-label-md font-headline text-azul-pizarra/60 border-b border-gris-bordes">
+                  <th class="py-2 pr-3">Certificado</th>
+                  <th class="py-2 pr-3">Expedido</th>
+                  <th class="py-2 pr-3">Vence</th>
+                  <th class="py-2">Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (certificado of verificado.reentrenamientos; track certificado.numero_certificado) {
+                  <tr class="border-b border-gris-bordes/60 last:border-0">
+                    <td class="py-2 pr-3">
+                      <span class="font-code text-code-md">{{ certificado.numero_certificado }}</span>
+                      <span class="block text-xs text-azul-pizarra/60">{{ certificado.tipo }} · {{ certificado.calibre }}</span>
+                    </td>
+                    <td class="py-2 pr-3 whitespace-nowrap">{{ fecha(certificado.fecha_expedicion) }}</td>
+                    <td class="py-2 pr-3 whitespace-nowrap">{{ fecha(certificado.fecha_vencimiento) }}</td>
+                    <td class="py-2"><esart-insignia-estado [estado]="certificado.estado" /></td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        } @else {
+          <p class="mt-3 text-body-md text-azul-pizarra/60">No tiene reentrenamientos registrados.</p>
+        }
+      </section>
+    </div>
+  }
+</div>

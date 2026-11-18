@@ -1,0 +1,47 @@
+{
+  "env_raiz_existe": false,
+  "env_backend_existe": true,
+  "carga_por_defecto": {
+    "valida": false,
+    "errores": [
+      {
+        "campos": [
+          "url_base_datos"
+        ],
+        "tipo": "missing",
+        "motivo": "Field required"
+      },
+      {
+        "campos": [
+          "jwt_clave_secreta"
+        ],
+        "tipo": "missing",
+        "motivo": "Field required"
+      },
+      {
+        "campos": [
+          "admin_usuario"
+        ],
+        "tipo": "missing",
+        "motivo": "Field required"
+      },
+      {
+        "campos": [
+          "admin_hash_contrasena"
+        ],
+        "tipo": "missing",
+        "motivo": "Field required"
+      }
+    ]
+  },
+  "carga_backend": {
+    "valida": false,
+    "errores": [
+      {
+        "campos": [],
+        "tipo": "value_error",
+        "motivo": "Value error, JWT_CLAVE_SECRETA todavía tiene el valor de ejemplo de .env.ejemplo. Reemplácelo."
+      }
+    ]
+  }
+}

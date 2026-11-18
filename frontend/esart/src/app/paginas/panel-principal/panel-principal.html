@@ -1,0 +1,778 @@
+<div class="space-y-6" (mouseleave)="ocultarCuadro()">
+  <!-- ============ Encabezado y filtros ============ -->
+  <section
+    class="relative overflow-hidden rounded-2xl bg-azul-pizarra text-white p-6 md:p-8 shadow-sm"
+  >
+    <div
+      class="pointer-events-none absolute -right-16 -top-16 w-72 h-72 rounded-full bg-azul-institucional/25 blur-2xl"
+      aria-hidden="true"
+    ></div>
+    <div class="relative flex flex-wrap items-end justify-between gap-6">
+      <div class="space-y-1.5">
+        <span
+          class="inline-block px-2.5 py-1 rounded-full bg-white/10 text-azul-claro font-headline text-label-sm uppercase tracking-wider"
+          >Panel principal</span
+        >
+        @if (usuario(); as usuarioEnSesion) {
+          <h1 class="font-headline font-bold text-2xl md:text-3xl">
+            Bienvenido, {{ usuarioEnSesion.nombre_completo || usuarioEnSesion.nombre_usuario }}
+          </h1>
+        }
+        <p class="text-white/70 text-body-md">
+          Estadística académica de la Escuela de Artillería ·
+          <span class="text-white font-semibold">{{ textoPeriodo() }}</span>
+          @if (datos(); as panel) {
+            · Corte {{ panel.hoy | date: 'd MMM y' }}
+          }
+        </p>
+      </div>
+
+      <!-- Filtros: año y semestre (por fecha de inicio del curso) -->
+      <div class="flex flex-col gap-2.5" role="group" aria-label="Filtros del panel">
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] uppercase tracking-wider text-white/60 font-headline mr-1"
+            >Año</span
+          >
+          @for (opcion of opcionesAnio(); track opcion) {
+            <button
+              type="button"
+              (click)="elegirAnio(opcion)"
+              [attr.aria-pressed]="anio() === opcion"
+              [class]="
+                'px-3 py-1.5 rounded-lg text-xs font-headline font-semibold transition-colors ' +
+                (anio() === opcion
+                  ? 'bg-white text-azul-pizarra shadow-sm'
+                  : 'bg-white/10 text-white hover:bg-white/20')
+              "
+            >
+              {{ opcion ?? 'Todos' }}
+            </button>
+          }
+        </div>
+        <div class="flex flex-wrap items-center gap-1.5">
+          <span class="text-[11px] uppercase tracking-wider text-white/60 font-headline mr-1"
+            >Semestre</span
+          >
+          @for (
+            opcion of [
+              { valor: null, texto: 'Año completo' },
+              { valor: 1, texto: '1.er semestre' },
+              { valor: 2, texto: '2.º semestre' },
+            ];
+            track opcion.texto
+          ) {
+            <button
+              type="button"
+              (click)="elegirSemestre($any(opcion.valor))"
+              [attr.aria-pressed]="semestre() === opcion.valor"
+              [class]="
+                'px-3 py-1.5 rounded-lg text-xs font-headline font-semibold transition-colors ' +
+                (semestre() === opcion.valor
+                  ? 'bg-azul-institucional text-white shadow-sm'
+                  : 'bg-white/10 text-white hover:bg-white/20')
+              "
+            >
+              {{ opcion.texto }}
+            </button>
+          }
+        </div>
+      </div>
+    </div>
+  </section>
+
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-center gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span class="flex-1">{{ fallo.mensaje }}</span>
+      <button type="button" (click)="cargar()" class="text-sm font-semibold text-error underline">
+        Reintentar
+      </button>
+    </div>
+  }
+
+  @if (datos(); as panel) {
+    <div
+      [class]="cargando() ? 'opacity-60 transition-opacity' : 'transition-opacity'"
+      [attr.aria-busy]="cargando()"
+    >
+      <!-- ============ Indicadores ============ -->
+      <section
+        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4"
+        aria-label="Indicadores"
+      >
+        <article class="bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p
+              class="text-xs font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60"
+            >
+              Cursos en curso
+            </p>
+            <span
+              class="w-9 h-9 rounded-xl bg-azul-hielo text-azul-institucional flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[20px]">pending_actions</span>
+            </span>
+          </div>
+          <p class="mt-2 font-headline font-bold text-4xl text-negro-institucional">
+            {{ panel.indicadores.cursos_en_curso }}
+          </p>
+          <p class="text-xs text-azul-pizarra/70 mt-1">
+            <strong class="text-azul-pizarra">{{ panel.indicadores.alumnos_en_curso }}</strong>
+            alumnos en formación hoy
+          </p>
+        </article>
+
+        <article class="bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p
+              class="text-xs font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60"
+            >
+              Cursos del período
+            </p>
+            <span
+              class="w-9 h-9 rounded-xl bg-azul-hielo text-azul-institucional flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[20px]">school</span>
+            </span>
+          </div>
+          <p class="mt-2 font-headline font-bold text-4xl text-negro-institucional">
+            {{ panel.indicadores.cursos_periodo }}
+          </p>
+          <p class="text-xs text-azul-pizarra/70 mt-1">
+            <strong class="text-azul-pizarra">{{ panel.indicadores.cursos_culminados }}</strong>
+            culminados
+          </p>
+        </article>
+
+        <article class="bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p
+              class="text-xs font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60"
+            >
+              Alumnos del período
+            </p>
+            <span
+              class="w-9 h-9 rounded-xl bg-azul-hielo text-azul-institucional flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[20px]">groups</span>
+            </span>
+          </div>
+          <p class="mt-2 font-headline font-bold text-4xl text-negro-institucional">
+            {{ panel.indicadores.alumnos_periodo | number }}
+          </p>
+          <p class="text-xs text-azul-pizarra/70 mt-1">inscritos en los cursos del período</p>
+        </article>
+
+        <article class="bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <div class="flex items-center justify-between">
+            <p
+              class="text-xs font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60"
+            >
+              Egresados
+            </p>
+            <span
+              class="w-9 h-9 rounded-xl bg-success/10 text-success flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[20px]">workspace_premium</span>
+            </span>
+          </div>
+          <p class="mt-2 font-headline font-bold text-4xl text-negro-institucional">
+            {{ panel.indicadores.egresados | number }}
+          </p>
+          <p class="text-xs text-azul-pizarra/70 mt-1">alumnos de cursos culminados</p>
+        </article>
+
+        <!-- Habilitación (APTO / NO APTO): estado, siempre con texto -->
+        <article
+          class="bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm sm:col-span-2 xl:col-span-1"
+        >
+          <div class="flex items-center justify-between">
+            <p
+              class="text-xs font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60"
+            >
+              Habilitación
+            </p>
+            <span
+              class="w-9 h-9 rounded-xl bg-azul-hielo text-azul-institucional flex items-center justify-center"
+              aria-hidden="true"
+            >
+              <span class="material-symbols-outlined text-[20px]">verified</span>
+            </span>
+          </div>
+          <p class="mt-2 font-headline font-bold text-4xl text-negro-institucional">
+            {{ porcentajeAptos() }}<span class="text-xl text-azul-pizarra/60"> % APTO</span>
+          </p>
+          <div
+            class="mt-2 flex h-2.5 rounded-full overflow-hidden gap-0.5 bg-white"
+            role="img"
+            [attr.aria-label]="
+              panel.habilitacion.aptos + ' APTO y ' + panel.habilitacion.no_aptos + ' NO APTO'
+            "
+          >
+            <div
+              class="bg-success rounded-l-full"
+              [style.width.%]="porcentaje(panel.habilitacion.aptos, panel.habilitacion.total)"
+            ></div>
+            <div class="bg-error/80 rounded-r-full flex-1"></div>
+          </div>
+          <p class="text-xs text-azul-pizarra/70 mt-1.5 flex flex-wrap gap-x-3">
+            <span
+              ><span
+                class="material-symbols-outlined text-[13px] text-success align-[-2px]"
+                aria-hidden="true"
+                >check_circle</span
+              >
+              {{ panel.habilitacion.aptos }} APTO</span
+            >
+            <span
+              ><span
+                class="material-symbols-outlined text-[13px] text-error align-[-2px]"
+                aria-hidden="true"
+                >cancel</span
+              >
+              {{ panel.habilitacion.no_aptos }} NO APTO</span
+            >
+            @if (panel.habilitacion.reentrenamiento_por_vencer) {
+              <a
+                routerLink="/personal/habilitados"
+                [queryParams]="{ estado: 'POR_VENCER' }"
+                class="text-warning font-semibold hover:underline"
+              >
+                {{ panel.habilitacion.reentrenamiento_por_vencer }} por vencer
+              </a>
+            }
+          </p>
+        </article>
+      </section>
+
+      <!-- ============ Seguimiento de cursos en curso ============ -->
+      <section class="mt-6 bg-white rounded-2xl border border-gris-bordes p-5 md:p-6 shadow-sm">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h2 class="font-headline font-bold text-lg text-negro-institucional">
+              Seguimiento de cursos en curso
+            </h2>
+            <p class="text-xs text-azul-pizarra/60">
+              Avance según las fechas de inicio y fin · estado de hoy
+            </p>
+          </div>
+          <span class="text-xs font-semibold text-azul-pizarra/70"
+            >{{ panel.en_curso.length }} curso(s)</span
+          >
+        </div>
+        @if (panel.en_curso.length) {
+          <div class="mt-4 grid grid-cols-1 lg:grid-cols-2 2xl:grid-cols-3 gap-4">
+            @for (curso of panel.en_curso; track curso.id) {
+              <article
+                [class]="
+                  'rounded-xl border p-4 space-y-3 ' +
+                  (curso.vencido ? 'border-warning/50 bg-warning/5' : 'border-gris-bordes')
+                "
+              >
+                <div class="flex items-start justify-between gap-3">
+                  <div class="min-w-0">
+                    <p
+                      class="text-[11px] font-headline font-bold uppercase tracking-wider text-azul-institucional"
+                    >
+                      {{ curso.tipo_curso }} · Curso {{ curso.codigo }}
+                    </p>
+                    <h3
+                      class="font-headline font-semibold text-negro-institucional truncate"
+                      [title]="curso.nombre"
+                    >
+                      {{ curso.nombre }}
+                    </h3>
+                    <p class="text-xs text-azul-pizarra/70 truncate">
+                      <span
+                        class="material-symbols-outlined text-[14px] align-[-3px]"
+                        aria-hidden="true"
+                        >military_tech</span
+                      >
+                      Comandante: {{ curso.comandante }}
+                    </p>
+                  </div>
+                  <div class="text-right shrink-0">
+                    <p
+                      class="font-headline font-bold text-2xl text-negro-institucional leading-none"
+                    >
+                      {{ curso.alumnos }}
+                    </p>
+                    <p class="text-[11px] text-azul-pizarra/60">alumnos</p>
+                  </div>
+                </div>
+                <div>
+                  <div class="flex justify-between text-xs mb-1">
+                    <span class="text-azul-pizarra/70"
+                      >Día {{ curso.dias_transcurridos }} de {{ curso.dias_totales }}</span
+                    >
+                    <span class="font-semibold text-azul-pizarra">{{ curso.porcentaje }} %</span>
+                  </div>
+                  <div
+                    class="h-2.5 rounded-full bg-gris-claro overflow-hidden"
+                    role="progressbar"
+                    [attr.aria-valuenow]="curso.porcentaje"
+                    aria-valuemin="0"
+                    aria-valuemax="100"
+                    [attr.aria-label]="'Avance de ' + curso.nombre"
+                  >
+                    <div
+                      [class]="
+                        'h-full rounded-full ' +
+                        (curso.vencido ? 'bg-warning' : 'bg-azul-institucional')
+                      "
+                      [style.width.%]="curso.porcentaje"
+                    ></div>
+                  </div>
+                  <div class="flex justify-between text-[11px] text-azul-pizarra/60 mt-1">
+                    <span>{{ curso.fecha_inicio | date: 'd MMM y' }}</span>
+                    <span>{{ curso.fecha_fin | date: 'd MMM y' }}</span>
+                  </div>
+                </div>
+                @if (curso.vencido) {
+                  <p
+                    class="text-xs font-semibold text-warning flex items-center gap-1.5"
+                    role="status"
+                  >
+                    <span class="material-symbols-outlined text-[16px]" aria-hidden="true"
+                      >warning</span
+                    >
+                    Su fecha de fin ya pasó y sigue "en curso": actualice su estado.
+                  </p>
+                } @else {
+                  <p class="text-xs text-azul-pizarra/70 flex items-center gap-1.5">
+                    <span
+                      class="material-symbols-outlined text-[16px] text-azul-institucional"
+                      aria-hidden="true"
+                      >schedule</span
+                    >
+                    Faltan
+                    <strong class="text-azul-pizarra">{{ curso.dias_restantes }}</strong> días
+                  </p>
+                }
+              </article>
+            }
+          </div>
+        } @else {
+          <p class="mt-4 text-body-md text-azul-pizarra/60">
+            No hay cursos en curso en este momento.
+          </p>
+        }
+      </section>
+
+      <!-- ============ Gráficas ============ -->
+      <div class="mt-6 flex items-center justify-between gap-3">
+        <h2 class="font-headline font-bold text-lg text-negro-institucional">
+          Estadística de cursos
+        </h2>
+        <button
+          type="button"
+          (click)="verTablas.set(!verTablas())"
+          [attr.aria-pressed]="verTablas()"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border border-gris-bordes bg-white text-xs font-semibold text-azul-pizarra hover:border-azul-institucional"
+        >
+          <span class="material-symbols-outlined text-[16px]" aria-hidden="true">{{
+            verTablas() ? 'bar_chart' : 'table_chart'
+          }}</span>
+          {{ verTablas() ? 'Ver gráficas' : 'Ver como tabla' }}
+        </button>
+      </div>
+
+      <div class="mt-3 grid grid-cols-1 xl:grid-cols-5 gap-4">
+        <!-- Cursos por año y semestre -->
+        <section class="xl:col-span-2 bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <h3 class="font-headline font-bold text-negro-institucional">Cursos por año</h3>
+          <p class="text-xs text-azul-pizarra/60">
+            Por fecha de inicio · clic en una barra para filtrar ese año
+          </p>
+          @if (!panel.cursos_por_anio.length) {
+            <p class="mt-6 text-body-md text-azul-pizarra/60">Todavía no hay cursos registrados.</p>
+          } @else if (verTablas()) {
+            <table class="mt-4 w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-azul-pizarra/60 border-b border-gris-bordes">
+                  <th class="py-1.5 font-medium">Año</th>
+                  <th class="py-1.5 font-medium text-right">1.er sem.</th>
+                  <th class="py-1.5 font-medium text-right">2.º sem.</th>
+                  <th class="py-1.5 font-medium text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of panel.cursos_por_anio; track fila.anio) {
+                  <tr class="border-b border-gris-bordes/60 last:border-0">
+                    <td class="py-1.5 font-semibold">{{ fila.anio }}</td>
+                    <td class="py-1.5 text-right">{{ fila.semestre_1 }}</td>
+                    <td class="py-1.5 text-right">{{ fila.semestre_2 }}</td>
+                    <td class="py-1.5 text-right font-semibold">
+                      {{ fila.semestre_1 + fila.semestre_2 }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div
+              class="mt-3 flex items-center gap-4 text-xs text-azul-pizarra/80"
+              aria-hidden="true"
+            >
+              <span class="flex items-center gap-1.5"
+                ><span class="w-3 h-3 rounded-sm" style="background: #86b6ef"></span>1.er
+                semestre</span
+              >
+              <span class="flex items-center gap-1.5"
+                ><span class="w-3 h-3 rounded-sm" style="background: #1c5cab"></span>2.º
+                semestre</span
+              >
+            </div>
+            <div
+              class="mt-3 flex items-end justify-around gap-3 border-b border-gris-bordes px-2"
+              [style.height.px]="alturaBarrasAnio + 36"
+              role="list"
+              aria-label="Cursos por año"
+            >
+              @for (fila of panel.cursos_por_anio; track fila.anio) {
+                <button
+                  type="button"
+                  role="listitem"
+                  (click)="elegirAnio(anio() === fila.anio ? null : fila.anio)"
+                  (mouseenter)="mostrarCuadro($event, 'Año ' + fila.anio, lineasAnio(fila))"
+                  (mousemove)="moverCuadro($event)"
+                  (mouseleave)="ocultarCuadro()"
+                  [attr.aria-label]="
+                    fila.anio + ': ' + (fila.semestre_1 + fila.semestre_2) + ' cursos'
+                  "
+                  [class]="
+                    'group flex flex-col items-center justify-end h-full flex-1 max-w-24 transition-opacity ' +
+                    (atenuada(fila) ? 'opacity-35' : 'opacity-100')
+                  "
+                >
+                  <span class="text-sm font-headline font-bold text-azul-pizarra mb-1">{{
+                    fila.semestre_1 + fila.semestre_2
+                  }}</span>
+                  <span class="w-full flex flex-col gap-0.5">
+                    @if (fila.semestre_2) {
+                      <span
+                        class="w-full rounded-t-[4px] group-hover:brightness-110"
+                        [class.rounded-b-[4px]]="false"
+                        style="background: #1c5cab"
+                        [style.height.px]="altura(fila.semestre_2)"
+                      ></span>
+                    }
+                    @if (fila.semestre_1) {
+                      <span
+                        [class]="
+                          'w-full group-hover:brightness-105 ' +
+                          (fila.semestre_2 ? '' : 'rounded-t-[4px]')
+                        "
+                        style="background: #86b6ef"
+                        [style.height.px]="altura(fila.semestre_1)"
+                      ></span>
+                    }
+                  </span>
+                </button>
+              }
+            </div>
+            <div class="flex justify-around gap-3 px-2 mt-1.5">
+              @for (fila of panel.cursos_por_anio; track fila.anio) {
+                <span
+                  [class]="
+                    'flex-1 max-w-24 text-center text-xs font-headline font-semibold ' +
+                    (anio() === fila.anio ? 'text-azul-institucional' : 'text-azul-pizarra/70')
+                  "
+                  >{{ fila.anio }}</span
+                >
+              }
+            </div>
+          }
+        </section>
+
+        <!-- Género por curso -->
+        <section class="xl:col-span-3 bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-2">
+            <div>
+              <h3 class="font-headline font-bold text-negro-institucional">Género por curso</h3>
+              <p class="text-xs text-azul-pizarra/60">Alumnos de los cursos del período</p>
+            </div>
+            @if (totalGenero().M + totalGenero().F) {
+              <p class="text-xs text-azul-pizarra/80 text-right">
+                Total: <strong>{{ totalGenero().M }}</strong> hombres ({{
+                  porcentaje(totalGenero().M, totalGenero().M + totalGenero().F)
+                }}
+                %) · <strong>{{ totalGenero().F }}</strong> mujeres ({{
+                  porcentaje(totalGenero().F, totalGenero().M + totalGenero().F)
+                }}
+                %)
+              </p>
+            }
+          </div>
+          @if (!cursosConAlumnos().length) {
+            <p class="mt-6 text-body-md text-azul-pizarra/60">
+              No hay alumnos en los cursos de este período.
+            </p>
+          } @else if (verTablas()) {
+            <table class="mt-4 w-full text-sm">
+              <thead>
+                <tr class="text-left text-xs text-azul-pizarra/60 border-b border-gris-bordes">
+                  <th class="py-1.5 font-medium">Curso</th>
+                  <th class="py-1.5 font-medium text-right">Hombres</th>
+                  <th class="py-1.5 font-medium text-right">Mujeres</th>
+                  <th class="py-1.5 font-medium text-right">Total</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (curso of cursosConAlumnos(); track curso.id) {
+                  <tr class="border-b border-gris-bordes/60 last:border-0">
+                    <td class="py-1.5">{{ curso.nombre }}</td>
+                    <td class="py-1.5 text-right">{{ curso.genero.M }}</td>
+                    <td class="py-1.5 text-right">{{ curso.genero.F }}</td>
+                    <td class="py-1.5 text-right font-semibold">{{ curso.alumnos }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          } @else {
+            <div
+              class="mt-3 flex items-center gap-4 text-xs text-azul-pizarra/80"
+              aria-hidden="true"
+            >
+              <span class="flex items-center gap-1.5"
+                ><span class="w-3 h-3 rounded-sm" style="background: #2a78d6"></span>Hombres</span
+              >
+              <span class="flex items-center gap-1.5"
+                ><span class="w-3 h-3 rounded-sm" style="background: #eb6834"></span>Mujeres</span
+              >
+            </div>
+            <ul class="mt-3 space-y-2.5 max-h-80 overflow-y-auto pr-1">
+              @for (curso of cursosConAlumnos(); track curso.id) {
+                <li
+                  class="grid grid-cols-[minmax(0,11rem)_1fr_auto] items-center gap-3"
+                  (mouseenter)="mostrarCuadro($event, curso.nombre, lineasGenero(curso))"
+                  (mousemove)="moverCuadro($event)"
+                  (mouseleave)="ocultarCuadro()"
+                >
+                  <span class="text-xs text-azul-pizarra truncate" [title]="curso.nombre">
+                    <span class="font-semibold">{{ curso.tipo_curso }}</span> ·
+                    {{ curso.fecha_inicio | date: 'MMM y' }}
+                  </span>
+                  <span
+                    class="flex h-5 gap-0.5 rounded-[4px] overflow-hidden"
+                    role="img"
+                    [attr.aria-label]="
+                      curso.nombre +
+                      ': ' +
+                      curso.genero.M +
+                      ' hombres y ' +
+                      curso.genero.F +
+                      ' mujeres'
+                    "
+                  >
+                    @if (curso.genero.M) {
+                      <span
+                        class="h-full"
+                        style="background: #2a78d6"
+                        [style.width.%]="porcentaje(curso.genero.M, curso.alumnos)"
+                      ></span>
+                    }
+                    @if (curso.genero.F) {
+                      <span
+                        class="h-full"
+                        style="background: #eb6834"
+                        [style.width.%]="porcentaje(curso.genero.F, curso.alumnos)"
+                      ></span>
+                    }
+                  </span>
+                  <span class="text-xs text-azul-pizarra/80 tabular-nums w-24 text-right">
+                    {{ curso.genero.M }} H · {{ curso.genero.F }} M
+                  </span>
+                </li>
+              }
+            </ul>
+          }
+        </section>
+
+        <!-- Grados por curso: mapa de calor -->
+        <section class="xl:col-span-5 bg-white rounded-2xl border border-gris-bordes p-5 shadow-sm">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h3 class="font-headline font-bold text-negro-institucional">Grados por curso</h3>
+              <p class="text-xs text-azul-pizarra/60">
+                Grado de cada alumno al ingresar al curso · más oscuro = mayor porcentaje del curso
+              </p>
+            </div>
+            <div
+              class="flex items-center gap-1.5 text-[11px] text-azul-pizarra/70"
+              aria-hidden="true"
+            >
+              <span>0 %</span>
+              @for (
+                color of [
+                  '#cde2fb',
+                  '#9ec5f4',
+                  '#6da7ec',
+                  '#3987e5',
+                  '#256abf',
+                  '#184f95',
+                  '#0d366b',
+                ];
+                track color
+              ) {
+                <span class="w-4 h-3 rounded-sm" [style.background]="color"></span>
+              }
+              <span>40 % o más</span>
+            </div>
+          </div>
+          @if (!cursosConAlumnos().length) {
+            <p class="mt-6 text-body-md text-azul-pizarra/60">
+              No hay alumnos en los cursos de este período.
+            </p>
+          } @else {
+            <div class="mt-4 overflow-x-auto">
+              <table class="w-full text-xs border-separate border-spacing-0.5">
+                <thead>
+                  <tr>
+                    <th class="sticky left-0 bg-white"></th>
+                    @for (grupo of gruposGrados(); track grupo.categoria) {
+                      <th
+                        [attr.colspan]="grupo.grados.length"
+                        class="pb-1 text-[11px] font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60 border-b-2 border-azul-claro/60"
+                      >
+                        {{ grupo.categoria }}
+                      </th>
+                    }
+                    <th
+                      class="pb-1 text-[11px] font-headline font-semibold uppercase tracking-wider text-azul-pizarra/60"
+                    >
+                      Total
+                    </th>
+                  </tr>
+                  <tr>
+                    <th
+                      class="sticky left-0 bg-white text-left font-medium text-azul-pizarra/60 pr-3 py-1"
+                    >
+                      Curso
+                    </th>
+                    @for (grado of panel.grados; track grado.sigla) {
+                      <th
+                        class="font-headline font-bold text-azul-pizarra py-1 min-w-9"
+                        [title]="grado.nombre"
+                      >
+                        {{ grado.sigla }}
+                      </th>
+                    }
+                    <th></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  @for (curso of cursosConAlumnos(); track curso.id) {
+                    <tr>
+                      <th
+                        scope="row"
+                        class="sticky left-0 bg-white text-left font-normal pr-3 py-1 whitespace-nowrap"
+                      >
+                        <span class="font-semibold text-azul-pizarra">{{ curso.tipo_curso }}</span>
+                        <span class="text-azul-pizarra/60">
+                          · {{ curso.fecha_inicio | date: 'MMM y' }}</span
+                        >
+                        <span
+                          [class]="
+                            'ml-1.5 px-1.5 py-0.5 rounded-full text-[9px] font-bold uppercase border ' +
+                            clasesEstado(curso.estado)
+                          "
+                          >{{ textoEstado(curso.estado) }}</span
+                        >
+                      </th>
+                      @for (grado of panel.grados; track grado.sigla) {
+                        @let cantidad = curso.grados[grado.sigla] ?? 0;
+                        @let color = celda(curso, cantidad);
+                        <td
+                          class="h-8 text-center rounded-[4px] tabular-nums font-semibold"
+                          [style.background]="cantidad ? color.fondo : '#f6f8fb'"
+                          [class.text-white]="color.textoClaro"
+                          [class.text-azul-pizarra]="!color.textoClaro"
+                          (mouseenter)="
+                            mostrarCuadro($event, curso.nombre, lineasGrado(curso, grado))
+                          "
+                          (mousemove)="moverCuadro($event)"
+                          (mouseleave)="ocultarCuadro()"
+                        >
+                          {{ cantidad || '' }}
+                        </td>
+                      }
+                      <td
+                        class="text-center font-headline font-bold text-azul-pizarra pl-2 tabular-nums"
+                      >
+                        {{ curso.alumnos }}
+                      </td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          }
+        </section>
+      </div>
+    </div>
+  } @else if (cargando()) {
+    <div
+      class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-5 gap-4"
+      aria-busy="true"
+      aria-label="Cargando estadísticas"
+    >
+      @for (marcador of [1, 2, 3, 4, 5]; track marcador) {
+        <div class="h-32 rounded-2xl bg-white border border-gris-bordes animate-pulse"></div>
+      }
+    </div>
+  }
+
+  <!-- ============ Accesos directos ============ -->
+  <section class="bg-white rounded-2xl border border-gris-bordes shadow-sm p-5">
+    <h2 class="font-headline font-bold text-negro-institucional">Accesos directos</h2>
+    <ul class="mt-3 grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+      @for (modulo of accesos(); track modulo.codigo) {
+        <li>
+          <a
+            [routerLink]="modulo.ruta"
+            class="flex items-start gap-3 p-3.5 rounded-xl border border-gris-bordes hover:border-azul-institucional hover:bg-azul-hielo/50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-azul-institucional/40"
+          >
+            <span
+              class="material-symbols-outlined text-azul-institucional text-[22px]"
+              aria-hidden="true"
+              >{{ iconoDeComponente(modulo.codigo) }}</span
+            >
+            <span>
+              <span class="block font-headline text-title-md text-negro-institucional">{{
+                modulo.nombre
+              }}</span>
+              @if (modulo.hijos.length) {
+                <span class="block text-xs text-azul-pizarra/60 mt-0.5">{{
+                  nombresHijos(modulo.hijos)
+                }}</span>
+              }
+            </span>
+          </a>
+        </li>
+      }
+    </ul>
+  </section>
+</div>
+
+<!-- Cuadro emergente de las gráficas -->
+@if (cuadro(); as info) {
+  <div
+    class="fixed z-50 pointer-events-none max-w-64 rounded-lg bg-azul-pizarra text-white text-xs shadow-lg px-3 py-2"
+    [style.left.px]="info.x + 14"
+    [style.top.px]="info.y + 14"
+    role="tooltip"
+  >
+    <p class="font-headline font-semibold mb-0.5">{{ info.titulo }}</p>
+    @for (linea of info.lineas; track linea) {
+      <p class="text-white/85">{{ linea }}</p>
+    }
+  </div>
+}

@@ -8,6 +8,8 @@
 # BACKEND (Python)
 # =============================================================================
 backend/.venv/
+backend/.venv311/
+backend/.python311/
 .venv/
 __pycache__/
 *.py[cod]
@@ -43,3 +45,18 @@ respaldos/
 .idea/
 Thumbs.db
 .DS_Store
+.mcp.json
+/.mcp.json
+
+/.mcp.json
+
+.pytest_cache/
+.pytest_tmp/
+
+backend/.pytest_tmp/
+.venv/
+**/.env
+**/.env.*
+
+# Ejecutable ajeno al código de ESART.
+Epson_L3210_Series_EM_50_Web.exe

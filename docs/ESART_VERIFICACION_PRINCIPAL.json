@@ -1,0 +1,22 @@
+{
+  "modo": "solo_lectura",
+  "modificaciones": 0,
+  "bloqueos": [],
+  "conexion": {
+    "base": "esart_db",
+    "usuario": "esart_aplicacion"
+  },
+  "estructura": "equivalente_a_p0001_propuesta_sin_registrar_revision",
+  "conteos": {
+    "esart_ref.unidades_militares": 40,
+    "esart.tipos_unidad": 9,
+    "esart.tipos_cargo": 5,
+    "esart.tipos_curso": 14
+  },
+  "huella_unidades": "aea1943aa29c1a4034657cebbcaaf1f4dcdfb91b98c85da7423a8d9e7006e9bf",
+  "respaldo": {
+    "disponible": true,
+    "sha256": "7488edaf5152b8603809f5fa8b5996d13c97b576a77e4d705b07bca0511511fc"
+  },
+  "estado": "lectura_validada"
+}

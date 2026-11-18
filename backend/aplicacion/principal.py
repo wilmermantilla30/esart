@@ -1,8 +1,8 @@
 """
 Punto de entrada de ESART.
 
-Arranque local (desde la carpeta raíz del proyecto):
-    uvicorn aplicacion.principal:aplicacion --reload --port 8081
+Arranque local (desde la carpeta backend/):
+    python -m uvicorn aplicacion.principal:aplicacion --reload --port 8081
 """
 
 import logging
@@ -16,7 +16,18 @@ from aplicacion.base_datos.sesion import cerrar_motor_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.nucleo.errores import registrar_manejadores_errores
 from aplicacion.nucleo.registro import configurar_registro
+from aplicacion.rutas.acciones_seguras import enrutador as enrutador_acciones
+from aplicacion.rutas.administracion import enrutador_administracion
+from aplicacion.rutas.autenticacion import enrutador_autenticacion
+from aplicacion.rutas.estadisticas import enrutador_estadisticas
+from aplicacion.rutas.importaciones import enrutador as enrutador_importaciones
+from aplicacion.rutas.instructores import enrutador_instructores
+from aplicacion.rutas.parametros import enrutador_parametros
+from aplicacion.rutas.personal import enrutador_personal
 from aplicacion.rutas.salud import enrutador_salud
+from aplicacion.rutas.totp import enrutador as enrutador_totp
+from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
+from aplicacion.rutas.verificacion import enrutador_verificacion
 
 registrador = logging.getLogger(__name__)
 
@@ -30,6 +41,7 @@ async def ciclo_de_vida(_aplicacion: FastAPI) -> AsyncIterator[None]:
     """Tareas al arrancar y al apagar la aplicación."""
     configuracion = obtener_configuracion()
     registrador.info("ESART %s iniciando en entorno '%s'", VERSION_APLICACION, configuracion.entorno)
+    # El alta inicial requiere el comando administrativo y autorización explícita.
     yield
     # Al apagar se devuelven las conexiones a PostgreSQL.
     await cerrar_motor_base_datos()
@@ -62,7 +74,32 @@ def crear_aplicacion() -> FastAPI:
     )
 
     registrar_manejadores_errores(aplicacion)
+
+    @aplicacion.middleware("http")
+    async def no_cachear_autenticacion(request, call_next):
+        respuesta = await call_next(request)
+        if request.url.path.startswith(
+            ("/api/auth/", "/api/v1/auth/", "/api/seguridad/", "/api/v1/seguridad/")
+        ):
+            respuesta.headers["Cache-Control"] = "no-store"
+            respuesta.headers["Pragma"] = "no-cache"
+        return respuesta
+
     aplicacion.include_router(enrutador_salud, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_autenticacion, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_catalogos, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_verificacion, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_estadisticas, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_importaciones, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_administracion, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_parametros, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_instructores, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_personal, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_totp, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_autenticacion, prefix="/api/v1")
+    aplicacion.include_router(enrutador_totp, prefix="/api/v1")
+    aplicacion.include_router(enrutador_acciones, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_acciones, prefix="/api/v1")
 
     return aplicacion
 

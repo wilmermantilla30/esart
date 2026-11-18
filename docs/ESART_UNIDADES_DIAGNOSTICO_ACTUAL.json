@@ -1,0 +1,808 @@
+{
+  "fecha_utc": "2026-11-15T18:05:29.366632+00:00",
+  "modo": "solo_lectura",
+  "configuracion_nombra_principal": true,
+  "bases": {
+    "esart_db": {
+      "conexion_verificada": true,
+      "tablas": [
+        {
+          "esquema": "esart",
+          "tabla": "alertas_academicas",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "alertas_certificacion",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "alumnos_activos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "artillero_cargos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "artillero_certificaciones",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "artillero_cursos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "artillero_disparos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "certificados_reentrenamiento",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "comite_movil_instructores",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "comites_moviles",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "componentes",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "consejos_academicos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "cursos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "cursos_instructores",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "diplomas",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "doctrina_documentos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "egresados_curso",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "especialidades_instructor",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "habilitaciones",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "hoja_vida_artillero",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "inscripciones_curso",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "instructores",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "instructores_especialidades",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "malla_curricular",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "materias",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "notas_finales_egresado",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "notas_materia",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "operadores_sistema",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "participantes_reentrenamiento",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "personal_militar",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "reentrenamientos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "rol_permisos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "roles",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "semestres_academicos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "tipos_cargo",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "tipos_curso",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "usuario_permisos",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart",
+          "tabla": "usuario_roles",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart_ref",
+          "tabla": "sistemas_artilleria",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart_ref",
+          "tabla": "sistemas_en_operacion",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart_ref",
+          "tabla": "unidades_militares",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        },
+        {
+          "esquema": "esart_ref",
+          "tabla": "usuarios",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        }
+      ],
+      "alembic": [],
+      "tablas_unidades": [
+        {
+          "esquema": "esart_ref",
+          "tabla": "unidades_militares",
+          "propietario": "postgres",
+          "uso_esquema": false,
+          "lectura": false
+        }
+      ],
+      "columnas_unidades": [
+        {
+          "esquema": "esart_ref",
+          "columna": "id",
+          "tipo": "bigint"
+        }
+      ]
+    },
+    "esart_hu03_pruebas": {
+      "conexion_verificada": true,
+      "tablas": [
+        {
+          "esquema": "public",
+          "tabla": "alembic_version",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "artillero_cargos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "artillero_certificaciones",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "artillero_cursos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "auditoria_eventos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "componentes",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "hoja_vida_artillero",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "importaciones_excel",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "intentos_inicio_sesion",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "permisos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "personal_militar",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "requisitos_habilitacion",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "rol_permisos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "roles",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "roles_permisos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "sesiones_usuario",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "sistemas_artilleria",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "tipos_cargo",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "tipos_certificacion",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "tipos_curso",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "tipos_unidad",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "unidades_militares",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "usuario_permisos",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        },
+        {
+          "esquema": "public",
+          "tabla": "usuarios",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        }
+      ],
+      "alembic": [
+        {
+          "esquema": "public",
+          "revisiones": [
+            "0002"
+          ]
+        }
+      ],
+      "tablas_unidades": [
+        {
+          "esquema": "public",
+          "tabla": "unidades_militares",
+          "propietario": "esart_aplicacion",
+          "uso_esquema": true,
+          "lectura": true
+        }
+      ],
+      "columnas_unidades": [
+        {
+          "esquema": "public",
+          "columna": "id",
+          "tipo": "uuid"
+        },
+        {
+          "esquema": "public",
+          "columna": "codigo",
+          "tipo": "character varying(20)"
+        },
+        {
+          "esquema": "public",
+          "columna": "nombre",
+          "tipo": "character varying(200)"
+        },
+        {
+          "esquema": "public",
+          "columna": "sigla",
+          "tipo": "character varying(30)"
+        },
+        {
+          "esquema": "public",
+          "columna": "unidad_superior_id",
+          "tipo": "uuid"
+        },
+        {
+          "esquema": "public",
+          "columna": "activa",
+          "tipo": "boolean"
+        },
+        {
+          "esquema": "public",
+          "columna": "fecha_creacion",
+          "tipo": "timestamp with time zone"
+        },
+        {
+          "esquema": "public",
+          "columna": "fecha_actualizacion",
+          "tipo": "timestamp with time zone"
+        },
+        {
+          "esquema": "public",
+          "columna": "tipo_unidad_id",
+          "tipo": "uuid"
+        }
+      ],
+      "unidades": [
+        {
+          "codigo": "BAACA1",
+          "nombre": "Batallón de Artillería de Campaña N°1",
+          "tipo": "BAACA",
+          "superior": "BR01"
+        },
+        {
+          "codigo": "BAACA10",
+          "nombre": "Batallón de Artillería de Campaña N°10",
+          "tipo": "BAACA",
+          "superior": "BR10"
+        },
+        {
+          "codigo": "BAACA13",
+          "nombre": "Batallón de Artillería de Campaña N°13",
+          "tipo": "BAACA",
+          "superior": "BR13"
+        },
+        {
+          "codigo": "BAACA18",
+          "nombre": "Batallón de Artillería de Campaña N°18",
+          "tipo": "BAACA",
+          "superior": "BR18"
+        },
+        {
+          "codigo": "BAACA2",
+          "nombre": "Batallón de Artillería de Campaña N°2",
+          "tipo": "BAACA",
+          "superior": "BR10"
+        },
+        {
+          "codigo": "BAACA27",
+          "nombre": "Batallón de Artillería de Campaña N°27",
+          "tipo": "BAACA",
+          "superior": "BR27"
+        },
+        {
+          "codigo": "BAACA3",
+          "nombre": "Batallón de Artillería de Campaña N°3",
+          "tipo": "BAACA",
+          "superior": "BR03"
+        },
+        {
+          "codigo": "BAACA30",
+          "nombre": "Batallón de Artillería de Campaña N°30",
+          "tipo": "BAACA",
+          "superior": "BR30"
+        },
+        {
+          "codigo": "BAACA4",
+          "nombre": "Batallón de Artillería de Campaña N°4",
+          "tipo": "BAACA",
+          "superior": "BR04"
+        },
+        {
+          "codigo": "BAACA5",
+          "nombre": "Batallón de Artillería de Campaña N°5",
+          "tipo": "BAACA",
+          "superior": "BR05"
+        },
+        {
+          "codigo": "BAACA6",
+          "nombre": "Batallón de Artillería de Campaña N°6",
+          "tipo": "BAACA",
+          "superior": "BR05"
+        },
+        {
+          "codigo": "BAACA8",
+          "nombre": "Batallón de Artillería de Campaña N°8",
+          "tipo": "BAACA",
+          "superior": "BR08"
+        },
+        {
+          "codigo": "BAACA9",
+          "nombre": "Batallón de Artillería de Campaña N°9",
+          "tipo": "BAACA",
+          "superior": "BR09"
+        },
+        {
+          "codigo": "BAADA1",
+          "nombre": "Batallón de Artillería de Defensa Aérea N°1",
+          "tipo": "BAADA",
+          "superior": "BR10"
+        },
+        {
+          "codigo": "BAADA2",
+          "nombre": "Batallón de Artillería de Defensa Aérea N°2",
+          "tipo": "BAADA",
+          "superior": "BR05"
+        },
+        {
+          "codigo": "BR01",
+          "nombre": "Primera Brigada",
+          "tipo": "BR",
+          "superior": "DIV05"
+        },
+        {
+          "codigo": "BR03",
+          "nombre": "Tercera Brigada",
+          "tipo": "BR",
+          "superior": "DIV03"
+        },
+        {
+          "codigo": "BR04",
+          "nombre": "Cuarta Brigada",
+          "tipo": "BR",
+          "superior": "DIV07"
+        },
+        {
+          "codigo": "BR05",
+          "nombre": "Quinta Brigada",
+          "tipo": "BR",
+          "superior": "DIV02"
+        },
+        {
+          "codigo": "BR08",
+          "nombre": "Octava Brigada",
+          "tipo": "BR",
+          "superior": "DIV05"
+        },
+        {
+          "codigo": "BR09",
+          "nombre": "Novena Brigada",
+          "tipo": "BR",
+          "superior": "DIV05"
+        },
+        {
+          "codigo": "BR10",
+          "nombre": "Décima Brigada",
+          "tipo": "BR",
+          "superior": "DIV01"
+        },
+        {
+          "codigo": "BR13",
+          "nombre": "Décimo Tercera Brigada",
+          "tipo": "BR",
+          "superior": "DIV05"
+        },
+        {
+          "codigo": "BR18",
+          "nombre": "Décimo Octava Brigada",
+          "tipo": "BR",
+          "superior": "DIV08"
+        },
+        {
+          "codigo": "BR27",
+          "nombre": "Vigésimo Séptima Brigada",
+          "tipo": "BR",
+          "superior": "DIV06"
+        },
+        {
+          "codigo": "BR30",
+          "nombre": "Trigésima Brigada",
+          "tipo": "BR",
+          "superior": "DIV02"
+        },
+        {
+          "codigo": "CEDOC",
+          "nombre": "Centro de Educación y Doctrina",
+          "tipo": "CEDOC",
+          "superior": null
+        },
+        {
+          "codigo": "CEMIL",
+          "nombre": "Centro de Educación Militar",
+          "tipo": "CEM",
+          "superior": "CEDOC"
+        },
+        {
+          "codigo": "DAAVA",
+          "nombre": "División de Aviación y Asalto Aéreo",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV01",
+          "nombre": "Primera División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV02",
+          "nombre": "Segunda División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV03",
+          "nombre": "Tercera División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV04",
+          "nombre": "Cuarta División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV05",
+          "nombre": "Quinta División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV06",
+          "nombre": "Sexta División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV07",
+          "nombre": "Séptima División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIV08",
+          "nombre": "Octava División",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "DIVFE",
+          "nombre": "División de Fuerzas Especiales",
+          "tipo": "DIV",
+          "superior": null
+        },
+        {
+          "codigo": "ESART",
+          "nombre": "Escuela de Artillería",
+          "tipo": "ESART",
+          "superior": "CEMIL"
+        },
+        {
+          "codigo": "FUTOM",
+          "nombre": "Fuerza de Tarea Omega",
+          "tipo": null,
+          "superior": null
+        }
+      ],
+      "total_unidades": 40,
+      "clasificadas": 39,
+      "pendientes": [
+        "FUTOM"
+      ],
+      "tipos": 9
+    }
+  }
+}
