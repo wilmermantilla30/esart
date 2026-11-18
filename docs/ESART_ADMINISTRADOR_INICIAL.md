@@ -30,7 +30,7 @@ El inventario de columnas, restricciones, índices y permisos está en [ESART_AD
 | bloqueado_hasta | opcional; no se desbloquean cuentas existentes |
 | usuario_roles | PK compuesta (usuario_id,rol_id); FK BIGINT a usuarios/roles. asignado_en default now(); asignado_por_id nullable, se deja NULL porque es bootstrap explícito |
 
-El índice único uq_esart_usuario_nombre_ci compara **lower(usuario)**; la búsqueda usa la misma normalización. La FK de roles restringe su eliminación. El administrador hereda las concesiones ya definidas en rol_permisos/componentes; no se agregan ni modifican permisos, componentes, roles o excepciones individuales. Tener el rol no es un bypass de autorización.
+El índice único uq_esart_usuario_nombre_ci compara **lower(usuario)**; la búsqueda usa la misma normalización. La FK de roles restringe su eliminación. El alta no agrega concesiones CRUD ni excepciones. La política vigente concede todas las operaciones funcionales al ADMINISTRADOR activo desde los roles del servidor, sin depender de filas CRUD; no omite autenticación, TOTP ni seguridad y no concede privilegios SQL. Véase [Administrador y privilegios](ESART_ADMINISTRADOR_Y_PRIVILEGIOS.md).
 
 ## Hash y login existentes
 

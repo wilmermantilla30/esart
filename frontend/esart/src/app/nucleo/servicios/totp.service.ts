@@ -2,7 +2,12 @@ import { Injectable, inject } from '@angular/core';
 import { ClienteApiService } from './cliente-api.service';
 import { SesionService } from './sesion.service';
 
-export type ModoTotp = 'CONFIGURAR' | 'LOGIN' | 'DESBLOQUEO' | 'AUTORIZAR_ACCION';
+export type ModoTotp =
+  | 'CONFIGURAR'
+  | 'LOGIN'
+  | 'DESBLOQUEO'
+  | 'AUTORIZAR_ACCION'
+  | 'CODIGO_OPERACION';
 export interface EstadoTotp {
   estado?: 'NO_CONFIGURADO' | 'PENDIENTE' | 'ACTIVO' | 'REVOCADO' | 'BLOQUEADO';
   configurado: boolean;

@@ -32,6 +32,11 @@ export class Totp implements OnInit, AfterViewInit {
   readonly nombreUsuario = input('');
   readonly volverAlInicioAlCerrar = input(true);
   readonly operacion = input<OperacionTotp | null>(null);
+  /** CODIGO_OPERACION: el endpoint de la operación valida el código y ejecuta la acción. */
+  readonly verificarCodigo = input<((codigo: string) => Observable<unknown>) | null>(null);
+  readonly operacionEtiqueta = input('');
+  readonly moduloEtiqueta = input('');
+  readonly errorInicial = input('');
   readonly cancelar = output<void>();
   readonly completado = output<{ modo: ModoTotp; autorizacion_id?: string }>();
   private readonly servicio = inject(TotpService);
@@ -119,6 +124,7 @@ export class Totp implements OnInit, AfterViewInit {
 
   ngOnInit(): void {
     this.identificador.set(this.desafioId());
+    if (this.errorInicial()) this.error.set(this.errorInicial());
     if (this.modo() === 'CONFIGURAR') {
       if (this.vinculacionInicial()) {
         this.configurar();
@@ -244,6 +250,8 @@ export class Totp implements OnInit, AfterViewInit {
       this.ejecutar(this.servicio.confirmarDesbloqueo(this.identificador(), codigo), () =>
         this.terminar(),
       );
+    } else if (this.modo() === 'CODIGO_OPERACION' && this.verificarCodigo()) {
+      this.ejecutar(this.verificarCodigo()!(codigo), () => this.terminar());
     } else if (this.modo() === 'AUTORIZAR_ACCION' && this.operacion()) {
       this.ejecutar(
         this.servicio.verificarAccion(this.identificador(), this.operacion()!, codigo),

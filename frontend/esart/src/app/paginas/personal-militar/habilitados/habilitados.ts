@@ -1,4 +1,5 @@
 import { Component, inject, signal } from '@angular/core';
+import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 import { ActivatedRoute, RouterLink } from '@angular/router';
 
@@ -43,8 +44,13 @@ export class Habilitados {
   protected readonly error = signal<ErrorApi | null>(null);
 
   constructor() {
+    this.verificacion.personalActualizado$
+      .pipe(takeUntilDestroyed())
+      .subscribe(() => this.cargar());
     // Se puede llegar con el filtro ya puesto, por ejemplo desde el panel (?estado=POR_VENCER).
-    const estadoInicial = inject(ActivatedRoute).snapshot.queryParamMap.get('estado') as FiltroEstado | null;
+    const estadoInicial = inject(ActivatedRoute).snapshot.queryParamMap.get(
+      'estado',
+    ) as FiltroEstado | null;
     if (estadoInicial && OPCIONES_ESTADO.some((opcion) => opcion.valor === estadoInicial)) {
       this.estado = estadoInicial;
     }

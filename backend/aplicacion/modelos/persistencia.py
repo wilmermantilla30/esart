@@ -377,20 +377,20 @@ class Cursos(BaseModelo):
         BaseModelo.metadata,
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
         sa.Column("tipo_curso_id", sa.BigInteger(), nullable=False),
-        sa.Column("semestre_id", sa.BigInteger(), nullable=False),
+        sa.Column("semestre_id", sa.BigInteger(), nullable=True),
         sa.Column("comandante_id", sa.BigInteger(), nullable=False),
         sa.Column("codigo", sa.String(30), nullable=False),
         sa.Column("nombre", sa.String(200), nullable=False),
         sa.Column("fecha_inicio", sa.Date(), nullable=False),
         sa.Column("fecha_fin", sa.Date(), nullable=False),
         sa.Column(
-            "estado", sa.String(20), server_default=sa.text("'PLANEADO'::character varying"), nullable=False
+            "estado", sa.String(20), server_default=sa.text("'EN_CURSO'::character varying"), nullable=False
         ),
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.Column("creado_por_id", sa.BigInteger(), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.CheckConstraint(
-            ("estado IN ('PLANEADO', 'EN_EJECUCION', 'FINALIZADO', 'CANCELADO')"),
+            ("estado IN ('EN_CURSO', 'CULMINADO', 'CANCELADO', 'APLAZADO')"),
             name=conv("ck_cursos_estado"),
         ),
         sa.CheckConstraint(
@@ -604,6 +604,9 @@ class HojaVidaArtillero(BaseModelo):
         BaseModelo.metadata,
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
         sa.Column("artillero_id", sa.BigInteger(), nullable=False),
+        sa.Column("grado", sa.String(20), nullable=True),
+        sa.Column("curso_id", sa.BigInteger(), nullable=True),
+        sa.Column("unidad_id", sa.BigInteger(), nullable=True),
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
         sa.Column(
@@ -612,7 +615,20 @@ class HojaVidaArtillero(BaseModelo):
         sa.ForeignKeyConstraint(
             ["artillero_id"], ["esart.personal_militar.id"], name=conv("fk_hoja_vida_artillero_artillero_id")
         ),
-        sa.UniqueConstraint("artillero_id", name=conv("hoja_vida_artillero_artillero_id_key")),
+        sa.ForeignKeyConstraint(
+            ["curso_id"], ["esart.cursos.id"], name=conv("fk_hoja_vida_artillero_curso_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["unidad_id"], ["esart_ref.unidades_militares.id"], name=conv("fk_hoja_vida_artillero_unidad_id")
+        ),
+        sa.Index("ix_hoja_vida_artillero_artillero_id", "artillero_id"),
+        sa.Index(
+            "uq_hoja_vida_artillero_curso",
+            "artillero_id",
+            "curso_id",
+            unique=True,
+            postgresql_where=sa.text("curso_id IS NOT NULL"),
+        ),
         sa.PrimaryKeyConstraint("id", name=conv("hoja_vida_artillero_pkey")),
         schema="esart",
     )
@@ -660,6 +676,14 @@ class Instructores(BaseModelo):
         sa.Column("fecha_ingreso_escuela", sa.Date(), nullable=False),
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("foto", sa.LargeBinary(), nullable=True),
+        sa.Column("foto_tipo", sa.String(30), nullable=True),
+        sa.CheckConstraint(
+            "(foto IS NULL AND foto_tipo IS NULL) OR (foto IS NOT NULL "
+            "AND foto_tipo IN ('image/jpeg', 'image/png', 'image/webp') "
+            "AND octet_length(foto) BETWEEN 1 AND 2097152)",
+            name=conv("ck_instructores_foto"),
+        ),
         sa.ForeignKeyConstraint(
             ["usuario_id"], ["esart_ref.usuarios.id"], name=conv("fk_instructores_usuario_id")
         ),

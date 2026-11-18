@@ -1,0 +1,541 @@
+<dialog
+  id="excel-importacion"
+  #dialogo
+  class="excel-ventana"
+  [class.excel-maximizada]="maximizada()"
+  [class.excel-posicionada]="geometria() !== null"
+  [class.excel-redimensionando]="redimensionando()"
+  [style.left.px]="geometria()?.x"
+  [style.top.px]="geometria()?.y"
+  [style.width.px]="geometria()?.ancho"
+  [style.height.px]="geometria()?.alto"
+  aria-labelledby="excel-titulo"
+  aria-describedby="excel-subtitulo"
+  (cancel)="cancelarDialogo($event)"
+  (dragenter)="entrarZona($event)"
+  (dragover)="sobreZona($event)"
+  (dragleave)="salirZona($event)"
+  (drop)="soltar($event)"
+  (pointermove)="moverTamano($event)"
+  (pointerup)="terminarTamano($event)"
+  (pointercancel)="terminarTamano($event)"
+  (lostpointercapture)="terminarTamano($event)"
+  (window:resize)="ajustarViewport()"
+>
+  @for (borde of bordes; track borde) {
+    <span
+      class="excel-borde"
+      [class]="'excel-borde excel-borde-' + borde"
+      aria-hidden="true"
+      (pointerdown)="iniciarTamano($event, borde)"
+    ></span>
+  }
+  @if (arrastrando()) {
+    <div class="excel-overlay" aria-hidden="true">
+      <div>
+        <span class="material-symbols-outlined" aria-hidden="true">table_view</span>
+        <p>Suelte aquí su archivo Excel</p>
+        <small>.xlsx o .xls · Máximo 20 MB</small>
+      </div>
+    </div>
+  }
+  <input
+    #entrada
+    type="file"
+    accept=".xlsx,.xls"
+    class="hidden"
+    aria-label="Seleccionar archivo Excel"
+    (change)="seleccionar($event)"
+  />
+  <div class="excel-marco">
+    <header class="excel-encabezado">
+      <span class="excel-icono material-symbols-outlined" aria-hidden="true">table_view</span>
+      <div class="min-w-0 flex-1">
+        <h2 id="excel-titulo" class="font-headline font-bold text-title-lg">
+          IMPORTACIÓN MASIVA DE PERSONAL
+        </h2>
+        <p id="excel-subtitulo" class="text-[11px] tracking-widest mt-1">
+          ESART — EXCEL A POSTGRESQL
+        </p>
+      </div>
+      <div class="excel-controles">
+        <button type="button" aria-label="Minimizar ventana" (click)="minimizar()">
+          <span class="material-symbols-outlined" aria-hidden="true">minimize</span>
+        </button>
+        <button
+          type="button"
+          [attr.aria-label]="maximizada() ? 'Restaurar tamaño' : 'Maximizar ventana'"
+          (click)="alternarMaximizada()"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">{{
+            maximizada() ? 'filter_none' : 'crop_square'
+          }}</span>
+        </button>
+        <button
+          type="button"
+          aria-label="Cerrar importación"
+          [disabled]="ocupado() || enviando()"
+          (click)="cerrar()"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">close</span>
+        </button>
+      </div>
+    </header>
+    <div class="excel-cuerpo" [attr.aria-busy]="ocupado() || enviando()">
+      <p class="text-xs text-azul-pizarra/65 mb-4">
+        01 Archivo y hoja / 02 Diagnóstico / 03 Confirmación
+      </p>
+      @if (error()) {
+        <p class="excel-alerta" role="alert">{{ error() }}</p>
+      }
+      @if (resultado(); as respuesta) {
+        <p class="excel-exito" role="status">
+          Importación aplicada: {{ respuesta.filas_validas }} registros
+          @if (respuesta.curso_codigo) {
+            en el curso N.º {{ respuesta.curso_codigo }} ({{ respuesta.registros_nuevos }} nuevos,
+            {{ respuesta.grados_actualizados }} con grado actualizado)
+          }
+          . Referencia: {{ respuesta.importacion_id }}.
+        </p>
+      }
+      @if (ocupado() || enviando()) {
+        <p role="status" class="excel-progreso">
+          {{
+            enviando()
+              ? 'Enviando y esperando validación del servidor…'
+              : 'Analizando el libro Excel…'
+          }}
+        </p>
+      }
+      <section class="excel-zona" [class.excel-arrastre]="arrastrando()">
+        <span class="material-symbols-outlined text-success text-[34px]" aria-hidden="true"
+          >upload_file</span
+        >
+        <div class="flex-1 min-w-0">
+          @if (archivo(); as fichero) {
+            <h3 class="font-semibold break-all">{{ fichero.name }}</h3>
+            <p class="text-xs mt-1">
+              {{ (fichero.size / 1024).toFixed(1) }} KB · Cargado
+              {{ fecha() | date: 'dd/MM/yyyy HH:mm' }} · {{ hojas().length }} hoja(s)
+            </p>
+            <p class="text-xs mt-1" role="status">
+              {{
+                ocupado()
+                  ? 'Procesando archivo…'
+                  : hojas().length
+                    ? 'Archivo cargado'
+                    : error()
+                      ? 'No se pudo procesar el archivo'
+                      : 'Pendiente de lectura'
+              }}
+            </p>
+          } @else {
+            <h3 class="font-semibold">Arrastre y suelte su archivo Excel aquí</h3>
+            <p class="text-xs mt-1">
+              .xlsx y .xls · Máximo 20 MB · Seleccionar el archivo no envía sus datos.
+            </p>
+          }
+        </div>
+        <button
+          type="button"
+          class="excel-boton excel-azul-claro"
+          [disabled]="ocupado() || enviando()"
+          (click)="buscarArchivo()"
+        >
+          Buscar archivo Excel
+        </button>
+        @if (archivo()) {
+          <button
+            type="button"
+            class="excel-boton excel-gris"
+            [disabled]="ocupado() || enviando()"
+            (click)="quitar()"
+            aria-label="Quitar archivo"
+          >
+            <span class="material-symbols-outlined" aria-hidden="true">delete</span>
+          </button>
+        }
+      </section>
+      @if (visible()) {
+        <app-datos-curso
+          [deshabilitado]="ocupado() || enviando() || !!resultado()"
+          (cambio)="curso.set($event)"
+        />
+      }
+      @if (hojas().length) {
+        <section class="excel-selector">
+          <label for="excel-hoja" class="font-semibold text-sm"
+            >Seleccione la hoja que desea importar</label
+          >
+          <select
+            id="excel-hoja"
+            [value]="hoja()"
+            [disabled]="ocupado() || enviando()"
+            (change)="cambiarHoja($any($event.target).value)"
+          >
+            <option value="">Seleccione una hoja</option>
+            @for (h of hojas(); track h.nombre; let i = $index) {
+              <option [value]="h.nombre">
+                Hoja {{ i + 1 }} — {{ h.nombre }} · {{ h.filas }} filas de rango ·
+                {{ h.columnas }} columnas
+              </option>
+            }
+          </select>
+          <span class="text-xs">{{
+            analisis()?.validado
+              ? errores().length
+                ? 'Con errores bloqueantes'
+                : 'Validación local completada'
+              : 'Pendiente de validación'
+          }}</span>
+        </section>
+      }
+      <section class="excel-resumen" aria-label="Resumen de la hoja seleccionada">
+        <article>
+          <p>TOTAL DE REGISTROS</p>
+          <strong>{{ analisis()?.filas?.length ?? 0 }}</strong><small>Filas con información</small>
+        </article>
+        <article>
+          <p>TOTAL DE COLUMNAS</p>
+          <strong>{{ analisis()?.columnas?.length ?? 0 }}</strong><small
+            >Atributos detectados</small
+          >
+        </article>
+        <article class="excel-tarjeta-verde">
+          <p>REGISTROS COMPLETOS</p>
+          <strong>{{ completos() ?? '—' }}</strong><small>Sin errores locales</small>
+        </article>
+        <article class="excel-tarjeta-naranja">
+          <p>REGISTROS INCOMPLETOS</p>
+          <strong>{{ incompletos() ?? '—' }}</strong><small>Requieren revisión</small>
+        </article>
+        <article class="excel-tarjeta-roja">
+          <p>COLUMNAS CON FALLAS</p>
+          <strong>{{ analisis()?.validado ? columnasFallidas() : '—' }}</strong><small
+            >Errores bloqueantes</small
+          >
+        </article>
+      </section>
+      <section id="diagnostico" class="excel-seccion">
+        <h3 class="excel-seccion-titulo">
+          <span class="material-symbols-outlined" aria-hidden="true">schema</span> DIAGNÓSTICO
+          ESTRUCTURAL DE COLUMNAS (MAPEO DE ATRIBUTOS)
+        </h3>
+        <div
+          class="excel-tabla-scroll"
+          tabindex="0"
+          role="region"
+          aria-label="Diagnóstico de columnas"
+        >
+          <table>
+            <thead>
+              <tr>
+                <th>Columna Excel</th>
+                <th>Tipo esperado</th>
+                <th>Registros diligenciados</th>
+                <th>Celdas vacías</th>
+                <th>% diligenciamiento</th>
+                <th>Estado estructural</th>
+                <th>Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (col of analisis()?.columnas ?? []; track $index; let i = $index) {
+                <tr>
+                  <td class="font-semibold">
+                    {{ col.nombre
+                    }}<small class="block font-normal">{{ col.campo ?? 'Sin mapeo' }}</small>
+                  </td>
+                  <td>{{ col.tipo }}</td>
+                  <td>{{ col.llenos }}</td>
+                  <td>{{ col.vacios }}</td>
+                  <td>
+                    <progress
+                      [value]="col.porcentaje"
+                      max="100"
+                      [attr.aria-label]="'Diligenciamiento de ' + col.nombre"
+                    ></progress>
+                    {{ col.porcentaje }}%
+                  </td>
+                  <td>
+                    <span
+                      class="excel-estado"
+                      [class.excel-estado-error]="col.errores"
+                      [class.excel-estado-aviso]="!col.errores && col.advertencias"
+                      >{{
+                        !analisis()?.validado
+                          ? 'Pendiente'
+                          : col.errores
+                            ? 'Error'
+                            : col.advertencias
+                              ? 'Advertencia'
+                              : 'Correcto'
+                      }}</span
+                    >
+                  </td>
+                  <td>
+                    <button
+                      type="button"
+                      class="excel-enlace"
+                      [disabled]="!col.errores"
+                      (click)="filtrarColumna(i)"
+                    >
+                      Filtrar fallas
+                    </button>
+                  </td>
+                </tr>
+              } @empty {
+                <tr>
+                  <td colspan="7" class="excel-vacio">
+                    Seleccione un archivo y una hoja para ver el diagnóstico.
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      </section>
+      <div class="excel-revision">
+        <section class="excel-seccion min-w-0">
+          <h3 class="excel-seccion-titulo">
+            <span class="material-symbols-outlined" aria-hidden="true">table</span> VISTA PREVIA DE
+            REGISTROS
+            <span class="ml-auto font-normal">{{ filasFiltradas().length }} registros</span>
+          </h3>
+          <div class="excel-herramientas">
+            <input
+              type="search"
+              placeholder="Buscar en los registros…"
+              aria-label="Buscar en los registros"
+              [value]="busqueda()"
+              (input)="busqueda.set($any($event.target).value); pagina.set(1)"
+            />
+            <div class="excel-filtros" role="group" aria-label="Filtrar registros">
+              <button
+                type="button"
+                [attr.aria-pressed]="filtro() === 'todos'"
+                (click)="filtrar('todos')"
+              >
+                Todos</button
+              ><button
+                type="button"
+                [disabled]="!analisis()?.validado"
+                [attr.aria-pressed]="filtro() === 'correctos'"
+                (click)="filtrar('correctos')"
+              >
+                Correctos</button
+              ><button
+                type="button"
+                [disabled]="!analisis()?.validado"
+                [attr.aria-pressed]="filtro() === 'errores'"
+                (click)="filtrar('errores')"
+              >
+                Con errores
+              </button>
+            </div>
+            @if (columnaFiltro() !== null) {
+              <button type="button" class="excel-enlace" (click)="reiniciarFiltros()">
+                Quitar filtro de columna
+              </button>
+            }
+          </div>
+          <div
+            class="excel-tabla-scroll excel-preview"
+            tabindex="0"
+            role="region"
+            aria-label="Registros de la hoja seleccionada"
+          >
+            <table>
+              <thead>
+                <tr>
+                  <th>Fila Excel</th>
+                  @for (col of analisis()?.columnas ?? []; track $index) {
+                    <th>{{ col.nombre }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of filasPagina(); track fila.numero) {
+                  <tr
+                    [id]="'excel-fila-' + fila.numero"
+                    tabindex="-1"
+                    [class.excel-fila-activa]="filaActiva() === fila.numero"
+                  >
+                    <td>{{ fila.numero }}</td>
+                    @for (valor of fila.valores; track $index; let i = $index) {
+                      <td
+                        [class.excel-celda-error]="celdasErroneas().has(fila.numero + ':' + i)"
+                        [attr.title]="
+                          celdasErroneas().has(fila.numero + ':' + i)
+                            ? 'Celda con error: consulte el panel de validación'
+                            : null
+                        "
+                      >
+                        {{ valor || '—' }}
+                      </td>
+                    }
+                  </tr>
+                } @empty {
+                  <tr>
+                    <td
+                      [attr.colspan]="(analisis()?.columnas?.length ?? 0) + 1"
+                      class="excel-vacio"
+                    >
+                      {{
+                        analisis()
+                          ? 'No hay registros para estos filtros.'
+                          : 'Seleccione una hoja para ver sus registros.'
+                      }}
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+          <div class="excel-paginacion">
+            <span>Página {{ pagina() }} de {{ paginas() }}</span
+            ><button type="button" [disabled]="pagina() <= 1" (click)="pagina.set(pagina() - 1)">
+              Anterior</button
+            ><button
+              type="button"
+              [disabled]="pagina() >= paginas()"
+              (click)="pagina.set(pagina() + 1)"
+            >
+              Siguiente
+            </button>
+          </div>
+        </section>
+        <aside class="excel-seccion">
+          <h3 class="excel-seccion-titulo">
+            <span class="material-symbols-outlined" aria-hidden="true">fact_check</span> RESULTADO
+            DE VALIDACIÓN
+          </h3>
+          <div class="excel-incidencias" aria-live="polite">
+            @if (!analisis()?.validado) {
+              <p class="excel-vacio">Pulse «Validar Excel» para revisar la hoja seleccionada.</p>
+            }
+            @for (inc of incidenciasPagina(); track $index) {
+              <button
+                type="button"
+                class="excel-incidencia"
+                [class.excel-advertencia]="inc.nivel === 'Advertencia'"
+                (click)="localizar(inc)"
+              >
+                <span class="font-semibold"
+                  >{{ inc.nivel }} · Fila {{ inc.fila }} · {{ inc.columna }}</span
+                ><span>Valor: {{ inc.valor || '(vacío)' }}</span
+                ><span>{{ inc.motivo }}</span>
+              </button>
+            }
+            @if (analisis()?.validado && !analisis()?.incidencias?.length) {
+              <p class="excel-exito">
+                La hoja supera las validaciones locales. El servidor realizará la validación
+                definitiva.
+              </p>
+            }
+          </div>
+          @if (paginasIncidencias() > 1) {
+            <div class="excel-paginacion">
+              <button
+                type="button"
+                [disabled]="paginaIncidencias() === 1"
+                (click)="paginaIncidencias.set(paginaIncidencias() - 1)"
+              >
+                Anterior</button
+              ><span>{{ paginaIncidencias() }}/{{ paginasIncidencias() }}</span
+              ><button
+                type="button"
+                [disabled]="paginaIncidencias() === paginasIncidencias()"
+                (click)="paginaIncidencias.set(paginaIncidencias() + 1)"
+              >
+                Siguiente
+              </button>
+            </div>
+          }
+        </aside>
+      </div>
+      <p class="text-xs text-azul-pizarra/65 mt-4">
+        La revisión local no comprueba documentos ya registrados ni sustituye la validación
+        definitiva del servidor. Se enviarán solo los atributos reconocidos de la hoja seleccionada.
+      </p>
+    </div>
+    <footer class="excel-pie">
+      @if (confirmar()) {
+        <div class="excel-confirmacion" role="alert">
+          <p>
+            ¿Confirma importar {{ analisis()?.filas?.length }} registros de «{{ hoja() }}» en el
+            curso «{{ curso()?.nombre_curso }}»? El servidor volverá a validar los datos.
+          </p>
+          <button type="button" class="excel-boton excel-gris" (click)="confirmar.set(false)">
+            Volver a revisar</button
+          ><button
+            type="button"
+            class="excel-boton excel-verde"
+            (click)="importar()"
+            [disabled]="!puedeImportar()"
+          >
+            Sí, importar esta hoja
+          </button>
+        </div>
+      }
+      <div class="excel-acciones">
+        <button
+          type="button"
+          class="excel-boton excel-gris"
+          [disabled]="ocupado() || enviando()"
+          (click)="cerrar()"
+        >
+          CANCELAR
+        </button>
+        <button
+          type="button"
+          class="excel-boton excel-azul-claro"
+          [disabled]="ocupado() || enviando()"
+          (click)="buscarArchivo()"
+        >
+          CAMBIAR ARCHIVO</button
+        ><span class="flex-1"></span>
+        <button
+          type="button"
+          class="excel-boton excel-azul"
+          [disabled]="!hoja() || ocupado() || enviando()"
+          (click)="validar()"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">task_alt</span> VALIDAR EXCEL
+        </button>
+        <button
+          type="button"
+          class="excel-boton excel-rojo"
+          [disabled]="!analisis()?.incidencias?.length || ocupado() || enviando()"
+          (click)="descargarErrores()"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">download</span> DESCARGAR
+          ERRORES
+        </button>
+        <button
+          type="button"
+          class="excel-boton excel-verde"
+          [disabled]="!puedeImportar()"
+          [attr.title]="analisis()?.validado && !curso() ? 'Complete los datos del curso' : null"
+          (click)="confirmar.set(true)"
+        >
+          <span class="material-symbols-outlined" aria-hidden="true">cloud_upload</span> CONFIRMAR
+          IMPORTACIÓN
+        </button>
+      </div>
+    </footer>
+  </div>
+</dialog>
+<dialog #dialogoTotp class="excel-totp" (cancel)="$event.preventDefault()">
+  @if (requiereTotp()) {
+    <app-totp
+      modo="CODIGO_OPERACION"
+      operacionEtiqueta="Importación de personal militar"
+      moduloEtiqueta="Personal militar"
+      [verificarCodigo]="verificarCodigoTotp"
+      [errorInicial]="errorTotp()"
+      (cancelar)="cancelarTotp()"
+      (completado)="cerrarTotp()"
+    />
+  }
+</dialog>

@@ -23,7 +23,9 @@ describe('exigirPermiso (HU-09)', () => {
     });
     const ruta = { data: componente ? { componente } : {} } as unknown as ActivatedRouteSnapshot;
     return TestBed.runInInjectionContext(() =>
-      firstValueFrom(exigirPermiso(ruta, {} as RouterStateSnapshot) as Observable<boolean | UrlTree>),
+      firstValueFrom(
+        exigirPermiso(ruta, {} as RouterStateSnapshot) as Observable<boolean | UrlTree>,
+      ),
     );
   }
 
@@ -42,4 +44,13 @@ describe('exigirPermiso (HU-09)', () => {
     await evaluar(false, [], 'DASHBOARD');
     expect(crearArbol).toHaveBeenCalledWith(['/', 'inicio-sesion']);
   });
+
+  it.each(['USUARIOS', 'PERMISOS', 'AUDITORIA', 'PERSONAL_CARGUE_EXCEL'])(
+    'permite el módulo administrativo %s autorizado por el servidor',
+    async (codigo) => {
+      expect(
+        await evaluar(true, ['USUARIOS', 'PERMISOS', 'AUDITORIA', 'PERSONAL_CARGUE_EXCEL'], codigo),
+      ).toBe(true);
+    },
+  );
 });

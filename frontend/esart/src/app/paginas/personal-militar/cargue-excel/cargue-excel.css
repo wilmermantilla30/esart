@@ -1,0 +1,577 @@
+:host {
+  display: block;
+  color: #172638;
+}
+.excel-ventana {
+  container-type: inline-size;
+  width: 90vw;
+  max-width: 1600px;
+  height: 88dvh;
+  max-height: 96dvh;
+  margin: auto;
+  padding: 0;
+  border: 1px solid #bedce7;
+  border-radius: 14px;
+  background: #f4f8fb;
+  color: #172638;
+  box-shadow: 0 24px 80px #0b25394d;
+}
+.excel-posicionada {
+  position: fixed;
+  right: auto;
+  bottom: auto;
+  margin: 0;
+  max-width: none;
+  max-height: none;
+  overflow: hidden;
+}
+.excel-redimensionando {
+  user-select: none;
+}
+.excel-borde {
+  position: absolute;
+  z-index: 30;
+  touch-action: none;
+}
+.excel-borde-n,
+.excel-borde-s {
+  left: 14px;
+  right: 14px;
+  height: 7px;
+  cursor: ns-resize;
+}
+.excel-borde-n {
+  top: 0;
+}
+.excel-borde-s {
+  bottom: 0;
+}
+.excel-borde-e,
+.excel-borde-o {
+  top: 14px;
+  bottom: 14px;
+  width: 7px;
+  cursor: ew-resize;
+}
+.excel-borde-e {
+  right: 0;
+}
+.excel-borde-o {
+  left: 0;
+}
+.excel-borde-ne,
+.excel-borde-no,
+.excel-borde-se,
+.excel-borde-so {
+  width: 14px;
+  height: 14px;
+}
+.excel-borde-ne,
+.excel-borde-so {
+  cursor: nesw-resize;
+}
+.excel-borde-no,
+.excel-borde-se {
+  cursor: nwse-resize;
+}
+.excel-borde-ne {
+  top: 0;
+  right: 0;
+}
+.excel-borde-no {
+  top: 0;
+  left: 0;
+}
+.excel-borde-se {
+  bottom: 0;
+  right: 0;
+}
+.excel-borde-so {
+  bottom: 0;
+  left: 0;
+}
+.excel-overlay {
+  position: absolute;
+  inset: 3px;
+  z-index: 20;
+  display: grid;
+  place-items: center;
+  border: 3px dashed #22c55e;
+  border-radius: 10px;
+  background: #eaf7fce6;
+  pointer-events: none;
+  color: #14532d;
+  text-align: center;
+}
+.excel-overlay .material-symbols-outlined {
+  font-size: 64px;
+  color: #22c55e;
+}
+.excel-overlay p {
+  padding: 16px;
+  font:
+    600 22px 'Jost',
+    sans-serif;
+}
+.excel-ventana::backdrop {
+  background: #102a435c;
+}
+.excel-maximizada {
+  width: 98vw;
+  max-width: none;
+  height: 96dvh;
+}
+.excel-marco {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+.excel-encabezado {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  background: #bfe8f7;
+  border-bottom: 1px solid #9ed4e9;
+}
+.excel-icono {
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: #e4f8eb;
+  color: #15803d;
+  font-size: 30px;
+}
+.excel-controles {
+  display: flex;
+  gap: 3px;
+  align-self: flex-start;
+}
+.excel-controles button {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 5px;
+}
+.excel-controles button:hover {
+  background: #ffffff80;
+}
+.excel-cuerpo {
+  min-width: 0;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+  padding: 20px;
+}
+.excel-zona {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px;
+  background: white;
+  border: 2px dashed #b5d9e8;
+  border-radius: 10px;
+  transition:
+    background-color 200ms,
+    border-color 200ms;
+}
+.excel-arrastre {
+  background: #dcfce7;
+  border-color: #22c55e;
+}
+.excel-selector {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+  margin: 16px 0;
+}
+.excel-selector select {
+  flex: 1;
+  min-width: 180px;
+  border: 1px solid #cbdde5;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.excel-resumen {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 12px;
+  margin: 18px 0;
+}
+.excel-resumen article {
+  padding: 16px;
+  border: 1px solid #cce5f1;
+  border-top: 3px solid #20a9d3;
+  border-radius: 8px;
+  background: #edf7fd;
+}
+.excel-resumen p {
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+}
+.excel-resumen strong {
+  display: block;
+  font:
+    700 30px 'Jost',
+    sans-serif;
+  margin: 5px 0;
+}
+.excel-resumen small {
+  font-size: 11px;
+}
+.excel-resumen .excel-tarjeta-verde {
+  background: #edf9f1;
+  border-color: #bce7ca;
+  border-top-color: #22c55e;
+  color: #166534;
+}
+.excel-resumen .excel-tarjeta-naranja {
+  background: #fff8eb;
+  border-color: #f4dfb8;
+  border-top-color: #e99b30;
+  color: #92400e;
+}
+.excel-resumen .excel-tarjeta-roja {
+  background: #fff1f1;
+  border-color: #f1caca;
+  border-top-color: #e45e5e;
+  color: #991b1b;
+}
+.excel-seccion {
+  border: 1px solid #d8e4ec;
+  border-radius: 8px;
+  background: white;
+  overflow: hidden;
+}
+.excel-seccion-titulo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 13px 15px;
+  font-size: 11px;
+  font-weight: 700;
+  background: #edf5fa;
+  border-bottom: 1px solid #d8e4ec;
+}
+.excel-seccion-titulo .material-symbols-outlined {
+  font-size: 18px;
+  color: #247d9c;
+}
+.excel-tabla-scroll {
+  overflow: auto;
+  max-height: 260px;
+}
+table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: 12px;
+  white-space: nowrap;
+}
+th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: #f5f8fb;
+  color: #516779;
+  text-align: left;
+  font-size: 11px;
+}
+th,
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #edf1f5;
+}
+tbody tr:hover {
+  background: #f6fbfe;
+}
+progress {
+  width: 50px;
+  height: 6px;
+  accent-color: #20a9d3;
+}
+.excel-estado {
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: #edf8f0;
+  color: #166534;
+  font-size: 11px;
+}
+.excel-estado-error {
+  background: #fee2e2;
+  color: #991b1b;
+}
+.excel-estado-aviso {
+  background: #fff3d6;
+  color: #854d0e;
+}
+.excel-enlace {
+  color: #086786;
+  font-size: 12px;
+  text-decoration: underline;
+}
+.excel-revision {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 310px;
+  gap: 16px;
+  margin-top: 18px;
+}
+.excel-herramientas {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+}
+.excel-herramientas input {
+  flex: 1;
+  min-width: 140px;
+  border: 1px solid #d8e4ec;
+  border-radius: 6px;
+  font-size: 12px;
+}
+.excel-filtros {
+  display: flex;
+  gap: 3px;
+}
+.excel-filtros button {
+  padding: 6px 8px;
+  border-radius: 5px;
+  font-size: 11px;
+}
+.excel-filtros button[aria-pressed='true'] {
+  background: #dff2fa;
+  color: #12536c;
+}
+.excel-preview {
+  max-height: 320px;
+}
+.excel-celda-error {
+  background: #fff0f0;
+  color: #991b1b;
+  box-shadow: inset 0 -2px #e57373;
+}
+.excel-fila-activa {
+  background: #e5f4ff;
+  outline: 2px solid #20a9d3;
+  outline-offset: -2px;
+}
+.excel-vacio {
+  padding: 30px 16px;
+  text-align: center;
+  color: #62778a;
+  white-space: normal;
+  font-size: 12px;
+}
+.excel-paginacion {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 10px 12px;
+  font-size: 11px;
+  border-top: 1px solid #e8eff4;
+}
+.excel-paginacion button {
+  padding: 4px 7px;
+  border: 1px solid #d8e4ec;
+  border-radius: 4px;
+}
+.excel-incidencias {
+  padding: 10px;
+  max-height: 370px;
+  overflow: auto;
+}
+.excel-incidencia {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  width: 100%;
+  text-align: left;
+  padding: 10px;
+  margin-bottom: 8px;
+  border: 1px solid #f1d1d1;
+  border-left: 3px solid #e36d6d;
+  border-radius: 5px;
+  background: #fff6f6;
+  color: #8a2727;
+  font-size: 11px;
+  overflow-wrap: anywhere;
+}
+.excel-advertencia {
+  border-color: #f2d7a1;
+  background: #fffaef;
+  color: #854d0e;
+}
+.excel-alerta,
+.excel-exito,
+.excel-progreso {
+  padding: 12px;
+  margin-bottom: 12px;
+  border-radius: 6px;
+  font-size: 13px;
+}
+.excel-alerta {
+  background: #fff0f0;
+  color: #991b1b;
+  border: 1px solid #f1caca;
+}
+.excel-exito {
+  background: #edf9f1;
+  color: #166534;
+}
+.excel-progreso {
+  background: #eaf7fc;
+  color: #12536c;
+}
+.excel-pie {
+  flex-shrink: 0;
+  padding: 14px 20px;
+  border-top: 1px solid #d4e1ea;
+  background: white;
+  box-shadow: 0 -4px 14px #17263806;
+}
+.excel-acciones {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+.excel-boton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 9px 12px;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 600;
+  transition:
+    background-color 200ms,
+    box-shadow 200ms;
+}
+.excel-boton .material-symbols-outlined {
+  font-size: 17px;
+}
+.excel-gris {
+  background: #f1f5f9;
+  border-color: #dce4ec;
+  color: #415568;
+}
+.excel-azul-claro {
+  background: #eaf7fc;
+  border-color: #c1e1ee;
+  color: #12536c;
+}
+.excel-azul {
+  background: #20a9d3;
+  color: #092e3c;
+}
+.excel-rojo {
+  background: #fff0f0;
+  border-color: #f3d1d1;
+  color: #991b1b;
+}
+.excel-verde {
+  background: #22c55e;
+  color: #052e16;
+}
+.excel-boton:hover:not(:disabled) {
+  box-shadow: 0 3px 8px #17263824;
+}
+.excel-verde:hover:not(:disabled) {
+  background: #16a34a;
+  box-shadow: 0 4px 10px #22c55e4d;
+}
+.excel-confirmacion {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding-bottom: 12px;
+  margin-bottom: 12px;
+  border-bottom: 1px solid #d8e4ec;
+  font-size: 13px;
+}
+button {
+  cursor: pointer;
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+:is(button, input, select, [tabindex]):focus-visible {
+  outline: 2px solid #08779d;
+  outline-offset: 3px;
+}
+@container (max-width: 1000px) {
+  .excel-resumen {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .excel-revision {
+    grid-template-columns: 1fr;
+  }
+}
+@media (max-width: 640px) {
+  .excel-ventana {
+    width: 98vw;
+    height: 95dvh;
+  }
+}
+@container (max-width: 640px) {
+  .excel-encabezado {
+    padding: 12px;
+    gap: 8px;
+    flex-wrap: wrap;
+  }
+  .excel-encabezado h2 {
+    font-size: 13px;
+  }
+  .excel-icono {
+    width: 32px;
+    height: 32px;
+    font-size: 23px;
+  }
+  .excel-cuerpo {
+    padding: 12px;
+  }
+  .excel-zona {
+    flex-wrap: wrap;
+    padding: 14px;
+  }
+  .excel-resumen {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .excel-pie {
+    padding: 10px;
+  }
+  .excel-acciones .excel-boton {
+    flex: 1 1 42%;
+  }
+  .excel-acciones > span {
+    display: none;
+  }
+}
+
+.excel-totp {
+  width: 100vw;
+  height: 100dvh;
+  max-width: none;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.excel-totp::backdrop {
+  background: none;
+}

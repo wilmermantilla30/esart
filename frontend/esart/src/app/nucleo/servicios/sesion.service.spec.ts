@@ -24,16 +24,47 @@ describe('SesionService', () => {
 
   afterEach(() => backend.verify());
 
+  it('usa los permisos completos de ADMINISTRADOR resueltos por el backend', () => {
+    sesion.renovarSesion().subscribe();
+    const codigos = ['USUARIOS', 'PERMISOS', 'AUDITORIA', 'PERSONAL_CARGUE_EXCEL'];
+    backend
+      .expectOne('/api/auth/yo')
+      .flush({
+        ...usuarioDePrueba,
+        rol: 'ADMINISTRADOR',
+        permisos: codigos,
+        menu: codigos.map((codigo) => ({
+          codigo,
+          nombre: codigo,
+          ruta: '/modulo/' + codigo,
+          operaciones: ['crear', 'leer', 'actualizar', 'eliminar'],
+          hijos: [],
+        })),
+      });
+    for (const codigo of codigos) {
+      expect(sesion.tienePermiso(codigo)).toBe(true);
+      for (const operacion of ['crear', 'leer', 'actualizar', 'eliminar'])
+        expect(sesion.puede(codigo, operacion)).toBe(true);
+    }
+  });
+
+  it('no inventa permisos desde la etiqueta de rol recibida sin la malla del servidor', () => {
+    sesion.renovarSesion().subscribe();
+    backend
+      .expectOne('/api/auth/yo')
+      .flush({ ...usuarioDePrueba, rol: 'ADMINISTRADOR', permisos: [], menu: [] });
+    expect(sesion.tienePermiso('USUARIOS')).toBe(false);
+    expect(sesion.puede('PERSONAL_CARGUE_EXCEL', 'crear')).toBe(false);
+  });
+
   it('cambia la contraseña temporal sin sesión y continúa con el desafío MFA', () => {
     sesion.iniciarSesion('cuenta.local', 'temporal').subscribe();
-    backend
-      .expectOne('/api/auth/login')
-      .flush({
-        totp_requerido: true,
-        cambio_contrasena_requerido: true,
-        desafio_id: 'cambio',
-        expira_en: '2026-11-16T23:00:00Z',
-      });
+    backend.expectOne('/api/auth/login').flush({
+      totp_requerido: true,
+      cambio_contrasena_requerido: true,
+      desafio_id: 'cambio',
+      expira_en: '2026-11-16T23:00:00Z',
+    });
     expect(sesion.haySesion()).toBe(false);
     expect(sesion.requiereCambioContrasena()).toBe(true);
     sesion.cambiarContrasena('temporal', 'nueva-local-2026').subscribe();
@@ -54,13 +85,11 @@ describe('SesionService', () => {
 
   it('borra menú y permisos anteriores al recibir un desafío de otro login', () => {
     sesion.renovarSesion().subscribe();
-    backend
-      .expectOne('/api/auth/yo')
-      .flush({
-        ...usuarioDePrueba,
-        permisos: ['USUARIOS'],
-        menu: [{ codigo: 'USUARIOS', operaciones: ['leer'], hijos: [] }],
-      });
+    backend.expectOne('/api/auth/yo').flush({
+      ...usuarioDePrueba,
+      permisos: ['USUARIOS'],
+      menu: [{ codigo: 'USUARIOS', operaciones: ['leer'], hijos: [] }],
+    });
     expect(sesion.tienePermiso('USUARIOS')).toBe(true);
     sesion.iniciarSesion('otra.cuenta', 'clave').subscribe();
     backend
@@ -131,31 +160,27 @@ describe('SesionService', () => {
 
   it('no guarda nada si el login falla', () => {
     sesion.iniciarSesion('comandante.esart', 'mala').subscribe({ error: () => undefined });
-    backend
-      .expectOne('/api/auth/login')
-      .flush(
-        {
-          error: {
-            codigo: 'CREDENCIALES_INVALIDAS',
-            mensaje: 'Usuario o contraseña incorrectos.',
-            detalle: null,
-          },
+    backend.expectOne('/api/auth/login').flush(
+      {
+        error: {
+          codigo: 'CREDENCIALES_INVALIDAS',
+          mensaje: 'Usuario o contraseña incorrectos.',
+          detalle: null,
         },
-        { status: 401, statusText: 'Unauthorized' },
-      );
+      },
+      { status: 401, statusText: 'Unauthorized' },
+    );
     expect(sesion.usuario()).toBeNull();
   });
 
   it('comprobarSesion recupera el usuario desde /api/auth/yo', () => {
     let resultado: boolean | undefined;
     sesion.comprobarSesion().subscribe((valor) => (resultado = valor));
-    backend
-      .expectOne('/api/auth/yo')
-      .flush({
-        ...usuarioDePrueba,
-        permisos: ['VERIFICAR_ARTILLERO'],
-        expira_por_inactividad_segundos: 1800,
-      });
+    backend.expectOne('/api/auth/yo').flush({
+      ...usuarioDePrueba,
+      permisos: ['VERIFICAR_ARTILLERO'],
+      expira_por_inactividad_segundos: 1800,
+    });
 
     expect(resultado).toBe(true);
     expect(sesion.usuario()).toEqual({ ...usuarioDePrueba, requiere_cambio_contrasena: false });

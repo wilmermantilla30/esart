@@ -1,11 +1,11 @@
-"""Autorización en servidor; el proveedor de identidad se conectará en el login."""
+"""Autorización funcional por identidad autenticada y roles vigentes del servidor."""
 
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
 
 from fastapi import Depends, Request
-from sqlalchemy import and_, false, func, select, text
+from sqlalchemy import and_, false, func, or_, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
@@ -20,13 +20,39 @@ class OperacionCRUD(StrEnum):
     DELETE = "puede_eliminar"
 
 
+def _consulta_administrador(usuario_id: int):
+    """Consulta rol vigente y usuario activo; no acepta roles del JWT o navegador."""
+    return (
+        select(UsuarioRoles.usuario_id)
+        .join(Rol, Rol.id == UsuarioRoles.rol_id)
+        .join(Usuario, Usuario.id == UsuarioRoles.usuario_id)
+        .where(
+            UsuarioRoles.usuario_id == usuario_id,
+            Usuario.activo.is_(True),
+            Rol.activo.is_(True),
+            Rol.codigo == "ADMINISTRADOR",
+        )
+        .correlate(None)
+        .exists()
+    )
+
+
+async def es_administrador(sesion: AsyncSession, usuario_id: int) -> bool:
+    """Autoridad funcional completa solo por membresía activa almacenada en servidor."""
+    return bool(await sesion.scalar(select(_consulta_administrador(usuario_id))))
+
+
 async def tiene_permiso_componente(
     sesion: AsyncSession,
     usuario_id: int,
     componente: str,
     operacion: OperacionCRUD,
 ) -> bool:
-    """La excepción del usuario sustituye la fila del rol; ausencia significa denegar."""
+    """Admin activo tiene todo; para los demás, excepción > rol > denegación.
+
+    El componente debe existir y estar activo. Autenticación, MFA, bloqueo y
+    sesión siguen siendo responsabilidad de las dependencias previas.
+    """
     operacion = OperacionCRUD(operacion)
     permiso_rol = (
         select(func.bool_or(and_(RolPermiso.puede_acceder, getattr(RolPermiso, operacion.value))))
@@ -47,7 +73,7 @@ async def tiene_permiso_componente(
         .scalar_subquery()
     )
     consulta = (
-        select(func.coalesce(excepcion, permiso_rol, false()))
+        select(or_(_consulta_administrador(usuario_id), func.coalesce(excepcion, permiso_rol, false())))
         .select_from(Usuario)
         .join(Componente, Componente.codigo == componente)
         .where(Usuario.id == usuario_id, Usuario.activo.is_(True), Componente.activo.is_(True))
@@ -56,11 +82,8 @@ async def tiene_permiso_componente(
 
 
 async def tiene_permiso_codigo(sesion: AsyncSession, usuario_id: int, codigo: str) -> bool:
-    """Denegar hasta conciliar el catálogo granular ausente en la base principal.
-
-    No convertir códigos granulares en concesiones CRUD por inferencia.
-    """
-    return False
+    """Admin vigente tiene permisos funcionales; otros no infieren códigos ausentes."""
+    return bool(codigo) and await es_administrador(sesion, usuario_id)
 
 
 def requerir_permiso_componente(
@@ -72,9 +95,10 @@ def requerir_permiso_componente(
 ) -> Callable:
     """Dependencia FastAPI: exige identidad confiable y opcionalmente un código API.
 
-    obtener_identidad debe devolver UUID validado por autenticación del servidor,
+    obtener_identidad debe devolver el ID validado por autenticación del servidor,
     nunca un identificador recibido directamente del navegador. No implementa login.
-    No hay bypass implícito para ADMINISTRADOR: los permisos deben estar asignados.
+    ADMINISTRADOR se resuelve en PostgreSQL en cada comprobación, sin omitir
+    identidad, sesión, MFA, CSRF, auditoría ni reglas de negocio.
     """
     operacion = OperacionCRUD(operacion)
 
@@ -107,7 +131,7 @@ def requerir_permiso_componente(
 
 @dataclass(frozen=True)
 class PermisoEfectivo:
-    """Lo que un usuario puede hacer sobre un componente, ya resuelto (rol + excepción)."""
+    """Permiso resuelto por política administrativa o, para otros roles, rol y excepción."""
 
     codigo: str
     nombre: str
@@ -124,9 +148,16 @@ class PermisoEfectivo:
 # Misma regla que tiene_permiso_componente, para TODOS los componentes activos en una consulta:
 # - por rol: basta que uno de sus roles activos lo conceda (bool_or), siempre junto con puede_acceder;
 # - la excepción del usuario (usuario_permisos), si existe, SUSTITUYE a la de sus roles;
-# - sin fila, se niega. Usuario inactivo: ningún permiso.
+# - ADMINISTRADOR activo tiene todos los permisos, sin filas CRUD ni excepciones.
+# - para otros, sin fila se niega. Usuario inactivo: ningún permiso.
 CONSULTA_PERMISOS_EFECTIVOS = text("""
-    WITH por_rol AS (
+    WITH administrador AS (
+        SELECT EXISTS (
+            SELECT 1 FROM esart.usuario_roles ur
+            JOIN esart.roles r ON r.id = ur.rol_id
+            WHERE ur.usuario_id = :usuario_id AND r.activo AND r.codigo = 'ADMINISTRADOR'
+        ) AS es_admin
+    ), por_rol AS (
         SELECT rp.componente_id,
                bool_or(rp.puede_acceder) AS acceder,
                bool_or(rp.puede_acceder AND rp.puede_crear) AS crear,
@@ -150,12 +181,13 @@ CONSULTA_PERMISOS_EFECTIVOS = text("""
         WHERE usuario_id = :usuario_id
     )
     SELECT c.codigo, c.nombre, c.ruta_angular, c.orden, padre.codigo AS codigo_padre,
-           coalesce(e.acceder, r.acceder, false) AS puede_acceder,
-           coalesce(e.crear, r.crear, false) AS puede_crear,
-           coalesce(e.leer, r.leer, false) AS puede_leer,
-           coalesce(e.actualizar, r.actualizar, false) AS puede_actualizar,
-           coalesce(e.eliminar, r.eliminar, false) AS puede_eliminar
+           (a.es_admin OR coalesce(e.acceder, r.acceder, false)) AS puede_acceder,
+           (a.es_admin OR coalesce(e.crear, r.crear, false)) AS puede_crear,
+           (a.es_admin OR coalesce(e.leer, r.leer, false)) AS puede_leer,
+           (a.es_admin OR coalesce(e.actualizar, r.actualizar, false)) AS puede_actualizar,
+           (a.es_admin OR coalesce(e.eliminar, r.eliminar, false)) AS puede_eliminar
     FROM esart.componentes c
+    CROSS JOIN administrador a
     LEFT JOIN esart.componentes padre ON padre.id = c.componente_padre_id
     LEFT JOIN por_rol r ON r.componente_id = c.id
     LEFT JOIN excepcion e ON e.componente_id = c.id

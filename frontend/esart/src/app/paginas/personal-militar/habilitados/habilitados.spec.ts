@@ -5,6 +5,7 @@ import { provideRouter } from '@angular/router';
 
 import { PaginaHabilitacion } from '../../../nucleo/modelos/verificacion';
 import { Habilitados } from './habilitados';
+import { VerificacionService } from '../../../nucleo/servicios/verificacion.service';
 
 const PAGINA: PaginaHabilitacion = {
   elementos: [
@@ -47,6 +48,9 @@ describe('Habilitados', () => {
     expect(pagina.textContent).toContain('NO APTO');
     expect(pagina.textContent).toContain('Reentrenamiento vencido el 17-sep-2026.');
     expect(pagina.textContent).toContain('1 resultado(s)');
+    TestBed.inject(VerificacionService).notificarPersonalActualizado();
+    backend.expectOne((p) => p.url === '/api/verificar/habilitacion').flush(PAGINA);
+    await fixture.whenStable();
     backend.verify();
   });
 });

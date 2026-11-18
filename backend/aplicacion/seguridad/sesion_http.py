@@ -8,6 +8,7 @@ Contrato de API, §1.1:
 Ninguna lleva Max-Age: son cookies de sesión del navegador.
 """
 
+import logging
 import secrets
 
 from fastapi import Depends, Request, Response
@@ -31,6 +32,7 @@ SEGUNDOS_POR_MINUTO = 60
 
 # Bytes aleatorios del valor CSRF (32 bytes = 256 bits).
 BYTES_TOKEN_CSRF = 32
+registrador = logging.getLogger(__name__)
 
 # Métodos que no modifican datos y por eso no exigen la cabecera CSRF.
 METODOS_SIN_VERIFICACION_CSRF = frozenset({"GET", "HEAD", "OPTIONS"})
@@ -116,12 +118,21 @@ async def obtener_usuario_en_sesion(
     """
     token_sesion = request.cookies.get(NOMBRE_COOKIE_SESION)
     if not token_sesion:
+        registrador.info("SESION_RECHAZADA etapa=cookie causa=ausente")
         raise ErrorAplicacion(401, "NO_AUTENTICADO", "Debe iniciar sesión.")
     try:
         datos_token = decodificar_token_sesion(token_sesion)
     except TokenSesionInvalido:
+        registrador.info("SESION_RECHAZADA etapa=jwt causa=invalido_o_vencido")
         raise ErrorAplicacion(401, "NO_AUTENTICADO", "Debe iniciar sesión.") from None
-    usuario = await validar_sesion(sesion, datos_token.usuario_id, datos_token.sesion_id)
+    try:
+        usuario = await validar_sesion(sesion, datos_token.usuario_id, datos_token.sesion_id)
+    except ErrorAplicacion as error:
+        # Solo códigos de servidor; no JWT, cookies, identificadores ni datos del usuario.
+        registrador.info(
+            "SESION_RECHAZADA etapa=validacion_servidor codigo=%s estado=%d", error.codigo, error.estado_http
+        )
+        raise
     # FastAPI copia esta cabecera a la respuesta final de la ruta que use la dependencia.
     respuesta.headers[NOMBRE_CABECERA_EXPIRA_EN] = str(segundos_de_inactividad_permitidos())
     return usuario
