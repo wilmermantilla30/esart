@@ -69,6 +69,9 @@ class Configuracion(BaseSettings):
     limite_generacion_captcha_ip: int = Field(default=20, ge=1, le=100)
     ventana_generacion_captcha_segundos: int = Field(default=300, ge=60, le=3600)
     cookie_segura: bool = True
+    # Activar únicamente tras revisar permisos/políticas y aportar una clave externa.
+    totp_habilitado: bool = False
+    totp_clave_cifrado: SecretStr | None = None
 
     # --- Administrador inicial ---
     admin_usuario: str = Field(min_length=3, max_length=60)

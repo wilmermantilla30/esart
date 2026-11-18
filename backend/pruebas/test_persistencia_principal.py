@@ -73,7 +73,12 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0009_gestion_usuarios"]
+    assert script.get_heads() == ["p0010_merge_hu10_totp"]
+    assert set(script.get_revision("p0010_merge_hu10_totp").down_revision) == {
+        "p0009_gestion_usuarios",
+        "p0005_integracion_totp",
+    }
+    assert script.get_revision("p0005_integracion_totp").down_revision == "p0004_captcha_local"
     assert script.get_revision("p0009_gestion_usuarios").down_revision == "p0008_malla_editable"
     assert script.get_revision("p0008_malla_editable").down_revision == "p0007_auditoria_eventos"
     assert script.get_revision("p0007_auditoria_eventos").down_revision == "p0006_parametros_habilitacion"

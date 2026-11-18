@@ -38,10 +38,16 @@ export class CambiarContrasena {
   protected readonly reglas = computed(() => [
     ...revisarContrasena(this.nueva()),
     { texto: 'Distinta de la actual', cumple: !!this.nueva() && this.nueva() !== this.actual() },
-    { texto: 'La confirmación coincide', cumple: !!this.nueva() && this.nueva() === this.confirmacion() },
+    {
+      texto: 'La confirmación coincide',
+      cumple: !!this.nueva() && this.nueva() === this.confirmacion(),
+    },
   ]);
   protected readonly puedeEnviar = computed(
-    () => !!this.actual() && contrasenaValida(this.nueva()) && this.reglas().every((regla) => regla.cumple),
+    () =>
+      !!this.actual() &&
+      contrasenaValida(this.nueva()) &&
+      this.reglas().every((regla) => regla.cumple),
   );
 
   protected guardar(): void {
@@ -57,7 +63,10 @@ export class CambiarContrasena {
         this.nueva.set('');
         this.confirmacion.set('');
         this.enviando.set(false);
-        void this.enrutador.navigate(['/', RUTA_PAGINA_INICIO]);
+        void this.enrutador.navigate([
+          '/',
+          this.sesion.mfaPendiente() ? RUTA_PAGINA_INICIO_SESION : RUTA_PAGINA_INICIO,
+        ]);
       },
       error: (error: unknown) => {
         this.error.set(leerErrorApi(error));

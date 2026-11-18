@@ -3,6 +3,7 @@
 import hashlib
 import hmac
 import ipaddress
+import logging
 import math
 from dataclasses import dataclass
 from datetime import datetime, timedelta
@@ -10,6 +11,7 @@ from datetime import datetime, timedelta
 from sqlalchemy import func, select, text
 from sqlalchemy import insert as insertar
 from sqlalchemy.dialects.postgresql import insert
+from sqlalchemy.exc import DBAPIError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.configuracion import obtener_configuracion
@@ -19,6 +21,7 @@ from aplicacion.nucleo.errores import ErrorAplicacion
 from aplicacion.seguridad.captcha import VerificadorCaptcha
 
 HORAS_BLOQUEO = 3
+registrador = logging.getLogger(__name__)
 
 
 async def reloj_servidor(sesion: AsyncSession) -> datetime:
@@ -98,9 +101,29 @@ async def rechazar(sesion: AsyncSession, c: ContextoIntento, motivo: str, *, con
         motivo=motivo,
         evento="CUENTA_BLOQUEADA" if contar and bloqueado else "LOGIN_RECHAZADO",
     )
+    if obtener_configuracion().totp_habilitado:
+        from aplicacion.servicios.totp import TotpService
+
+        try:
+            # La auditoría principal ya se escribió arriba y sigue siendo obligatoria.
+            # La copia adicional TOTP no puede revertir contador/bloqueo si su esquema falla.
+            async with sesion.begin_nested():
+                await TotpService(sesion).auditar(
+                    c.usuario.id if c.usuario else None,
+                    "CUENTA_BLOQUEADA" if contar and bloqueado else "LOGIN_FALLIDO",
+                    "DENEGADO",
+                    c.ip,
+                )
+                await sesion.flush()
+        except DBAPIError:
+            registrador.error(
+                "No se pudo escribir la auditoría adicional TOTP; "
+                "se conserva auditoría de acceso y control persistente del login."
+            )
     detalle = {
         "captcha_requerido": not bloqueado and estado.intentos_fallidos_consecutivos >= 3,
         "acceso_temporalmente_restringido": bloqueado,
+        "captcha_validado": c.captcha_validado,
     }
     if bloqueado:
         detalle.update(
@@ -134,8 +157,10 @@ async def rechazar(sesion: AsyncSession, c: ContextoIntento, motivo: str, *, con
         )
     raise ErrorAplicacion(
         401,
-        "CREDENCIALES_INVALIDAS",
-        "No fue posible iniciar sesión. Compruebe los datos o inténtelo más tarde.",
+        "CAPTCHA_INVALIDO" if motivo == "CAPTCHA_INVALIDO" else "CREDENCIALES_INVALIDAS",
+        "El CAPTCHA no es válido o ha expirado. La contraseña no se comprobó. Solicite un código nuevo."
+        if motivo == "CAPTCHA_INVALIDO"
+        else "No fue posible iniciar sesión. Compruebe los datos o inténtelo más tarde.",
         detalle,
     )
 
@@ -233,13 +258,12 @@ async def preparar(
                 503, "CAPTCHA_NO_DISPONIBLE", "Verificación temporalmente no disponible."
             ) from None
         if not c.captcha_validado:
-            # Contar solo el primer fallo asociado a un desafío propio y pendiente.
-            # Ausentes, ajenos y replay no pueden multiplicar el contador de la cuenta.
+            # Política TOTP: CAPTCHA rechazado no equivale a contraseña comprobada incorrecta.
+            # Se conserva cuota IP, consumo del desafío, registro y auditoría, sin sumar credenciales.
             await rechazar(
                 sesion,
                 c,
                 "CAPTCHA_INVALIDO",
-                contar=bool(captcha_id and captcha_respuesta)
-                and getattr(proveedor, "fallo_contabilizable", False) is True,
+                contar=False,
             )
     return c

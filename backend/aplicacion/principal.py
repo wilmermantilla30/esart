@@ -16,9 +16,11 @@ from aplicacion.base_datos.sesion import cerrar_motor_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.nucleo.errores import registrar_manejadores_errores
 from aplicacion.nucleo.registro import configurar_registro
+from aplicacion.rutas.acciones_seguras import enrutador as enrutador_acciones
 from aplicacion.rutas.administracion import enrutador_administracion
 from aplicacion.rutas.autenticacion import enrutador_autenticacion
 from aplicacion.rutas.salud import enrutador_salud
+from aplicacion.rutas.totp import enrutador as enrutador_totp
 from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
 from aplicacion.rutas.verificacion import enrutador_verificacion
 
@@ -71,7 +73,9 @@ def crear_aplicacion() -> FastAPI:
     @aplicacion.middleware("http")
     async def no_cachear_autenticacion(request, call_next):
         respuesta = await call_next(request)
-        if request.url.path.startswith("/api/auth/"):
+        if request.url.path.startswith(
+            ("/api/auth/", "/api/v1/auth/", "/api/seguridad/", "/api/v1/seguridad/")
+        ):
             respuesta.headers["Cache-Control"] = "no-store"
             respuesta.headers["Pragma"] = "no-cache"
         return respuesta
@@ -81,6 +85,11 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_catalogos, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_verificacion, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_administracion, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_totp, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_autenticacion, prefix="/api/v1")
+    aplicacion.include_router(enrutador_totp, prefix="/api/v1")
+    aplicacion.include_router(enrutador_acciones, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_acciones, prefix="/api/v1")
 
     return aplicacion
 

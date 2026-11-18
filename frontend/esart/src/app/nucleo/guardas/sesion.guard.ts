@@ -21,20 +21,18 @@ import { SesionService } from '../servicios/sesion.service';
 export const exigirSesion: CanActivateFn = (_ruta, estado) => {
   const sesion = inject(SesionService);
   const enrutador = inject(Router);
-  return sesion
-    .comprobarSesion()
-    .pipe(
-      map((haySesion) => {
-        if (!haySesion) {
-          return enrutador.createUrlTree(['/', RUTA_PAGINA_INICIO_SESION], {
-            queryParams: { [PARAMETRO_VOLVER_A]: estado.url },
-          });
-        }
-        return sesion.requiereCambioContrasena()
-          ? enrutador.createUrlTree(['/', RUTA_PAGINA_CAMBIAR_CONTRASENA])
-          : true;
-      }),
-    );
+  return sesion.comprobarSesion().pipe(
+    map((haySesion) => {
+      if (!haySesion) {
+        return enrutador.createUrlTree(['/', RUTA_PAGINA_INICIO_SESION], {
+          queryParams: { [PARAMETRO_VOLVER_A]: estado.url },
+        });
+      }
+      return sesion.requiereCambioContrasena()
+        ? enrutador.createUrlTree(['/', RUTA_PAGINA_CAMBIAR_CONTRASENA])
+        : true;
+    }),
+  );
 };
 
 /**
@@ -44,9 +42,14 @@ export const exigirSesion: CanActivateFn = (_ruta, estado) => {
 export const exigirSesionParaCambiarContrasena: CanActivateFn = () => {
   const sesion = inject(SesionService);
   const enrutador = inject(Router);
+  if (sesion.cambioInicialPendiente()) return true;
   return sesion
     .comprobarSesion()
-    .pipe(map((haySesion) => (haySesion ? true : enrutador.createUrlTree(['/', RUTA_PAGINA_INICIO_SESION]))));
+    .pipe(
+      map((haySesion) =>
+        haySesion ? true : enrutador.createUrlTree(['/', RUTA_PAGINA_INICIO_SESION]),
+      ),
+    );
 };
 
 /** La página de login solo es para quien NO tiene sesión; si ya la tiene, va al inicio. */
@@ -55,5 +58,7 @@ export const soloSinSesion: CanActivateFn = () => {
   const enrutador = inject(Router);
   return sesion
     .comprobarSesion()
-    .pipe(map((haySesion) => (haySesion ? enrutador.createUrlTree(['/', RUTA_PAGINA_INICIO]) : true)));
+    .pipe(
+      map((haySesion) => (haySesion ? enrutador.createUrlTree(['/', RUTA_PAGINA_INICIO]) : true)),
+    );
 };

@@ -48,6 +48,26 @@ describe('InicioSesion', () => {
 
   afterEach(() => backend.verify());
 
+  it('no navega ni establece sesión cuando el primer factor devuelve un desafío TOTP', async () => {
+    await crearPagina();
+    escribir('#nombre-usuario', 'cuenta.local');
+    escribir('#contrasena', 'clave-local');
+    await enviar();
+    backend.expectOne('/api/auth/login').flush(
+      {
+        totp_requerido: true,
+        desafio_id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+        expira_en: '2026-11-16T15:00:00Z',
+      },
+      { status: 202, statusText: 'Accepted' },
+    );
+    await fixture.whenStable();
+    expect(navegarPorUrl).not.toHaveBeenCalled();
+    expect(pagina.querySelector('app-totp')).not.toBeNull();
+    expect(pagina.querySelector<HTMLInputElement>('#contrasena')!.value).toBe('');
+    backend.expectNone('/api/auth/yo');
+  });
+
   it('presenta solo el envío actual público y mantiene restringido el histórico', async () => {
     await crearPagina(
       {},
@@ -170,14 +190,13 @@ describe('InicioSesion', () => {
       { status: 401, statusText: 'Unauthorized' },
     );
     await fixture.whenStable();
-    escribir('#contrasena', 'clave-local');
-    pagina.querySelector('form')!.dispatchEvent(new Event('submit'));
-    fixture.detectChanges();
+    expect(pagina.querySelector('app-captcha')).not.toBeNull();
+    escribir('#captcha-contrasena', 'clave-local');
     backend.expectOne('/api/auth/captcha').flush({
       captcha_id: 'a'.repeat(43),
       imagen_png_base64: 'iVBORw0KGgo=',
       longitud: 6,
-      expira_en: '2026-11-16T12:05:00Z',
+      expira_en: new Date(Date.now() + 300_000).toISOString(),
     });
     await fixture.whenStable();
     escribir('#codigo-captcha', 'ACD346');
@@ -193,7 +212,36 @@ describe('InicioSesion', () => {
       captcha_id: 'a'.repeat(43),
       captcha_respuesta: 'ACD346',
     });
-    solicitud.flush({
+    solicitud.flush(
+      {
+        error: {
+          codigo: 'CAPTCHA_INVALIDO',
+          mensaje: 'Resuelva otro CAPTCHA.',
+          detalle: { captcha_requerido: true, captcha_validado: false },
+        },
+      },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    await fixture.whenStable();
+    expect(pagina.querySelector('app-captcha')).not.toBeNull();
+    const regeneracion = backend.expectOne('/api/auth/captcha');
+    expect(regeneracion.request.headers.has('X-ESART-Captcha-Anterior')).toBe(false);
+    regeneracion.flush({
+      captcha_id: 'b'.repeat(43),
+      imagen_png_base64: 'iVBORw0KGgo=',
+      longitud: 6,
+      expira_en: new Date(Date.now() + 300_000).toISOString(),
+    });
+    await fixture.whenStable();
+    escribir('#captcha-contrasena', 'clave-local');
+    escribir('#codigo-captcha', 'ACD346');
+    await fixture.whenStable();
+    [...pagina.querySelectorAll<HTMLButtonElement>('button')]
+      .find((b) => b.textContent?.includes('Validar e Ingresar'))!
+      .click();
+    const reintento = backend.expectOne('/api/auth/login');
+    expect(reintento.request.body.captcha_id).toBe('b'.repeat(43));
+    reintento.flush({
       usuario: { nombre_usuario: 'cuenta.local', nombre_completo: 'Cuenta', rol: 'USUARIO' },
       expira_por_inactividad_segundos: 1800,
     });
@@ -218,14 +266,13 @@ describe('InicioSesion', () => {
       { status: 401, statusText: 'Unauthorized' },
     );
     await fixture.whenStable();
-    escribir('#contrasena', 'clave-local');
-    pagina.querySelector('form')!.dispatchEvent(new Event('submit'));
-    fixture.detectChanges();
+    expect(pagina.querySelector('app-captcha')).not.toBeNull();
+    escribir('#captcha-contrasena', 'clave-local');
     backend.expectOne('/api/auth/captcha').flush({
       captcha_id: 'a'.repeat(43),
       imagen_png_base64: 'iVBORw0KGgo=',
       longitud: 6,
-      expira_en: '2026-11-16T12:05:00Z',
+      expira_en: new Date(Date.now() + 300_000).toISOString(),
     });
     await fixture.whenStable();
     escribir('#codigo-captcha', 'ACD346');
@@ -415,6 +462,12 @@ describe('InicioSesion', () => {
       );
       fixture.detectChanges();
       expect(pagina.textContent).toContain('verificación CAPTCHA del servidor');
+      backend.expectOne('/api/auth/captcha').flush({
+        captcha_id: 'a'.repeat(43),
+        imagen_png_base64: 'iVBORw0KGgo=',
+        longitud: 6,
+        expira_en: new Date(Date.now() + 300_000).toISOString(),
+      });
     } finally {
       fixture.destroy();
       vi.useRealTimers();
@@ -429,6 +482,63 @@ describe('InicioSesion', () => {
     backend.expectOne('/api/auth/login').error(new ProgressEvent('error'), { status: 0 });
     await fixture.whenStable();
     expect(pagina.textContent).toContain('No fue posible conectar con el servidor');
+  });
+
+  it('abre CONFIGURAR tras contraseña sin navegar ni consultar una sesión completa', async () => {
+    await crearPagina();
+    escribir('#nombre-usuario', 'cuenta.local');
+    escribir('#contrasena', 'clave-local');
+    await enviar();
+    backend
+      .expectOne('/api/auth/login')
+      .flush({
+        totp_requerido: true,
+        configuracion_requerida: true,
+        desafio_id: 'aaaaaaaa-aaaa-4aaa-aaaa-aaaaaaaaaaaa',
+        expira_en: new Date(Date.now() + 120_000).toISOString(),
+      });
+    fixture.detectChanges();
+    backend.expectOne('/api/auth/totp/login/configurar').flush(
+      {
+        error: { codigo: 'TOTP_NO_DISPONIBLE', mensaje: 'Servicio no disponible.' },
+      },
+      { status: 503, statusText: 'Service Unavailable' },
+    );
+    await fixture.whenStable();
+    expect(pagina.querySelector('app-totp')).not.toBeNull();
+    expect(pagina.textContent).toContain('CONFIGURAR AUTENTICADOR');
+    expect(navegarPorUrl).not.toHaveBeenCalled();
+    expect(pagina.querySelector<HTMLInputElement>('#contrasena')!.value).toBe('');
+    backend.expectNone('/api/auth/totp/estado');
+  });
+
+  it('distingue CAPTCHA rechazado de una contraseña comprobada incorrecta', async () => {
+    await crearPagina();
+    escribir('#nombre-usuario', 'cuenta.local');
+    escribir('#contrasena', 'clave-local');
+    await enviar();
+    backend.expectOne('/api/auth/login').flush(
+      {
+        error: {
+          codigo: 'CAPTCHA_INVALIDO',
+          mensaje: 'El CAPTCHA no es válido o ha expirado. La contraseña no se comprobó.',
+          detalle: { captcha_requerido: true, captcha_validado: false },
+        },
+      },
+      { status: 401, statusText: 'Unauthorized' },
+    );
+    await fixture.whenStable();
+    expect(pagina.textContent).toContain('La contraseña no se comprobó');
+    expect(pagina.querySelector('app-captcha')).not.toBeNull();
+    backend.expectOne('/api/auth/captcha').flush({
+      captcha_id: 'a'.repeat(43),
+      imagen_png_base64: 'iVBORw0KGgo=',
+      longitud: 6,
+      expira_en: new Date(Date.now() + 300_000).toISOString(),
+    });
+    expect(pagina.querySelector('app-ventana-bloqueo')).toBeNull();
+    expect(navegarPorUrl).not.toHaveBeenCalled();
+    expect(pagina.querySelector<HTMLInputElement>('#contrasena')!.value).toBe('');
   });
 
   it('muestra el aviso de sesión expirada', async () => {

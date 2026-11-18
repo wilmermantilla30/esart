@@ -17,6 +17,7 @@ from aplicacion.modelos.seguridad import AuditoriaAcceso, DesafioCaptcha
 from aplicacion.nucleo.errores import ErrorAplicacion
 from aplicacion.servicios import captcha_local as captcha
 from aplicacion.servicios import seguridad_login
+from pruebas.soporte_mfa import completar_vinculacion
 from pruebas.test_seguridad_login_pg import CLAVE, estado, ip, nuevo_usuario
 from pruebas.test_seguridad_login_pg import login as login_credenciales
 from pruebas.test_seguridad_login_pg import motores as fixture_motores
@@ -216,7 +217,7 @@ async def test_http_integrado_desde_cuarto_intento_sin_dobles_de_captcha(motores
                 "captcha_respuesta": "XXXXXX",
             },
         )
-        assert fallo.status_code == 401 and (await estado(admin, identificador))[0] == 4
+        assert fallo.status_code == 401 and (await estado(admin, identificador))[0] == 3
         nuevo = await c.get("/api/auth/captcha", headers={"X-ESART-Usuario": nombre})
         codigo = emitidos[-1]
         bien = await c.post(
@@ -228,7 +229,10 @@ async def test_http_integrado_desde_cuarto_intento_sin_dobles_de_captcha(motores
                 "captcha_respuesta": codigo.lower(),
             },
         )
-        assert bien.status_code == 200 and bien.headers["cache-control"] == "no-store"
+        assert bien.status_code == 202 and "esart_sesion" not in bien.cookies
+        assert (await estado(admin, identificador))[0] == 3
+        bien = await completar_vinculacion(c, bien)
+        assert bien.headers["cache-control"] == "no-store"
         assert (await estado(admin, identificador)) == (0, None)
         assert codigo not in bien.text and "esart_sesion" in bien.cookies
 
@@ -296,7 +300,7 @@ async def test_septimo_fallo_con_captcha_real_bloquea_tres_horas(motores, emitid
         assert lectura.json()["ip_terminal_verificada"] is False
 
 
-async def test_registro_terminal_con_sesion_jwt_administrativa_real(motores):
+async def test_registro_terminal_con_sesion_jwt_administrativa_real(motores, emitidos):
     from pathlib import Path
 
     from sqlalchemy import func
@@ -331,7 +335,7 @@ async def test_registro_terminal_con_sesion_jwt_administrativa_real(motores):
             if numero >= 4:
                 reto = await c.get("/api/auth/captcha", headers={"X-ESART-Usuario": objetivo})
                 assert reto.status_code == 200
-                datos.update(captcha_id=reto.json()["captcha_id"], captcha_respuesta="!!!!!!")
+                datos.update(captcha_id=reto.json()["captcha_id"], captcha_respuesta=emitidos[-1])
             respuesta = await c.post("/api/auth/login", json=datos)
             assert respuesta.status_code == (423 if numero == 7 else 401)
         assert (await c.get(f"/api/auth/administracion/bloqueos/{objetivo_id}")).status_code == 401
@@ -339,12 +343,17 @@ async def test_registro_terminal_con_sesion_jwt_administrativa_real(motores):
         assert publico["intentos_fallidos_consecutivos"] is None and publico["direccion_ip"] is None
     ruta = f"/api/auth/administracion/bloqueos/{objetivo_id}"
     async with httpx.AsyncClient(transport=transporte, base_url="http://pruebas") as c:
-        assert (
-            await c.post("/api/auth/login", json={"nombre_usuario": ordinario, "contrasena": CLAVE})
-        ).status_code == 200
+        await completar_vinculacion(
+            c,
+            await c.post(
+                "/api/auth/login",
+                json={"nombre_usuario": ordinario, "contrasena": CLAVE},
+            ),
+        )
         assert (await c.get(ruta)).status_code == 403
     async with httpx.AsyncClient(transport=transporte, base_url="http://pruebas") as c:
         login = await c.post("/api/auth/login", json={"nombre_usuario": operador, "contrasena": CLAVE})
+        login = await completar_vinculacion(c, login)
         assert login.status_code == 200 and login.json()["usuario"]["rol"] == "ADMINISTRADOR"
         respuesta = await c.get(ruta)
         assert respuesta.status_code == 200 and respuesta.headers["cache-control"] == "no-store"
@@ -398,7 +407,7 @@ async def test_flujo_publico_completo_chrome_sin_sesion(motores):
     admin, _ = motores
     identificador, nombre = await nuevo_usuario(admin)
     resultado = await asyncio.to_thread(ejecutar, nombre)
-    assert resultado["estados_login"] == [401, 401, 401, 401, 401, 401, 423]
+    assert resultado["estados_login"] == [401, 401, 401, 401, 401, 401, 401, 423]
     assert resultado["sin_sesion_jwt"] is True
     assert resultado["recuperado"]["intento_actual"] == resultado["bloqueo"]["intento_actual"]
     async with AsyncSession(admin) as s:
@@ -409,7 +418,7 @@ async def test_flujo_publico_completo_chrome_sin_sesion(motores):
             .select_from(IntentoInicioSesion)
             .where(IntentoInicioSesion.usuario_id == identificador)
         )
-        assert intentos == 7
+        assert intentos == 8
         ultimo = await s.scalar(
             select(IntentoInicioSesion)
             .where(IntentoInicioSesion.usuario_id == identificador)
@@ -426,7 +435,7 @@ async def login_captcha(app, nombre, reto, respuesta):
         return await iniciar_sesion(s, nombre, CLAVE, ip(), None, reto["captcha_id"], respuesta)
 
 
-async def test_cuatro_captcha_incorrectos_bloquean_y_auditan(motores, emitidos, monkeypatch):
+async def test_cuatro_captcha_incorrectos_no_cuentan_credenciales_y_auditan(motores, emitidos, monkeypatch):
     from unittest.mock import Mock
 
     from sqlalchemy import func
@@ -438,17 +447,17 @@ async def test_cuatro_captcha_incorrectos_bloquean_y_auditan(motores, emitidos, 
     identificador, nombre = await preparar_tres_fallos(admin, app)
     verificar = Mock(side_effect=AssertionError("CAPTCHA incorrecto no debe verificar contraseña"))
     monkeypatch.setattr(autenticacion, "verificar_contrasena", verificar)
-    for numero in range(4, 8):
+    for _numero in range(4, 8):
         reto = await emitir(app, nombre)
         codigo = emitidos[-1]
         incorrecto = ("C" if codigo[0] == "A" else "A") + codigo[1:]
         with pytest.raises(ErrorAplicacion) as error:
             await login_captcha(app, nombre, reto, incorrecto)
-        assert (await estado(admin, identificador))[0] == numero
-        assert error.value.estado_http == (423 if numero == 7 else 401)
-    assert error.value.codigo == "CUENTA_BLOQUEADA"
-    assert error.value.detalle["segundos_restantes"] == 10800
-    assert error.value.detalle["captcha_requerido"] is False
+        assert (await estado(admin, identificador))[0] == 3
+        assert error.value.estado_http == 401
+    assert error.value.codigo == "CAPTCHA_INVALIDO"
+    assert error.value.detalle["captcha_validado"] is False
+    assert error.value.detalle["captcha_requerido"] is True
     verificar.assert_not_called()
     async with AsyncSession(admin) as s:
         intentos = (
@@ -468,17 +477,12 @@ async def test_cuatro_captcha_incorrectos_bloquean_y_auditan(motores, emitidos, 
                     AuditoriaAcceso.evento == "CUENTA_BLOQUEADA",
                 )
             )
-            == 1
+            == 0
         )
-    # Incluso respuesta y credenciales correctas no permiten acceso durante el bloqueo.
-    nuevo = await emitir(app, nombre)
-    with pytest.raises(ErrorAplicacion) as vigente:
-        await login_captcha(app, nombre, nuevo, emitidos[-1])
-    assert vigente.value.estado_http == 423
-    assert (await estado(admin, identificador))[0] == 7
+    assert (await estado(admin, identificador)) == (3, None)
 
 
-async def test_mismo_captcha_incorrecto_concurrente_cuenta_solo_una_vez(motores, emitidos):
+async def test_mismo_captcha_incorrecto_concurrente_no_cuenta_credenciales(motores, emitidos):
     admin, app = motores
     identificador, nombre = await preparar_tres_fallos(admin, app)
     reto = await emitir(app, nombre)
@@ -486,10 +490,10 @@ async def test_mismo_captcha_incorrecto_concurrente_cuenta_solo_una_vez(motores,
         *(login_captcha(app, nombre, reto, "!!!!!!") for _ in range(6)), return_exceptions=True
     )
     assert all(isinstance(r, ErrorAplicacion) and r.estado_http == 401 for r in resultados)
-    assert (await estado(admin, identificador)) == (4, None)
+    assert (await estado(admin, identificador)) == (3, None)
 
 
-async def test_captcha_vencido_cuenta_y_regenerar_no_cuenta(motores, emitidos, monkeypatch):
+async def test_captcha_vencido_y_regenerar_no_cuentan_credenciales(motores, emitidos, monkeypatch):
     admin, app = motores
     identificador, nombre = await preparar_tres_fallos(admin, app)
     anterior = await emitir(app, nombre)
@@ -505,7 +509,7 @@ async def test_captcha_vencido_cuenta_y_regenerar_no_cuenta(motores, emitidos, m
     with pytest.raises(ErrorAplicacion) as error:
         await login_captcha(app, nombre, reto, emitidos[-1])
     assert error.value.estado_http == 401
-    assert (await estado(admin, identificador)) == (4, None)
+    assert (await estado(admin, identificador)) == (3, None)
 
 
 async def test_averia_captcha_no_cuenta_ni_confirma_intento(motores, monkeypatch):

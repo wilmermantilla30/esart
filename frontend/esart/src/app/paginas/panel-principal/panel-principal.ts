@@ -31,13 +31,19 @@ import { SesionService } from '../../nucleo/servicios/sesion.service';
               [routerLink]="modulo.ruta"
               class="flex items-start gap-3 p-4 rounded-lg border border-gris-bordes hover:border-azul-institucional hover:bg-azul-hielo/50 transition-colors duration-150 focus:outline-none focus:ring-2 focus:ring-azul-institucional/40"
             >
-              <span class="material-symbols-outlined text-azul-institucional text-[24px]" aria-hidden="true">{{
-                iconoDeComponente(modulo.codigo)
-              }}</span>
+              <span
+                class="material-symbols-outlined text-azul-institucional text-[24px]"
+                aria-hidden="true"
+                >{{ iconoDeComponente(modulo.codigo) }}</span
+              >
               <span>
-                <span class="block font-headline text-title-md text-negro-institucional">{{ modulo.nombre }}</span>
+                <span class="block font-headline text-title-md text-negro-institucional">{{
+                  modulo.nombre
+                }}</span>
                 @if (modulo.hijos.length) {
-                  <span class="block text-xs text-azul-pizarra/60 mt-0.5">{{ nombresHijos(modulo.hijos) }}</span>
+                  <span class="block text-xs text-azul-pizarra/60 mt-0.5">{{
+                    nombresHijos(modulo.hijos)
+                  }}</span>
                 }
               </span>
             </a>
@@ -53,7 +59,9 @@ export class PanelPrincipal {
   protected readonly iconoDeComponente = iconoDeComponente;
 
   /** Accesos directos: todos los módulos del menú menos el propio panel. */
-  protected readonly accesos = computed(() => (this.sesion.menu() ?? []).filter((m) => m.codigo !== 'DASHBOARD'));
+  protected readonly accesos = computed(() =>
+    (this.sesion.menu() ?? []).filter((m) => m.codigo !== 'DASHBOARD'),
+  );
 
   protected nombresHijos(hijos: { nombre: string }[]): string {
     return hijos.map((hijo) => hijo.nombre).join(' · ');

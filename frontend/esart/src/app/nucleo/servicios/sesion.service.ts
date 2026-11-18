@@ -5,6 +5,7 @@ import { HttpErrorResponse } from '@angular/common/http';
 import {
   CaptchaLocal,
   ElementoMenu,
+  DesafioSegundoFactor,
   EstadoBloqueoPublico,
   RespuestaInicioSesion,
   RespuestaUsuarioActual,
@@ -35,13 +36,20 @@ export class SesionService {
   private readonly usuarioActual = signal<UsuarioEnSesion | null>(null);
   private readonly menuActual = signal<ElementoMenu[] | null>(null);
   private readonly permisosActuales = signal<ReadonlySet<string>>(new Set());
+  private readonly cambioInicial = signal<DesafioSegundoFactor | null>(null);
+  private readonly pasoMfa = signal<DesafioSegundoFactor | null>(null);
+  readonly cambioInicialPendiente = this.cambioInicial.asReadonly();
+  readonly mfaPendiente = this.pasoMfa.asReadonly();
 
   /** Usuario en sesión, o null si no hay sesión confirmada. */
   readonly usuario = this.usuarioActual.asReadonly();
   readonly haySesion = computed(() => this.usuarioActual() !== null);
 
   /** La contraseña actual es temporal: hasta cambiarla, el backend no deja usar nada más. */
-  readonly requiereCambioContrasena = computed(() => this.usuarioActual()?.requiere_cambio_contrasena === true);
+  readonly requiereCambioContrasena = computed(
+    () =>
+      this.cambioInicial() !== null || this.usuarioActual()?.requiere_cambio_contrasena === true,
+  );
 
   /** Menú del usuario (sidebar y pestañas), o null si todavía no se ha cargado. */
   readonly menu = this.menuActual.asReadonly();
@@ -62,7 +70,8 @@ export class SesionService {
   puede(codigoComponente: string, operacion: string): boolean {
     const buscar = (elementos: ElementoMenu[]): ElementoMenu | undefined => {
       for (const elemento of elementos) {
-        const encontrado = elemento.codigo === codigoComponente ? elemento : buscar(elemento.hijos ?? []);
+        const encontrado =
+          elemento.codigo === codigoComponente ? elemento : buscar(elemento.hijos ?? []);
         if (encontrado) {
           return encontrado;
         }
@@ -81,11 +90,30 @@ export class SesionService {
       contrasena_actual: contrasenaActual,
       contrasena_nueva: contrasenaNueva,
     };
-    return this.clienteApi.enviar<void>(RUTA_CAMBIAR_CONTRASENA, solicitud).pipe(
-      tap(() =>
-        this.usuarioActual.update((usuario) => (usuario ? { ...usuario, requiere_cambio_contrasena: false } : usuario)),
-      ),
-    );
+    const desafio = this.cambioInicial();
+    if (desafio) {
+      return this.clienteApi
+        .enviar<DesafioSegundoFactor>('/auth/cambiar-contrasena-inicial', {
+          ...solicitud,
+          desafio_id: desafio.desafio_id,
+        })
+        .pipe(
+          tap((siguiente) => {
+            this.cambioInicial.set(null);
+            this.pasoMfa.set(siguiente);
+          }),
+          map(() => undefined),
+        );
+    }
+    return this.clienteApi
+      .enviar<void>(RUTA_CAMBIAR_CONTRASENA, solicitud)
+      .pipe(
+        tap(() =>
+          this.usuarioActual.update((usuario) =>
+            usuario ? { ...usuario, requiere_cambio_contrasena: false } : usuario,
+          ),
+        ),
+      );
   }
 
   consultarBloqueo(): Observable<EstadoBloqueoPublico> {
@@ -95,10 +123,19 @@ export class SesionService {
   obtenerCaptcha(nombreUsuario: string, anterior: string | null = null): Observable<CaptchaLocal> {
     const nombre = nombreUsuario.trim();
     if (nombre.length < 3 || nombre.length > 80 || /[\x00-\x1f\x7f]/.test(nombre)) {
-      return throwError(() => new HttpErrorResponse({ status: 422, error: { error: {
-        codigo: 'DATOS_INVALIDOS', mensaje: 'Escriba un usuario válido antes de solicitar el código.',
-        detalle: null,
-      } } }));
+      return throwError(
+        () =>
+          new HttpErrorResponse({
+            status: 422,
+            error: {
+              error: {
+                codigo: 'DATOS_INVALIDOS',
+                mensaje: 'Escriba un usuario válido antes de solicitar el código.',
+                detalle: null,
+              },
+            },
+          }),
+      );
     }
     // Contexto del desafío, nunca identidad autenticada. No requiere token JWT.
     const cabeceras: Record<string, string> = { 'X-ESART-Usuario': nombre };
@@ -107,18 +144,70 @@ export class SesionService {
   }
 
   /** Envía las credenciales. Si son correctas, el backend deja las cookies y aquí se guarda el usuario. */
-  iniciarSesion(nombreUsuario: string, contrasena: string,
-    captcha: { id: string; respuesta: string } | null = null): Observable<UsuarioEnSesion> {
+  iniciarSesion(
+    nombreUsuario: string,
+    contrasena: string,
+    captcha: { id: string; respuesta: string } | null = null,
+  ): Observable<UsuarioEnSesion | DesafioSegundoFactor> {
     const solicitud: SolicitudInicioSesion = {
       nombre_usuario: nombreUsuario.trim(),
       contrasena,
       captcha_id: captcha?.id ?? null,
       captcha_respuesta: captcha?.respuesta ?? null,
     };
-    return this.clienteApi.enviar<RespuestaInicioSesion>(RUTA_INICIAR_SESION, solicitud).pipe(
-      map((respuesta) => respuesta.usuario),
-      tap((usuario) => this.usuarioActual.set(usuario)),
-    );
+    return this.clienteApi
+      .enviar<RespuestaInicioSesion | DesafioSegundoFactor>(RUTA_INICIAR_SESION, solicitud)
+      .pipe(
+        map((respuesta) => ('totp_requerido' in respuesta ? respuesta : respuesta.usuario)),
+        tap((usuario) => {
+          this.olvidarSesion();
+          if ('totp_requerido' in usuario) {
+            if (usuario.cambio_contrasena_requerido) this.cambioInicial.set(usuario);
+          } else this.usuarioActual.set(usuario);
+        }),
+      );
+  }
+
+  confirmarLoginTotp(
+    desafioId: string,
+    codigo: string,
+    recuperacion = false,
+  ): Observable<UsuarioEnSesion> {
+    return this.clienteApi
+      .enviar<RespuestaInicioSesion>('/auth/totp/login/confirmar', {
+        desafio_id: desafioId,
+        codigo,
+        ...(recuperacion ? { recuperacion: true } : {}),
+      })
+      .pipe(
+        map((r) => r.usuario),
+        tap((u) => {
+          this.olvidarSesion();
+          this.usuarioActual.set(u);
+        }),
+      );
+  }
+
+  confirmarVinculacionLogin(desafioId: string, codigo: string) {
+    return this.clienteApi
+      .enviar<
+        RespuestaInicioSesion & {
+          activo: boolean;
+          codigos_recuperacion: string[];
+        }
+      >('/auth/totp/login/vincular', { desafio_id: desafioId, codigo })
+      .pipe(
+        tap((r) => {
+          this.olvidarSesion();
+          this.usuarioActual.set(r.usuario);
+        }),
+      );
+  }
+
+  tomarPasoMfaPendiente(): DesafioSegundoFactor | null {
+    const paso = this.pasoMfa();
+    this.pasoMfa.set(null);
+    return paso;
   }
 
   /**
@@ -174,5 +263,7 @@ export class SesionService {
     this.usuarioActual.set(null);
     this.menuActual.set(null);
     this.permisosActuales.set(new Set());
+    this.cambioInicial.set(null);
+    this.pasoMfa.set(null);
   }
 }

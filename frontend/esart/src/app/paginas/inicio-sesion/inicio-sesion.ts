@@ -11,9 +11,15 @@ import {
   PARAMETRO_MOTIVO,
   PARAMETRO_VOLVER_A,
   RUTA_PAGINA_INICIO,
+  RUTA_PAGINA_CAMBIAR_CONTRASENA,
   esRutaInternaSegura,
 } from '../../nucleo/rutas-paginas';
-import { DetalleBloqueo, RespuestaCaptcha } from '../../nucleo/modelos/sesion';
+import {
+  DesafioSegundoFactor,
+  DetalleBloqueo,
+  RespuestaCaptcha,
+} from '../../nucleo/modelos/sesion';
+import { Totp } from '../totp/totp';
 import { SesionService } from '../../nucleo/servicios/sesion.service';
 import { Captcha } from '../inicio-sesion/captcha/captcha'; //importación del captcha
 import { VentanaBloqueo } from '../inicio-sesion/ventana-bloqueo/ventana-bloqueo'; //importacion de la ventan de bloqueo
@@ -37,6 +43,7 @@ export const LONGITUD_MAXIMA_CONTRASENA = 72;
     PieInstitucional,
     Captcha,
     VentanaBloqueo,
+    Totp,
   ],
   templateUrl: './inicio-sesion.html',
 })
@@ -75,6 +82,9 @@ export class InicioSesion {
   // Estados del CAPTCHA
   readonly captchaRequerido = signal<boolean>(false);
   readonly mostrarCaptcha = signal(false);
+  readonly revisionCaptcha = signal(0);
+  readonly pasoTotp = signal<DesafioSegundoFactor | null>(null);
+  readonly desbloqueoTotp = signal(false);
   readonly accesoRestringido = signal<boolean>(false);
   readonly segundosRestantes = signal<number | null>(null);
   readonly tiempoRestante = computed(() => {
@@ -99,6 +109,7 @@ export class InicioSesion {
   } | null>(null);
 
   constructor() {
+    this.pasoTotp.set(this.sesion.tomarPasoMfaPendiente());
     this.destruccion.onDestroy(() => this.detenerReloj());
     this.sesion
       .consultarBloqueo()
@@ -271,7 +282,16 @@ export class InicioSesion {
       .iniciarSesion(nombreUsuario, contrasena, captcha)
       .pipe(takeUntilDestroyed(this.destruccion))
       .subscribe({
-        next: () => {
+        next: (resultado) => {
+          if ('totp_requerido' in resultado) {
+            if (resultado.cambio_contrasena_requerido) {
+              void this.enrutador.navigateByUrl('/' + RUTA_PAGINA_CAMBIAR_CONTRASENA);
+            } else this.pasoTotp.set(resultado);
+            this.mostrarCaptcha.set(false);
+            this.formulario.controls.contrasena.reset();
+            this.enviando.set(false);
+            return;
+          }
           this.detenerReloj();
 
           // Restablecer estados.
@@ -296,12 +316,11 @@ export class InicioSesion {
         },
 
         error: (error: unknown) => {
-          this.mostrarCaptcha.set(false);
-
           const respuesta = leerErrorApi(error);
 
           // 1. VERIFICAR BLOQUEO DEL BACKEND.
           if (respuesta.estadoHttp === 423 && respuesta.codigo === 'CUENTA_BLOQUEADA') {
+            this.mostrarCaptcha.set(false);
             this.errorServidor.set(respuesta);
 
             // Activar bloqueo y contador.
@@ -326,7 +345,7 @@ export class InicioSesion {
           }
 
           // 2. ERRORES DE CAPTCHA O CREDENCIALES.
-          if (captcha && respuesta.estadoHttp === 401) {
+          if (captcha && respuesta.estadoHttp === 401 && respuesta.codigo !== 'CAPTCHA_INVALIDO') {
             respuesta.mensaje =
               'No se pudo validar el código o las credenciales. ' +
               'Ingrese nuevamente la contraseña y solicite un código nuevo.';
@@ -347,8 +366,12 @@ export class InicioSesion {
           );
 
           this.formulario.controls.contrasena.reset();
-
           this.enviando.set(false);
+          if (this.captchaRequerido() && !this.accesoRestringido()) {
+            // Cada envío consume el desafío: conservar la ventana y pedir otro.
+            if (captcha) this.revisionCaptcha.update((valor) => valor + 1);
+            this.mostrarCaptcha.set(true);
+          }
         },
       });
   }
@@ -356,6 +379,24 @@ export class InicioSesion {
   protected cancelarCaptcha(): void {
     this.mostrarCaptcha.set(false);
     this.formulario.controls.contrasena.reset();
+  }
+
+  protected cerrarTotp(): void {
+    this.pasoTotp.set(null);
+    this.desbloqueoTotp.set(false);
+    this.formulario.controls.contrasena.reset();
+  }
+
+  protected completarTotp(): void {
+    const desbloqueo = this.desbloqueoTotp();
+    this.cerrarTotp();
+    this.liberarInterfaz();
+    if (!desbloqueo) {
+      const volver = this.rutaActual.snapshot.queryParamMap.get(PARAMETRO_VOLVER_A);
+      void this.enrutador.navigateByUrl(
+        esRutaInternaSegura(volver) ? volver : '/' + RUTA_PAGINA_INICIO,
+      );
+    }
   }
 
   /** Hora local de desbloqueo cuando la cuenta está bloqueada (USUARIO_BLOQUEADO, contrato §1.2). */

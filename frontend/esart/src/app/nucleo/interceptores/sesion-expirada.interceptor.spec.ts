@@ -32,14 +32,24 @@ describe('sesionExpiradaInterceptor', () => {
   it('un 401 en una ruta protegida limpia la sesión y lleva al login con el aviso', () => {
     let errorRecibido = false;
     http.get('/api/catalogos/unidades').subscribe({ error: () => (errorRecibido = true) });
-    backend.expectOne('/api/catalogos/unidades').flush(null, { status: 401, statusText: 'Unauthorized' });
+    backend
+      .expectOne('/api/catalogos/unidades')
+      .flush(null, { status: 401, statusText: 'Unauthorized' });
 
     expect(errorRecibido).toBe(true);
     expect(olvidarSesion).toHaveBeenCalledTimes(1);
-    expect(navegar).toHaveBeenCalledWith(['/', 'inicio-sesion'], { queryParams: { motivo: 'sesion-expirada' } });
+    expect(navegar).toHaveBeenCalledWith(['/', 'inicio-sesion'], {
+      queryParams: { motivo: 'sesion-expirada' },
+    });
   });
 
-  it.each(['/api/auth/login', '/api/auth/yo'])('un 401 de %s no redirige', (ruta) => {
+  it.each([
+    '/api/auth/login',
+    '/api/auth/yo',
+    '/api/auth/totp/login/configurar',
+    '/api/auth/totp/login/vincular',
+    '/api/auth/totp/login/confirmar',
+  ])('un 401 de %s no redirige', (ruta) => {
     http.post(ruta, {}).subscribe({ error: () => undefined });
     backend.expectOne(ruta).flush(null, { status: 401, statusText: 'Unauthorized' });
     expect(navegar).not.toHaveBeenCalled();
@@ -48,7 +58,9 @@ describe('sesionExpiradaInterceptor', () => {
 
   it('otros errores (por ejemplo 403) no cierran la sesión', () => {
     http.get('/api/catalogos/unidades').subscribe({ error: () => undefined });
-    backend.expectOne('/api/catalogos/unidades').flush(null, { status: 403, statusText: 'Forbidden' });
+    backend
+      .expectOne('/api/catalogos/unidades')
+      .flush(null, { status: 403, statusText: 'Forbidden' });
     expect(navegar).not.toHaveBeenCalled();
   });
 });

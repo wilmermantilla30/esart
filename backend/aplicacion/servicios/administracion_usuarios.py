@@ -22,6 +22,7 @@ from fastapi import Request
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from aplicacion.configuracion import obtener_configuracion
 from aplicacion.modelos import PersonalMilitar, Rol, SesionUsuario, UnidadMilitar, Usuario, UsuarioRoles
 from aplicacion.modelos.seguridad import LimiteInicioIP
 from aplicacion.nucleo.errores import ErrorAplicacion
@@ -105,7 +106,9 @@ class Actor:
         )
 
 
-async def _auditar(sesion: AsyncSession, accion: str, actor: Actor, detalle: dict, documento=None) -> None:
+async def _auditar(
+    sesion: AsyncSession, accion: str, actor: Actor, detalle: dict, documento=None, confirmar=True
+) -> None:
     """Registra la acción con el actor y confirma (registrar_evento hace commit)."""
     await auditoria.registrar_evento(
         sesion,
@@ -116,6 +119,7 @@ async def _auditar(sesion: AsyncSession, accion: str, actor: Actor, detalle: dic
         documento=documento,
         resultado="EXITOSO",
         detalle={**detalle, "operador": actor.operador},
+        confirmar=confirmar,
     )
 
 
@@ -393,8 +397,31 @@ async def cambiar_contrasena_propia(
     El usuario en sesión cambia su contraseña (obligatorio si era temporal).
     Exige la actual, valida la nueva, quita la marca de cambio obligatorio y cierra sus otras sesiones.
     """
-    fila = await _obtener_usuario(sesion, usuario.id)
-    actor = Actor(usuario.id, usuario.nombre_usuario, usuario.nombre_usuario, request)
+    await cambiar_contrasena_comprobada(
+        sesion,
+        usuario_id=usuario.id,
+        nombre_usuario=usuario.nombre_usuario,
+        sesion_a_conservar=usuario.sesion_id,
+        contrasena_actual=contrasena_actual,
+        contrasena_nueva=contrasena_nueva,
+        request=request,
+    )
+
+
+async def cambiar_contrasena_comprobada(
+    sesion: AsyncSession,
+    *,
+    usuario_id: int,
+    nombre_usuario: str,
+    contrasena_actual: str,
+    contrasena_nueva: str,
+    request: Request | None = None,
+    sesion_a_conservar=None,
+    confirmar=True,
+) -> None:
+    """Reglas HU-10 compartidas por la sesión y el desafío restringido de primer acceso."""
+    fila = await _obtener_usuario(sesion, usuario_id)
+    actor = Actor(usuario_id, nombre_usuario, nombre_usuario, request)
     if not fila.contrasena_hash or not await asyncio.to_thread(
         verificar_contrasena, contrasena_actual, fila.contrasena_hash
     ):
@@ -402,8 +429,8 @@ async def cambiar_contrasena_propia(
             sesion,
             auditoria.CONTRASENA_CAMBIADA,
             request,
-            usuario_id=usuario.id,
-            nombre_usuario=usuario.nombre_usuario,
+            usuario_id=usuario_id,
+            nombre_usuario=nombre_usuario,
             resultado="RECHAZADO",
             detalle={"codigo": "CONTRASENA_ACTUAL_INCORRECTA"},
         )
@@ -414,12 +441,29 @@ async def cambiar_contrasena_propia(
     nuevo_hash = await asyncio.to_thread(generar_hash_contrasena, contrasena_nueva)
     await sesion.execute(
         update(Usuario)
-        .where(Usuario.id == usuario.id)
+        .where(Usuario.id == usuario_id)
         .values(contrasena_hash=nuevo_hash, requiere_cambio_contrasena=False, actualizado_en=func.now())
     )
     # Si alguien más conocía la contraseña anterior y tenía una sesión abierta, se le cierra.
-    await _revocar_sesiones(sesion, usuario.id, excepto=usuario.sesion_id)
-    await _auditar(sesion, auditoria.CONTRASENA_CAMBIADA, actor, {"usuario_afectado": usuario.nombre_usuario})
+    await _revocar_sesiones(sesion, usuario_id, excepto=sesion_a_conservar)
+    if obtener_configuracion().totp_habilitado:
+        from aplicacion.modelos.totp import DesafioTotp
+
+        await sesion.execute(
+            update(DesafioTotp)
+            .where(
+                DesafioTotp.usuario_id == usuario_id,
+                DesafioTotp.estado == "PENDIENTE",
+            )
+            .values(estado="CANCELADO")
+        )
+    await _auditar(
+        sesion,
+        auditoria.CONTRASENA_CAMBIADA,
+        actor,
+        {"usuario_afectado": nombre_usuario},
+        confirmar=confirmar,
+    )
 
 
 async def desbloquear_usuario(sesion: AsyncSession, *, nombre_usuario: str, actor: Actor) -> EstadoUsuario:

@@ -55,14 +55,7 @@
           </div>
         </div>
       }
-      <a
-        [routerLink]="rutaCambiarContrasena"
-        aria-label="Cambiar contraseña"
-        title="Cambiar contraseña"
-        class="inline-flex items-center gap-2 py-2 px-2.5 border border-gris-bordes rounded-sm text-xs font-semibold text-azul-pizarra bg-white hover:border-azul-institucional hover:text-azul-institucional transition-all duration-150 ease-state-change focus:outline-none focus:ring-2 focus:ring-azul-institucional/40"
-      >
-        <span class="material-symbols-outlined text-[18px]" aria-hidden="true">key</span>
-      </a>
+      <esart-menu-seguridad />
       <button
         type="button"
         (click)="cerrarSesion()"

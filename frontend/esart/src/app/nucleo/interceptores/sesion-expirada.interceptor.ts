@@ -10,14 +10,25 @@ import {
   RUTA_PAGINA_INICIO_SESION,
 } from '../rutas-paginas';
 import { PREFIJO_API } from '../servicios/cliente-api.service';
-import { RUTA_INICIAR_SESION, RUTA_USUARIO_ACTUAL, SesionService } from '../servicios/sesion.service';
+import {
+  RUTA_INICIAR_SESION,
+  RUTA_USUARIO_ACTUAL,
+  SesionService,
+} from '../servicios/sesion.service';
 
 /**
  * Peticiones cuyo 401 NO significa "la sesión expiró":
  * - el login (un 401 ahí es "credenciales inválidas" y lo muestra la propia pantalla);
  * - /auth/yo (lo usan las guardas justamente para averiguar si hay sesión).
  */
-const RUTAS_SIN_REDIRECCION = [PREFIJO_API + RUTA_INICIAR_SESION, PREFIJO_API + RUTA_USUARIO_ACTUAL];
+const RUTAS_SIN_REDIRECCION = [
+  PREFIJO_API + RUTA_INICIAR_SESION,
+  PREFIJO_API + RUTA_USUARIO_ACTUAL,
+  PREFIJO_API + '/auth/totp/login/configurar',
+  PREFIJO_API + '/auth/totp/login/vincular',
+  PREFIJO_API + '/auth/totp/login/confirmar',
+  PREFIJO_API + '/auth/cambiar-contrasena-inicial',
+];
 
 /** Código del 403 que da el backend mientras la contraseña sea temporal. */
 export const CODIGO_CAMBIO_CONTRASENA_REQUERIDO = 'CAMBIO_CONTRASENA_REQUERIDO';

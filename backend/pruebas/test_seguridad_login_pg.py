@@ -79,9 +79,9 @@ def ip():
     return str(ipaddress.IPv6Address(uuid.uuid4().int))
 
 
-async def login(app, nombre, clave="incorrecta", direccion=None, captcha=True):
+async def login(app, nombre, clave="incorrecta", direccion=None, captcha=True, completar=False):
     async with AsyncSession(app, expire_on_commit=False) as s:
-        return await autenticacion.iniciar_sesion(
+        resultado = await autenticacion.iniciar_sesion(
             s,
             nombre,
             clave,
@@ -91,6 +91,28 @@ async def login(app, nombre, clave="incorrecta", direccion=None, captcha=True):
             "respuesta-test" if captcha else None,
             VerificadorControlado(),
         )
+        if not completar:
+            return resultado
+        from urllib.parse import parse_qs, urlparse
+
+        import pyotp
+
+        from aplicacion.servicios.totp import TotpService
+
+        servicio = TotpService(s)
+        qr = await servicio.configurar_login(resultado.id, resultado.nonce, direccion or "127.0.0.1")
+        secreto = parse_qs(urlparse(qr["uri"]).query)["secret"][0]
+        usuario, _ = await servicio.vincular_login(
+            resultado.id, resultado.nonce, pyotp.TOTP(secreto).now(), direccion or "127.0.0.1"
+        )
+        contexto = seguridad_login.ContextoIntento(
+            seguridad_login.seudonimo("usuario", nombre.lower()),
+            direccion,
+            await seguridad_login.reloj_servidor(s),
+            usuario=usuario,
+            estado=usuario,
+        )
+        return await autenticacion.finalizar_login(s, usuario, direccion, None, contexto)
 
 
 async def estado(admin, identificador):
@@ -162,7 +184,7 @@ async def test_desbloqueo_exacto_y_jwt_roles_preservados(motores, monkeypatch):
         return fin
 
     monkeypatch.setattr(seguridad_login, "reloj_servidor", reloj)
-    resultado = await login(app, nombre, CLAVE, captcha=False)
+    resultado = await login(app, nombre, CLAVE, captcha=False, completar=True)
     assert decodificar_token_sesion(resultado.token_sesion).usuario_id == identificador
     assert resultado.rol == "USUARIO"
     assert await estado(admin, identificador) == (0, None)
@@ -187,7 +209,7 @@ async def test_exito_reinicia_contador(motores):
     for _ in range(3):
         with pytest.raises(ErrorAplicacion):
             await login(app, nombre)
-    await login(app, nombre, CLAVE)
+    await login(app, nombre, CLAVE, completar=True)
     assert await estado(admin, identificador) == (0, None)
 
 
@@ -288,7 +310,7 @@ async def test_fallo_de_auditoria_revierte_y_no_emite_jwt(motores, monkeypatch):
 async def test_sesion_existente_no_accede_durante_bloqueo(motores):
     admin, app = motores
     identificador, nombre = await nuevo_usuario(admin)
-    resultado = await login(app, nombre, CLAVE)
+    resultado = await login(app, nombre, CLAVE, completar=True)
     token = decodificar_token_sesion(resultado.token_sesion)
     for _ in range(7):
         with pytest.raises(ErrorAplicacion):
@@ -408,6 +430,17 @@ async def test_http_real_login_cookie_y_sesion_actual(motores):
     api.dependency_overrides[obtener_sesion_base_datos] = entregar_sesion
     async with httpx.AsyncClient(transport=httpx.ASGITransport(app=api), base_url="http://pruebas") as c:
         respuesta = await c.post("/api/auth/login", json={"nombre_usuario": nombre, "contrasena": CLAVE})
+        async with AsyncSession(admin) as s:
+            from sqlalchemy import text
+
+            esquema = await s.scalar(text("SELECT to_regclass('seguridad.usuario_totp')"))
+        if esquema is None:
+            assert respuesta.status_code == 503 and NOMBRE_COOKIE_SESION not in c.cookies
+            assert (await c.get("/api/auth/yo")).status_code == 401
+            return
+        from pruebas.soporte_mfa import completar_vinculacion
+
+        respuesta = await completar_vinculacion(c, respuesta)
         assert respuesta.status_code == 200
         assert respuesta.json()["usuario"]["rol"] == "USUARIO"
         token = respuesta.cookies[NOMBRE_COOKIE_SESION]

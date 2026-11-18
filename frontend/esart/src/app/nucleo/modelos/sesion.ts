@@ -72,6 +72,15 @@ export interface RespuestaInicioSesion {
   expira_por_inactividad_segundos: number;
 }
 
+export interface DesafioSegundoFactor {
+  totp_requerido: true;
+  configuracion_requerida?: boolean;
+  cambio_contrasena_requerido?: boolean;
+  metodos?: string[];
+  desafio_id: string;
+  expira_en: string;
+}
+
 /** Respuesta de GET /api/auth/yo. */
 /** Opción del menú armada por el backend según la malla de permisos (HU-09). */
 export interface ElementoMenu {
