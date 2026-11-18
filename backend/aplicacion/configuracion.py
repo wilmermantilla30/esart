@@ -32,6 +32,10 @@ PATRON_HASH_BCRYPT = re.compile(r"^\$2[aby]\$\d{2}\$[./A-Za-z0-9]{53}$")
 # desde qué carpeta se ejecute uvicorn o pytest.
 # backend/aplicacion/configuracion.py -> parents[1]=backend.
 RUTA_ARCHIVO_ENV = Path(__file__).resolve().parents[1] / ".env"
+# Build de producción de Angular (npm run build). FastAPI lo sirve si existe (HU-21).
+RUTA_FRONT_POR_DEFECTO = (
+    Path(__file__).resolve().parents[2] / "frontend" / "esart" / "dist" / "esart" / "browser"
+)
 
 # Textos de los valores de ejemplo de .env.ejemplo. Si siguen presentes,
 # significa que alguien copió el archivo sin reemplazar los secretos.
@@ -72,6 +76,11 @@ class Configuracion(BaseSettings):
     # Activar únicamente tras revisar permisos/políticas y aportar una clave externa.
     totp_habilitado: bool = False
     totp_clave_cifrado: SecretStr | None = None
+
+    # --- Dashboard (HU-21) ---
+    # Carpeta del Angular compilado que sirve FastAPI. Si no existe, se sirve solo la API
+    # (en desarrollo el front corre aparte con "npm start").
+    ruta_front: Path | None = RUTA_FRONT_POR_DEFECTO
 
     # --- Administrador inicial ---
     admin_usuario: str = Field(min_length=3, max_length=60)
