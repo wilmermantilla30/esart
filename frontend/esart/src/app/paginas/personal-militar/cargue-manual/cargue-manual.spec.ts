@@ -1,11 +1,12 @@
 import { provideHttpClient } from '@angular/common/http';
 import { HttpTestingController, provideHttpClientTesting } from '@angular/common/http/testing';
 import { ComponentFixture, TestBed } from '@angular/core/testing';
-import { provideRouter } from '@angular/router';
+import { provideRouter, Router } from '@angular/router';
 
 import { OpcionesRegistroPersonal, PersonalRegistrado } from '../../../nucleo/modelos/personal';
 import { SesionService } from '../../../nucleo/servicios/sesion.service';
 import { CargueManual } from './cargue-manual';
+import { limitarPosicion, MARGEN_VENTANA, pasoDeTecla } from './mover-ventana';
 
 const OPCIONES: OpcionesRegistroPersonal = {
   categorias: [
@@ -44,6 +45,10 @@ describe('CargueManual', () => {
 
   async function crear(conPermisos: string[]) {
     permisos = new Set(conPermisos);
+    // jsdom no implementa la capa modal de <dialog>.
+    HTMLDialogElement.prototype.showModal ??= function (this: HTMLDialogElement) {
+      this.open = true;
+    };
     await TestBed.configureTestingModule({
       imports: [CargueManual],
       providers: [
@@ -165,22 +170,106 @@ describe('CargueManual', () => {
     await crear([]);
     diligenciar();
     enviar();
-    http
-      .expectOne('/api/personal')
-      .flush(
-        {
-          error: {
-            codigo: 'DOCUMENTO_EXISTENTE',
-            mensaje: 'Ya existe un militar registrado con ese documento de identidad.',
-            detalle: null,
-          },
+    http.expectOne('/api/personal').flush(
+      {
+        error: {
+          codigo: 'DOCUMENTO_EXISTENTE',
+          mensaje: 'Ya existe un militar registrado con ese documento de identidad.',
+          detalle: null,
         },
-        { status: 409, statusText: 'Conflict' },
-      );
+      },
+      { status: 409, statusText: 'Conflict' },
+    );
     fixture.detectChanges();
     expect(elemento().querySelector('[role="alert"]')!.textContent).toContain(
       'Ya existe un militar',
     );
     expect(formulario().controls.nombres.value).toBe('  Carlos   Andrés ');
+  });
+
+  /** jsdom no tiene PointerEvent: se arma desde MouseEvent con los campos que se leen. */
+  function puntero(tipo: string, x: number, y: number) {
+    const evento = new MouseEvent(tipo, { bubbles: true, clientX: x, clientY: y, button: 0 });
+    Object.defineProperties(evento, { pointerId: { value: 1 }, isPrimary: { value: true } });
+    return evento;
+  }
+
+  it('se abre como ventana modal y se arrastra por la cabecera sin salirse del navegador', async () => {
+    await crear([]);
+    const dialogo = elemento().querySelector<HTMLDialogElement>('dialog')!;
+    expect(dialogo.open).toBe(true);
+    expect(dialogo.classList).not.toContain('registro-posicionada');
+
+    const cabecera = elemento().querySelector<HTMLElement>('.registro-cabecera')!;
+    cabecera.dispatchEvent(puntero('pointerdown', 100, 50));
+    cabecera.dispatchEvent(puntero('pointermove', 400, 300));
+    fixture.detectChanges();
+    expect(dialogo.classList).toContain('registro-posicionada');
+    expect([dialogo.style.left, dialogo.style.top]).toEqual(['300px', '250px']);
+
+    // Arrastrar más allá del borde la deja pegada al margen.
+    cabecera.dispatchEvent(puntero('pointermove', -500, -500));
+    fixture.detectChanges();
+    expect([dialogo.style.left, dialogo.style.top]).toEqual([
+      `${MARGEN_VENTANA}px`,
+      `${MARGEN_VENTANA}px`,
+    ]);
+    cabecera.dispatchEvent(puntero('pointerup', 0, 0));
+
+    // Doble clic la vuelve a centrar.
+    cabecera.dispatchEvent(new MouseEvent('dblclick', { bubbles: true }));
+    fixture.detectChanges();
+    expect(dialogo.classList).not.toContain('registro-posicionada');
+  });
+
+  it('el botón cerrar no inicia arrastre y Esc equivale a cancelar', async () => {
+    await crear([]);
+    const cerrar = elemento().querySelector<HTMLButtonElement>('button[aria-label^="Cerrar"]')!;
+    cerrar.dispatchEvent(puntero('pointerdown', 10, 10));
+    elemento()
+      .querySelector('.registro-cabecera')!
+      .dispatchEvent(puntero('pointermove', 300, 300));
+    fixture.detectChanges();
+    expect(elemento().querySelector('dialog')!.classList).not.toContain('registro-posicionada');
+
+    const cancelar = vi.spyOn(TestBed.inject(Router), 'navigateByUrl').mockResolvedValue(true);
+    elemento()
+      .querySelector('dialog')!
+      .dispatchEvent(new Event('cancel', { cancelable: true }));
+    expect(cancelar).toHaveBeenCalledWith('/personal');
+  });
+
+  it('las flechas sobre "Mover ventana" desplazan la ventana', async () => {
+    await crear([]);
+    const mover = elemento().querySelector<HTMLButtonElement>('.registro-mover')!;
+    mover.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowRight', bubbles: true }));
+    mover.dispatchEvent(new KeyboardEvent('keydown', { key: 'ArrowDown', bubbles: true }));
+    fixture.detectChanges();
+    // jsdom informa el rectángulo en 0,0: un paso a la derecha desde ahí y luego uno abajo.
+    const dialogo = elemento().querySelector<HTMLDialogElement>('dialog')!;
+    expect(dialogo.style.top).toBe('24px');
+  });
+});
+
+describe('mover-ventana', () => {
+  const viewport = { ancho: 1000, alto: 700 };
+  const tamano = { ancho: 760, alto: 600 };
+
+  it('mantiene la ventana completa dentro del navegador', () => {
+    expect(limitarPosicion({ x: 50, y: 40 }, tamano, viewport)).toEqual({ x: 50, y: 40 });
+    expect(limitarPosicion({ x: 900, y: 900 }, tamano, viewport)).toEqual({ x: 232, y: 92 });
+    expect(limitarPosicion({ x: -90, y: -90 }, tamano, viewport)).toEqual({ x: 8, y: 8 });
+  });
+
+  it('si la ventana es más grande que el navegador queda en el margen', () => {
+    expect(limitarPosicion({ x: 300, y: 300 }, { ancho: 2000, alto: 900 }, viewport)).toEqual({
+      x: 8,
+      y: 8,
+    });
+  });
+
+  it('solo las flechas mueven la ventana', () => {
+    expect(pasoDeTecla('ArrowUp')).toEqual({ x: 0, y: -24 });
+    expect(pasoDeTecla('Enter')).toBeNull();
   });
 });

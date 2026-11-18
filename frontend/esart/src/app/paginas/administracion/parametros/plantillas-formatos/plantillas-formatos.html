@@ -204,6 +204,27 @@
   }
 </div>
 
+<!--
+  Aviso mientras se arrastra un archivo: cubre la pantalla y no captura eventos (pointer-events
+  none), así el archivo se puede soltar en cualquier parte. Los eventos los maneja el host.
+-->
+@if (arrastrando()) {
+  <div
+    class="fixed inset-0 z-50 pointer-events-none p-3 flex items-start justify-center"
+    aria-hidden="true"
+  >
+    <div
+      class="absolute inset-3 rounded-2xl border-4 border-dashed border-azul-institucional bg-azul-institucional/10"
+    ></div>
+    <div
+      class="relative mt-6 px-5 py-3 rounded-xl bg-azul-institucional text-white shadow-lg flex items-center gap-2 font-headline font-semibold"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">upload_file</span>
+      Suelte el archivo en cualquier parte para cargarlo
+    </div>
+  </div>
+}
+
 <!-- Ventana "Subir nueva plantilla o formato" -->
 @if (subiendo()) {
   <div
@@ -255,9 +276,6 @@
         <button
           type="button"
           (click)="examinar()"
-          (dragover)="sobre($event)"
-          (dragleave)="arrastrando.set(false)"
-          (drop)="soltar($event)"
           [class]="
             'w-full rounded-xl border-2 border-dashed p-6 flex flex-col items-center gap-1.5 text-center transition-colors ' +
             (arrastrando()
@@ -280,7 +298,7 @@
             </span>
           } @else {
             <span class="font-headline font-semibold text-negro-institucional"
-              >Haga clic para examinar o arrastre el archivo aquí</span
+              >Haga clic para examinar o arrastre el archivo a cualquier parte de la pantalla</span
             >
             <span class="text-xs text-azul-pizarra/70"
               >Formatos permitidos: .XLSX, .XLS, .PDF, .DOCX (máx. 25 MB). Sin macros.</span

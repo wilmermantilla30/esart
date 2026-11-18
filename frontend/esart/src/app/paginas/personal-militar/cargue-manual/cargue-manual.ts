@@ -1,4 +1,13 @@
-import { Component, computed, DestroyRef, inject, signal } from '@angular/core';
+import {
+  afterNextRender,
+  Component,
+  computed,
+  DestroyRef,
+  ElementRef,
+  inject,
+  signal,
+  viewChild,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
@@ -13,6 +22,7 @@ import {
 } from '../../../nucleo/modelos/personal';
 import { RegistroPersonalService } from '../../../nucleo/servicios/registro-personal.service';
 import { SesionService } from '../../../nucleo/servicios/sesion.service';
+import { limitarPosicion, pasoDeTecla, PosicionVentana } from './mover-ventana';
 
 /** Cédula: solo dígitos, 5 a 15 (misma regla del backend). */
 const PATRON_CEDULA = /^\d{5,15}$/;
@@ -29,6 +39,9 @@ const RUTA_PANEL = '/personal';
  * - Tras guardar muestra el resumen y dos accesos: "Registrar como instructor" y "Crear usuario".
  *   Cada uno aparece solo si el usuario tiene la operación "crear" en INSTRUCTORES / USUARIOS;
  *   las rutas destino tienen su guarda y el backend vuelve a verificar cada petición.
+ * - Se muestra como ventana flotante (<dialog> modal) que se arrastra por la cabecera a cualquier
+ *   parte del navegador, sin salirse de él; también se mueve con las flechas desde el botón
+ *   "Mover ventana", y doble clic en la cabecera la vuelve a centrar.
  */
 @Component({
   imports: [ReactiveFormsModule, RouterLink],
@@ -68,8 +81,80 @@ export class CargueManual {
     activo: [true],
   });
 
+  // --- Ventana flotante ---
+  private readonly ventana = viewChild.required<ElementRef<HTMLDialogElement>>('ventana');
+  /** null = centrada por el navegador; con valor, la ventana quedó donde el usuario la soltó. */
+  protected readonly posicion = signal<PosicionVentana | null>(null);
+  protected readonly moviendo = signal(false);
+  /** Gesto de arrastre en curso: puntero y distancia del puntero a la esquina de la ventana. */
+  private arrastre: { id: number; dx: number; dy: number } | null = null;
+
   constructor() {
     this.cargarOpciones();
+    // showModal necesita el <dialog> en el DOM: se abre después del primer render.
+    afterNextRender(() => {
+      const dialogo = this.ventana().nativeElement;
+      if (!dialogo.open) dialogo.showModal();
+    });
+  }
+
+  /** Empieza a arrastrar desde la cabecera (no desde sus botones). */
+  protected iniciarArrastre(evento: PointerEvent): void {
+    if (evento.button !== 0 || !evento.isPrimary) return;
+    // El botón "Mover ventana" sí arrastra; los demás botones (cerrar) conservan su clic.
+    if ((evento.target as HTMLElement).closest('button:not(.registro-mover)')) return;
+    const rect = this.ventana().nativeElement.getBoundingClientRect();
+    this.arrastre = {
+      id: evento.pointerId,
+      dx: evento.clientX - rect.left,
+      dy: evento.clientY - rect.top,
+    };
+    (evento.currentTarget as HTMLElement).setPointerCapture?.(evento.pointerId);
+    this.moviendo.set(true);
+    evento.preventDefault();
+  }
+
+  protected arrastrar(evento: PointerEvent): void {
+    if (!this.arrastre || evento.pointerId !== this.arrastre.id) return;
+    this.colocar({ x: evento.clientX - this.arrastre.dx, y: evento.clientY - this.arrastre.dy });
+  }
+
+  protected terminarArrastre(evento: PointerEvent): void {
+    if (!this.arrastre || evento.pointerId !== this.arrastre.id) return;
+    this.arrastre = null;
+    this.moviendo.set(false);
+  }
+
+  /** Flechas sobre el botón "Mover ventana": desplaza la ventana sin usar el ratón. */
+  protected moverConTeclado(evento: KeyboardEvent): void {
+    const paso = pasoDeTecla(evento.key);
+    if (!paso) return;
+    evento.preventDefault();
+    const rect = this.ventana().nativeElement.getBoundingClientRect();
+    this.colocar({ x: rect.left + paso.x, y: rect.top + paso.y });
+  }
+
+  /** Doble clic en la cabecera: la ventana vuelve al centro. */
+  protected centrar(evento?: MouseEvent): void {
+    if (evento && (evento.target as HTMLElement).closest('button')) return;
+    this.posicion.set(null);
+  }
+
+  /** Si cambia el tamaño del navegador, la ventana se reacomoda para no quedar por fuera. */
+  protected reacomodar(): void {
+    const actual = this.posicion();
+    if (actual) this.colocar(actual);
+  }
+
+  private colocar(deseada: PosicionVentana): void {
+    const rect = this.ventana().nativeElement.getBoundingClientRect();
+    this.posicion.set(
+      limitarPosicion(
+        deseada,
+        { ancho: rect.width, alto: rect.height },
+        { ancho: window.innerWidth, alto: window.innerHeight },
+      ),
+    );
   }
 
   /** Pide categorías, grados y unidades; preselecciona la Escuela de Artillería. */

@@ -1,15 +1,49 @@
-/* Registro manual de personal: tarjeta con aspecto de ventana, responsiva (una columna en móvil). */
+/* Registro manual de personal: ventana flotante y movible, responsiva (una columna en móvil). */
 :host {
   display: block;
 }
+/* Centrada al abrir; al arrastrarla queda fija en left/top (.registro-posicionada). */
 .registro {
-  max-width: 760px;
-  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  width: min(760px, calc(100vw - 16px));
+  max-height: calc(100dvh - 16px);
+  margin: auto;
+  padding: 0;
   background: white;
+  color: inherit;
   border: 1px solid #dbe6ec;
   border-radius: 14px;
-  box-shadow: 0 10px 30px rgb(15 40 60 / 0.08);
+  box-shadow: 0 24px 70px rgb(11 37 57 / 0.3);
   overflow: hidden;
+}
+.registro:not([open]) {
+  display: none;
+}
+.registro::backdrop {
+  background: rgb(16 42 67 / 0.25);
+}
+.registro-posicionada {
+  margin: 0;
+  right: auto;
+  bottom: auto;
+}
+.registro > form {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+}
+.registro-cabecera {
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
+}
+.registro-moviendo .registro-cabecera,
+.registro-moviendo .registro-mover {
+  cursor: grabbing;
+}
+.registro-mover {
+  cursor: grab;
 }
 .registro-cabecera {
   display: flex;
@@ -55,6 +89,9 @@
   background: #f1f6f9;
 }
 .registro-cuerpo {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   padding: 16px 20px;
 }
 .registro-cuerpo fieldset {

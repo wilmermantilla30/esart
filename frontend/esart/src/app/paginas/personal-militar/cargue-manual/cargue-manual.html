@@ -3,8 +3,31 @@
   Formulario en tarjeta tipo ventana; tras guardar se reemplaza por el resumen y los accesos
   a Instructores y Usuarios (cada uno visible solo con permiso "crear" en su componente).
 -->
-<section class="registro" aria-labelledby="registro-titulo">
-  <header class="registro-cabecera">
+<!--
+  Ventana flotante: <dialog> modal que se arrastra por la cabecera (o con las flechas desde
+  "Mover ventana"); Esc equivale a Cancelar y doble clic en la cabecera la centra.
+-->
+<dialog
+  #ventana
+  class="registro registro-ventana"
+  [class.registro-posicionada]="posicion() !== null"
+  [class.registro-moviendo]="moviendo()"
+  [style.left.px]="posicion()?.x"
+  [style.top.px]="posicion()?.y"
+  aria-labelledby="registro-titulo"
+  (cancel)="$event.preventDefault(); cancelar()"
+  (window:resize)="reacomodar()"
+>
+  <header
+    class="registro-cabecera"
+    title="Arrastre para mover la ventana · doble clic para centrarla"
+    (pointerdown)="iniciarArrastre($event)"
+    (pointermove)="arrastrar($event)"
+    (pointerup)="terminarArrastre($event)"
+    (pointercancel)="terminarArrastre($event)"
+    (lostpointercapture)="terminarArrastre($event)"
+    (dblclick)="centrar($event)"
+  >
     <span class="registro-icono material-symbols-outlined" aria-hidden="true">person_add</span>
     <div class="min-w-0 flex-1">
       <h2 id="registro-titulo" class="flex flex-wrap items-center gap-2">
@@ -12,6 +35,15 @@
       </h2>
       <p>Captura homologada con la base de datos PostgreSQL de la Escuela de Artillería.</p>
     </div>
+    <button
+      type="button"
+      class="registro-cerrar registro-mover"
+      aria-label="Mover ventana (use las flechas del teclado)"
+      title="Mover ventana (arrastre o use las flechas)"
+      (keydown)="moverConTeclado($event)"
+    >
+      <span class="material-symbols-outlined" aria-hidden="true">open_with</span>
+    </button>
     <button
       type="button"
       class="registro-cerrar"
@@ -265,4 +297,4 @@
       </footer>
     </form>
   }
-</section>
+</dialog>
