@@ -223,6 +223,12 @@ Cada elemento:
 }
 ```
 
+### `GET /api/verificar/artillero/{numero_documento}/documento?tipo=DIPLOMA|OFICIO_REMISORIO|CERTIFICACION`
+Permiso `PERSONAL_VERIFICAR` (leer). Devuelve el PDF (ReportLab) como descarga; cédula enmascarada sin
+`VER_DOCUMENTO_COMPLETO`. **409** `DOCUMENTO_NO_DISPONIBLE` (diploma sin curso aprobado), **422** opción inválida.
+Auditado como `CONSULTA_ARTILLERO` con resultado `DOC_<OPCION>`. Opciones del selector: `GET /api/verificar/documentos`.
+Detalle en `ESART_DOCUMENTOS_ARTILLERO.md`.
+
 ### `GET /api/verificar/resumen`
 Indicadores del panel: `{ "total", "aptos", "no_aptos", "reentrenamiento_por_vencer", "activos", "unidades", "dias_alerta_vencimiento" }`.
 
@@ -400,3 +406,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.11 | 2026-11-17 | §5c panel de Parámetros: regla de habilitación (leer, simular, guardar con TOTP y control de concurrencia), repositorio de plantillas (publicar, descargar, retirar) y parámetros de seguridad (solo consulta). Migración p0012 |
 | 0.12 | 2026-11-17 | §5d panel de instructores (militares y civiles, foto y especialidades) y cursos del instructor. Migraciones p0013 y p0014 |
 | 0.13 | 2026-11-18 | §5e registro manual de personal militar y accesos a Instructores / Usuarios con `?cedula=`. Migración p0015 |
+| 0.14 | 2026-11-18 | §3 documentos PDF del artillero (diploma, oficio remisorio, certificación) con ReportLab |

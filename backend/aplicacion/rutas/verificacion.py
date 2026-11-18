@@ -5,10 +5,12 @@ Cada ruta exige su permiso de la malla (HU-09). La cédula sale enmascarada a qu
 tenga VER_DOCUMENTO_COMPLETO. La lógica de la regla vive en servicios/habilitacion.py.
 """
 
+import secrets
 from datetime import UTC, datetime
 from typing import Annotated, Literal
+from urllib.parse import quote
 
-from fastapi import APIRouter, Depends, Query, Request
+from fastapi import APIRouter, Depends, Query, Request, Response
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
@@ -17,6 +19,7 @@ from aplicacion.esquemas.verificacion import (
     CriterioVerificacion,
     CursoVerificacion,
     ElementoHabilitacion,
+    OpcionDocumentoArtillero,
     PaginaHabilitacion,
     ReentrenamientoVerificacion,
     RespuestaVerificacion,
@@ -24,6 +27,14 @@ from aplicacion.esquemas.verificacion import (
     UnidadResumida,
 )
 from aplicacion.nucleo.errores import ErrorAplicacion
+from aplicacion.reportes.comun import (
+    CriterioDocumento,
+    CursoDocumento,
+    DatosDocumento,
+    DocumentoNoDisponible,
+    ReentrenamientoDocumento,
+)
+from aplicacion.reportes.maestro import REPORTES, generar_documento
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente, tiene_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual
 from aplicacion.servicios import auditoria, habilitacion
@@ -311,3 +322,99 @@ async def resumen_habilitacion(
         resultado="EXITOSO",
     )
     return ResumenHabilitacion(**resumen)
+
+
+# --- Documentos PDF del artillero (diploma, oficio remisorio, certificación) ----------------
+# El script maestro (aplicacion/reportes/maestro.py) decide qué script genera cada opción; aquí
+# solo se arma DatosDocumento con la misma verificación de /artillero/{cedula}, con el mismo
+# permiso (PERSONAL_VERIFICAR, leer), la misma regla de cédula enmascarada y queda auditado.
+OpcionDocumento = Literal["DIPLOMA", "OFICIO_REMISORIO", "CERTIFICACION"]
+
+
+@enrutador_verificacion.get(
+    "/documentos", response_model=list[OpcionDocumentoArtillero], dependencies=[Depends(puede_verificar)]
+)
+async def opciones_documento() -> list[OpcionDocumentoArtillero]:
+    """Documentos que se pueden generar (para el selector del front)."""
+    return [OpcionDocumentoArtillero(codigo=codigo, nombre=r.nombre) for codigo, r in REPORTES.items()]
+
+
+@enrutador_verificacion.get("/artillero/{numero_documento}/documento")
+async def generar_documento_artillero(
+    numero_documento: str,
+    request: Request,
+    sesion: Sesion,
+    tipo: OpcionDocumento = Query(..., description="DIPLOMA, OFICIO_REMISORIO o CERTIFICACION"),
+    usuario_id: int = Depends(puede_verificar),
+    usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
+) -> Response:
+    """PDF del documento elegido. 404 si la cédula no existe; 409 si el documento no aplica
+    (diploma sin curso aprobado)."""
+    cedula = habilitacion.normalizar_cedula(numero_documento)
+    fila, criterios, cursos, reentrenamientos, parametros = await habilitacion.verificar_artillero(
+        sesion, cedula
+    )
+    # Número del documento: fecha + sufijo aleatorio; queda en la auditoría para rastrearlo.
+    numero = f"ESART-{fila.hoy:%Y%m%d}-{secrets.token_hex(3).upper()}"
+    datos = DatosDocumento(
+        cedula=habilitacion.enmascarar_cedula(
+            fila.documento_identidad, await puede_ver_cedula_completa(sesion, usuario_id)
+        ),
+        grado=fila.grado,
+        nombres=fila.nombres,
+        apellidos=fila.apellidos,
+        categoria=fila.categoria,
+        unidad=fila.unidad_nombre if fila.unidad_actual_id else None,
+        activo=fila.activo,
+        resultado=fila.resultado,
+        fecha_expedicion=fila.hoy,
+        numero=numero,
+        expedido_por=usuario.nombre_usuario,
+        motivos=habilitacion.motivos_no_apto(criterios),
+        criterios=[CriterioDocumento(c.descripcion, c.tipo, c.cumple, c.detalle) for c in criterios],
+        cursos=[
+            CursoDocumento(
+                nombre=curso.nombre,
+                codigo=curso.codigo,
+                institucion=curso.institucion,
+                fecha_inicio=curso.fecha_inicio,
+                fecha_fin=curso.fecha_fin,
+                aprobado=bool(curso.finalizado_aprobado),
+            )
+            for curso in cursos
+        ],
+        reentrenamientos=[
+            ReentrenamientoDocumento(
+                numero_certificado=c.numero_certificado,
+                tipo=c.tipo,
+                calibre=c.calibre,
+                fecha_expedicion=c.fecha_expedicion,
+                fecha_vencimiento=c.fecha_vencimiento,
+                estado=_estado_certificado(c, fila.hoy, parametros),
+            )
+            for c in reentrenamientos
+        ],
+    )
+    try:
+        pdf, nombre = generar_documento(tipo, datos)
+    except DocumentoNoDisponible as error:
+        raise ErrorAplicacion(409, "DOCUMENTO_NO_DISPONIBLE", str(error)) from None
+    await auditoria.registrar_evento(
+        sesion,
+        auditoria.CONSULTA_ARTILLERO,
+        request,
+        usuario_id=usuario.id,
+        nombre_usuario=usuario.nombre_usuario,
+        documento=cedula,
+        resultado=f"DOC_{tipo}"[:20],
+        detalle={"documento_generado": tipo, "numero": numero},
+    )
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers={
+            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(nombre)}",
+            "X-Content-Type-Options": "nosniff",
+            "Cache-Control": "no-store",
+        },
+    )

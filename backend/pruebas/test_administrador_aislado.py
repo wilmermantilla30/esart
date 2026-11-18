@@ -265,6 +265,10 @@ async def test_sql_propuesto_es_suficiente_sin_privilegios_excesivos(laboratorio
         p0011 = "\n".join(linea for linea in p0011.splitlines() if linea.strip() not in ("BEGIN;", "COMMIT;"))
         crudo = await (await sesion.connection()).get_raw_connection()
         await crudo.driver_connection.execute(p0011)
+        # p0016: el cargue registra también el curso de cada artillero en artillero_cursos.
+        p0016 = (propuestas / "p0016_cursos_artilleros_importacion.sql").read_text(encoding="utf-8-sig")
+        p0016 = "\n".join(linea for linea in p0016.splitlines() if linea.strip() not in ("BEGIN;", "COMMIT;"))
+        await crudo.driver_connection.execute(p0016)
         await sesion.execute(text("SET LOCAL ROLE esart_aplicacion"))
         privilegios = (
             (
@@ -318,7 +322,13 @@ async def test_sql_propuesto_es_suficiente_sin_privilegios_excesivos(laboratorio
         hoja, filas = leer_excel(excel_personal(grado="CS"), "CARGUE_PERSONAL")
         curso = replace(curso, fecha_inicio=date(2026, 6, 1), fecha_fin=date(2026, 7, 1), estado="CULMINADO")
         respuesta = await guardar_personal(sesion, hoja, filas, actor, curso)
-        assert respuesta["grados_actualizados"] == 1 and respuesta["curso_codigo"] == "2"
+        assert respuesta["grados_actualizados"] == 1 and respuesta["curso_codigo"] == "SIM-CUR 02"
+        await sesion.execute(text("RESET ROLE"))
         assert await sesion.scalar(select(func.count()).select_from(PersonalMilitar)) == 1
+        # Con los permisos de p0016, cada importación dejó su curso en artillero_cursos.
+        aprobados = (
+            await sesion.scalars(text("SELECT aprobado FROM esart.artillero_cursos ORDER BY id"))
+        ).all()
+        assert aprobados == [False, True]  # EN_CURSO y luego CULMINADO
     finally:
         await motor.dispose()

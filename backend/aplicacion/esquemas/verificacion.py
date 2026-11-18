@@ -92,3 +92,10 @@ class ResumenHabilitacion(BaseModel):
     activos: int
     unidades: int
     dias_alerta_vencimiento: int
+
+
+class OpcionDocumentoArtillero(BaseModel):
+    """Documento PDF que se puede generar desde la verificación (selector del front)."""
+
+    codigo: str
+    nombre: str

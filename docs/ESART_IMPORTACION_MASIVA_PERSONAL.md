@@ -448,10 +448,11 @@ Cada importación crea un curso y registra a cada persona de la hoja en ese curs
 
 1. Se valida la hoja como antes, el tipo de curso y el comandante (activos) y el orden de fechas.
 2. Documento nuevo → se inserta en `personal_militar`.
-3. Documento existente:
-   - mismo grado (sin distinguir mayúsculas/espacios) → error de la fila, no se guarda nada;
-   - grado distinto, pero la persona ya está en un curso del **mismo tipo con fechas que se cruzan** → error;
-   - grado distinto → se actualiza `personal_militar.grado`.
+3. Documento existente (regla vigente desde la sección 20; antes "mismo grado" era error):
+   - ya está en un curso del **mismo tipo con fechas que se cruzan** → error de la fila, no se guarda nada;
+   - en cualquier otro caso se guarda como histórico (mismo grado o distinto);
+   - grado distinto y curso igual o más reciente que el último de su historial → se actualiza
+     `personal_militar.grado`.
 4. Se crea el curso con código consecutivo (bloqueo `pg_advisory_xact_lock`, sin `LOCK TABLE`).
 5. Se inserta una fila por persona en `hoja_vida_artillero` (`artillero_id`, `grado`, `curso_id`, `unidad_id`).
 6. La respuesta y la auditoría incluyen `curso_codigo`, `registros_nuevos` y `grados_actualizados`.
@@ -472,3 +473,188 @@ Revisión `p0011_cursos_importacion` y su equivalente manual
 Mientras la estructura o los privilegios falten, el formulario y la importación responden 503
 `IMPORTACION_NO_DISPONIBLE` mencionando la migración p0011. Sin instructores activos no se puede
 elegir comandante; la carga de instructores (y de su foto) no forma parte de esta pantalla.
+
+## 19. Corrección: el curso cargado no aparecía en el listado (p0016)
+
+### Síntoma
+
+Después de cargar un Excel, el listado de habilitados mostraba **Curso: —** y **NO APTO** para todo
+el personal del curso.
+
+### Causa
+
+El cargue guardaba el curso en `esart.cursos` y en el historial (`esart.hoja_vida_artillero`), pero
+la regla de habilitación (`servicios/habilitacion.py`) y la columna **Curso** leen los cursos de
+`esart.artillero_cursos`, una fila por artillero. El cargue nunca escribía en esa tabla.
+
+### Corrección
+
+`guardar_personal` (función `_registrar_cursos_artilleros`) ahora inserta, en la misma transacción,
+una fila en `artillero_cursos` por cada persona del Excel, enlazada a su fila del historial:
+
+| Estado del curso | ¿Se registra en artillero_cursos? | aprobado |
+|---|---|---|
+| CULMINADO | Sí | `true` (todo el personal del Excel se da por aprobado) |
+| EN_CURSO | Sí | `false`: aparece "en curso, aún no aprobado" |
+| CANCELADO / APLAZADO | No (queda solo en `cursos` y en el historial) | — |
+
+Datos de cada fila: `tipo_curso_id` y `nombre` del curso, `institucion` = "Escuela de Artillería",
+`fecha_inicio` y `fecha_fin` del curso. La auditoría `IMPORTACION_EXCEL` agrega `cursos_registrados`.
+
+### Cuándo aparece el curso en la columna "Curso"
+
+La columna muestra el **curso habilitante aprobado**, así que deben cumplirse las tres condiciones:
+
+1. El tipo de curso está en el parámetro `CURSOS_HABILITANTES` (hoy SACLI o SACME).
+2. El estado del curso es **CULMINADO**.
+3. La fecha final ya pasó (`fecha_fin <= hoy`).
+
+Un curso EN_CURSO aparece en la verificación como "en curso, aún no aprobado". Un curso de otro tipo
+queda en la hoja de vida del artillero, pero no lo habilita ni aparece en la columna.
+
+### Migración p0016 (ejecutar como postgres)
+
+`backend/propuestas/p0016_cursos_artilleros_importacion.sql`, equivalente a
+`migraciones_principal/versions/p0016_cursos_artilleros_importacion.py`:
+
+- Permisos de `esart_aplicacion`:
+  - `SELECT (id)` en `hoja_vida_artillero`;
+  - `INSERT` (por columnas) y `SELECT (id)` en `artillero_cursos` (SQLAlchemy usa `RETURNING id`
+    al insertar una sola fila);
+  - uso de la secuencia de `artillero_cursos`.
+- **Reparación de lo ya cargado:** crea la fila de `artillero_cursos` para cada fila del historial
+  con curso EN_CURSO o CULMINADO que no la tenga. Es idempotente.
+- El script muestra antes y después cuántas personas quedan reparadas por curso.
+
+Sin p0016, el cargue responde **503 IMPORTACION_NO_DISPONIBLE** y no guarda nada: la verificación
+de estructura incluye los nuevos privilegios.
+
+### Pruebas
+
+- `test_importacion_personal.py`: filas escritas en `artillero_cursos` y comportamiento por cada
+  uno de los cuatro estados.
+- `test_importacion_personal_aislada.py`, en PostgreSQL efímero:
+  - curso CULMINADO → 3 filas aprobadas con sus fechas;
+  - curso CANCELADO → solo historial.
+- `test_administrador_aislado.py`: con los privilegios mínimos de p0011 + p0016, la cuenta de la API
+  registra el curso EN_CURSO (no aprobado) y el CULMINADO (aprobado).
+
+### Si el cargue responde 503 "no tiene habilitado el guardado de cursos y personal"
+
+Falta algún privilegio de la cuenta `esart_aplicacion`. Normalmente es que p0016 no se ha
+ejecutado, o que se ejecutó en otra base.
+
+1. **Ver qué falta en el log del backend.** La línea `IMPORTACION_NO_DISPONIBLE` trae
+   `faltantes=...` con cada privilegio ausente, por ejemplo
+   `faltantes=esart.artillero_cursos.nombre INSERT,...`, o `<tabla> SIN_TABLA` si la tabla no existe.
+2. **O consultarlo en la base** (solo lectura, como postgres):
+   `backend/propuestas/diagnostico_privilegios_importacion.sql`. Se genera desde la misma lista que
+   revisa el backend (`PRIVILEGIOS_IMPORTACION`); si no devuelve filas, todo está bien.
+3. Ejecutar la migración que corresponda: `artillero_cursos` → p0016; `cursos` /
+   `hoja_vida_artillero` → p0011. Hay que ejecutarla en la misma base que usa el backend
+   (`BD_NOMBRE` del `.env`, hoy `esart_db`).
+4. No hace falta reiniciar el backend: los privilegios se revisan en cada importación.
+
+## 20. Cédula repetida: repetir cursos sin perder el histórico
+
+Una persona puede hacer el mismo curso varias veces, en distintos años y con distintos grados (por
+ejemplo, CS Nicolás SACLI 2024 y SV Nicolás SACLI 2026). Cada cargue se conserva como histórico; no
+se borra ni se sobrescribe nada.
+
+### Reglas al cargar una cédula que ya existe
+
+| Situación | Resultado |
+|---|---|
+| Ya está en un curso del **mismo tipo** con **fechas que se cruzan** | **Error** en la fila (sería cargar dos veces el mismo curso). No se guarda nada del archivo. |
+| Mismo grado, otro periodo (repite el curso o hace otro) | Se guarda: nueva fila en `hoja_vida_artillero` y en `artillero_cursos`. El grado no cambia. |
+| Grado distinto y el curso es **igual o más reciente** que el último de su historial | Se guarda el histórico y se **actualiza** `personal_militar.grado`. |
+| Grado distinto pero el curso es **anterior** al último de su historial (carga de cursos antiguos) | Se guarda el histórico con el grado de ese momento; el grado actual **no baja**. |
+
+"Más reciente" compara la fecha inicial del curso que se carga con la fecha inicial más reciente
+del historial de esa persona (`SQL_ULTIMO_CURSO`).
+
+### Dónde queda cada dato
+
+- `personal_militar.grado`: el grado **actual**.
+- `hoja_vida_artillero`: una fila por persona y curso, con el **grado que tenía en ese curso** y su
+  unidad.
+- `artillero_cursos`: una fila por persona y curso (ver sección 19). Es la que usa la regla de
+  habilitación; un curso repetido y aprobado cuenta igual.
+
+Ejemplo de la hoja de vida de Nicolás:
+
+| Curso | Grado en el curso | Inicio | Aprobado |
+|---|---|---|---|
+| SACLI | CS | 2024-02-01 | Sí |
+| SACLI | SV | 2026-02-01 | Sí |
+
+Su grado actual en `personal_militar` es **SV**.
+
+### Auditoría
+
+`IMPORTACION_EXCEL` agrega `personas_existentes` (cuántas cédulas ya existían) junto a
+`registros_nuevos`, `grados_actualizados` y `cursos_registrados`.
+
+### Pruebas
+
+- `test_importacion_personal.py`:
+  - el cruce de fechas es error con cualquier grado;
+  - repetir el curso con el mismo grado guarda el histórico;
+  - el grado se actualiza o no según la fecha del curso (sin cursos previos, más reciente, mismo
+    día, más antiguo).
+- `test_importacion_personal_aislada.py`, en PostgreSQL efímero:
+  - repetir el curso con el mismo grado;
+  - CS → SV en el mismo curso (grado final SV, dos filas en el historial);
+  - cargar un curso antiguo no baja el grado.
+
+## 21. Número del curso por tipo (SACLI 01, SACLI 02, COFUO 01…)
+
+El número del curso ya no es un consecutivo global (1, 2, 3…). Ahora es la **sigla del tipo de
+curso** (`tipos_curso.codigo`) seguida de un **consecutivo propio de ese tipo**, con dos dígitos
+como mínimo:
+
+| Orden de creación | Tipo | Número |
+|---|---|---|
+| 1 | SACLI | SACLI 01 |
+| 2 | SACLI | SACLI 02 |
+| 3 | COFUO | COFUO 01 |
+| 4 | SACLI | SACLI 03 |
+
+### Cómo se calcula
+
+- `SQL_SIGUIENTES_POR_TIPO` (en `importacion_personal.py`): para cada tipo toma el mayor `<NN>` de
+  los cursos cuyo código es `<SIGLA> <NN>` y le suma 1. Los códigos viejos, solo numéricos, no
+  cuentan.
+- `codigo_curso(sigla, numero)` arma el texto: sigla en mayúsculas + espacio + número con dos
+  dígitos (`SACLI 01`, `SACLI 12`, `SACLI 100`).
+- Al guardar se calcula dentro del mismo bloqueo `pg_advisory_xact_lock`: dos cargues simultáneos
+  no reciben el mismo número.
+
+### En el formulario
+
+- `GET /api/importaciones/datos-curso` devuelve el siguiente número **en cada tipo de curso**
+  (`tipos_curso[].siguiente_codigo`). El campo global `siguiente_codigo` desapareció.
+- El campo **Número del curso** (solo lectura) muestra el número del tipo elegido. Sin tipo elegido
+  aparece "Elija el tipo de curso". El número definitivo lo asigna el servidor al guardar.
+
+### Cursos creados antes del cambio
+
+Los cursos existentes conservan su número viejo. Para pasarlos al formato nuevo, de forma opcional,
+ejecutar como postgres `backend/propuestas/renumerar_cursos_por_tipo.sql`:
+
+- primero muestra la vista previa (código actual → código nuevo);
+- renumera cada tipo en orden cronológico (fecha inicial, luego id), en dos pasos para no chocar
+  con la restricción de código único;
+- comprueba que no quede ningún código viejo.
+
+Los cursos se relacionan por `id`, así que renumerar no afecta el historial ni la habilitación.
+
+### Pruebas
+
+- `test_importacion_personal.py`: formato del código (`SACLI 01`, `COFUO 02`, `SACLI 12`,
+  `SACLI 100`) y número asignado al guardar.
+- `test_importacion_personal_aislada.py`, en PostgreSQL efímero:
+  - la secuencia SIM-CUR 01, SIM-CUR 02, COFUO 01, SIM-CUR 03;
+  - el siguiente número por tipo;
+  - un curso viejo con código "4" no altera la numeración.
+- `datos-curso.spec.ts`: el número cambia según el tipo elegido.

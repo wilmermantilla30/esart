@@ -16,6 +16,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from aplicacion.base_datos.base import BaseModelo
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.modelos import (
+    ArtilleroCurso,
     AuditoriaEvento,
     Componente,
     Cursos,
@@ -114,6 +115,7 @@ async def laboratorio():
             Instructores,
             Cursos,
             HojaVidaArtillero,
+            ArtilleroCurso,
         ]
         await conexion.run_sync(
             lambda c: BaseModelo.metadata.create_all(c, tables=[t.__table__ for t in tablas])
@@ -207,8 +209,8 @@ async def test_importa_200_original_hoja_elegida_sin_encabezado(cliente_api, lab
     assert all(f.documento_identidad != "Documento" for f in filas)
     assert all(f.nombres == "Persona ficticia" and f.activo for f in filas)
     curso = await sesion.scalar(select(Cursos))
-    assert curso.codigo == "1" and curso.nombre == "Curso ficticio" and curso.estado == "EN_CURSO"
-    assert respuesta.json()["curso_codigo"] == "1"
+    assert curso.codigo == "SIM-CUR 01" and curso.nombre == "Curso ficticio" and curso.estado == "EN_CURSO"
+    assert respuesta.json()["curso_codigo"] == "SIM-CUR 01"
     assert respuesta.json()["registros_nuevos"] == 200
     historial = (await sesion.scalars(select(HojaVidaArtillero))).all()
     assert len(historial) == 200
@@ -260,16 +262,64 @@ async def test_rechaza_libros_invalidos_sin_insertar(
     assert await sesion.scalar(select(func.count()).select_from(PersonalMilitar)) == 0
 
 
-async def test_documento_existente_con_mismo_grado_es_error(cliente_api, laboratorio):
+async def test_repetir_el_mismo_curso_con_el_mismo_grado_conserva_el_historico(cliente_api, laboratorio):
+    """Una persona puede repetir el curso en otro periodo con el mismo grado: no se pierde nada."""
     sesion, _, _ = laboratorio
     assert (await enviar(cliente_api, excel_personal())).status_code == 201
     otro_periodo = datos_curso("2026-06-01", "2026-07-01")
     respuesta = await enviar(cliente_api, excel_personal(), curso=otro_periodo)
-    assert respuesta.status_code == 422
-    incidencia = respuesta.json()["error"]["detalle"]["errores"][0]
-    assert incidencia["fila"] == 2 and incidencia["columna"] == "grado" and incidencia["valor"] == "SL"
+    assert respuesta.status_code == 201, respuesta.text
+    assert respuesta.json()["grados_actualizados"] == 0
     assert await sesion.scalar(select(func.count()).select_from(PersonalMilitar)) == 1
-    assert await sesion.scalar(select(func.count()).select_from(Cursos)) == 1
+    assert await sesion.scalar(select(func.count()).select_from(Cursos)) == 2
+    grados = (await sesion.scalars(select(HojaVidaArtillero.grado).order_by(HojaVidaArtillero.id))).all()
+    assert grados == ["SL", "SL"]
+    assert await sesion.scalar(text("SELECT count(*) FROM esart.artillero_cursos")) == 2
+
+
+async def test_cs_y_luego_sv_en_el_mismo_curso_guarda_ambos_y_el_grado_actual_es_sv(cliente_api, laboratorio):
+    """Ejemplo de la Escuela: CS Nicolás hizo SACLI y años después, ya SV, lo vuelve a hacer."""
+    sesion, _, _ = laboratorio
+    como_cs = {**datos_curso("2024-02-01", "2024-03-01"), "estado_curso": "CULMINADO"}
+    como_sv = {**datos_curso("2026-02-01", "2026-03-01"), "estado_curso": "CULMINADO"}
+    assert (await enviar(cliente_api, excel_personal(grado="CS"), curso=como_cs)).status_code == 201
+    respuesta = await enviar(cliente_api, excel_personal(grado="SV"), curso=como_sv)
+    assert respuesta.status_code == 201, respuesta.text
+    assert respuesta.json()["grados_actualizados"] == 1
+    militar = await sesion.scalar(select(PersonalMilitar))
+    await sesion.refresh(militar)
+    assert militar.grado == "SV"
+    historial = (
+        await sesion.execute(
+            text("""
+                SELECT hv.grado, c.fecha_inicio, ac.aprobado
+                FROM esart.hoja_vida_artillero hv
+                JOIN esart.cursos c ON c.id = hv.curso_id
+                JOIN esart.artillero_cursos ac ON ac.hoja_vida_id = hv.id
+                ORDER BY c.fecha_inicio
+            """)
+        )
+    ).all()
+    assert [(f.grado, f.fecha_inicio.year, f.aprobado) for f in historial] == [
+        ("CS", 2024, True),
+        ("SV", 2026, True),
+    ]
+
+
+async def test_cargar_un_curso_antiguo_no_baja_el_grado_actual(cliente_api, laboratorio):
+    """Si después de cargar SV 2026 se carga el SACLI de 2024 (cuando era CS), el grado sigue SV."""
+    sesion, _, _ = laboratorio
+    reciente = datos_curso("2026-02-01", "2026-03-01")
+    antiguo = datos_curso("2024-02-01", "2024-03-01")
+    assert (await enviar(cliente_api, excel_personal(grado="SV"), curso=reciente)).status_code == 201
+    respuesta = await enviar(cliente_api, excel_personal(grado="CS"), curso=antiguo)
+    assert respuesta.status_code == 201, respuesta.text
+    assert respuesta.json()["grados_actualizados"] == 0
+    militar = await sesion.scalar(select(PersonalMilitar))
+    await sesion.refresh(militar)
+    assert militar.grado == "SV"
+    grados = (await sesion.scalars(select(HojaVidaArtillero.grado).order_by(HojaVidaArtillero.id))).all()
+    assert grados == ["SV", "CS"]
 
 
 async def test_documento_existente_con_otro_grado_actualiza_y_guarda_historial(cliente_api, laboratorio):
@@ -280,12 +330,44 @@ async def test_documento_existente_con_otro_grado_actualiza_y_guarda_historial(c
     assert respuesta.status_code == 201, respuesta.text
     assert respuesta.json()["grados_actualizados"] == 1
     assert respuesta.json()["registros_nuevos"] == 0
-    assert respuesta.json()["curso_codigo"] == "2"
+    assert respuesta.json()["curso_codigo"] == "SIM-CUR 02"
     militar = await sesion.scalar(select(PersonalMilitar))
     await sesion.refresh(militar)
     assert militar.grado == "CS"
     grados = (await sesion.scalars(select(HojaVidaArtillero.grado).order_by(HojaVidaArtillero.id))).all()
     assert grados == ["SL", "CS"]
+
+
+async def test_el_curso_queda_en_artillero_cursos_para_la_regla_de_habilitacion(cliente_api, laboratorio):
+    """Antes el curso solo quedaba en cursos/hoja_vida y el listado mostraba "Curso" vacío."""
+    sesion, _, _ = laboratorio
+    culminado = {**datos_curso("2026-01-05", "2026-03-01"), "estado_curso": "CULMINADO"}
+    respuesta = await enviar(cliente_api, excel_personal(3), curso=culminado)
+    assert respuesta.status_code == 201, respuesta.text
+    filas = (
+        await sesion.execute(
+            text("""
+                SELECT p.documento_identidad, ac.tipo_curso_id, ac.nombre, ac.institucion,
+                       ac.fecha_inicio, ac.fecha_fin, ac.aprobado
+                FROM esart.artillero_cursos ac
+                JOIN esart.hoja_vida_artillero hv ON hv.id = ac.hoja_vida_id
+                JOIN esart.personal_militar p ON p.id = hv.artillero_id
+                ORDER BY p.documento_identidad
+            """)
+        )
+    ).all()
+    assert len(filas) == 3
+    assert {(f.tipo_curso_id, f.nombre, f.institucion, f.aprobado) for f in filas} == {
+        (CURSO_PRUEBA["tipo_curso_id"], "Curso ficticio", "Escuela de Artillería", True)
+    }
+    assert filas[0].fecha_inicio == date(2026, 1, 5) and filas[0].fecha_fin == date(2026, 3, 1)
+
+    # Un curso cancelado queda en el historial, pero no en artillero_cursos.
+    cancelado = {**datos_curso("2026-06-01", "2026-07-01"), "estado_curso": "CANCELADO"}
+    respuesta = await enviar(cliente_api, excel_personal(3, grado="CS"), curso=cancelado)
+    assert respuesta.status_code == 201, respuesta.text
+    assert await sesion.scalar(text("SELECT count(*) FROM esart.artillero_cursos")) == 3
+    assert await sesion.scalar(text("SELECT count(*) FROM esart.hoja_vida_artillero")) == 6
 
 
 async def test_otro_grado_en_curso_del_mismo_tipo_con_fechas_cruzadas_es_error(cliente_api, laboratorio):
@@ -300,14 +382,60 @@ async def test_otro_grado_en_curso_del_mismo_tipo_con_fechas_cruzadas_es_error(c
     assert militar.grado == "SL"
 
 
+async def test_numero_del_curso_es_consecutivo_por_tipo(cliente_api, laboratorio):
+    """SIM-CUR 01, SIM-CUR 02… y otro tipo empieza en 01; los códigos viejos solo numéricos no cuentan."""
+    sesion, actor, _ = laboratorio
+    otro_tipo = await sesion.scalar(
+        insert(TipoCurso.__table__)
+        .values(codigo="COFUO", nombre="Otro curso", modalidad="PRESENCIAL", duracion_semanas=2)
+        .returning(TipoCurso.id)
+    )
+    # Curso antiguo con el número global de antes: no afecta la numeración por tipo.
+    await sesion.execute(
+        text("""
+            INSERT INTO esart.cursos (tipo_curso_id, comandante_id, codigo, nombre, fecha_inicio, fecha_fin,
+                                      estado, creado_por_id)
+            VALUES (:tipo, :comandante, '4', 'Curso viejo', '2020-01-01', '2020-02-01', 'CULMINADO', :actor)
+        """),
+        {
+            "tipo": CURSO_PRUEBA["tipo_curso_id"],
+            "comandante": CURSO_PRUEBA["comandante_id"],
+            "actor": actor.id,
+        },
+    )
+    await sesion.commit()
+
+    def periodo(mes, tipo=None):
+        datos = datos_curso(f"2026-{mes:02d}-01", f"2026-{mes:02d}-20")
+        return {**datos, "tipo_curso_id": str(tipo)} if tipo else datos
+
+    codigos = []
+    for curso in (periodo(1), periodo(3), periodo(5, otro_tipo), periodo(7)):
+        respuesta = await enviar(cliente_api, excel_personal(), curso=curso)
+        assert respuesta.status_code == 201, respuesta.text
+        codigos.append(respuesta.json()["curso_codigo"])
+    assert codigos == ["SIM-CUR 01", "SIM-CUR 02", "COFUO 01", "SIM-CUR 03"]
+
+    tipos = (await cliente_api.get("/api/importaciones/datos-curso")).json()["tipos_curso"]
+    assert {t["codigo"]: t["siguiente_codigo"] for t in tipos} == {
+        "COFUO": "COFUO 02",
+        "SIM-CUR": "SIM-CUR 04",
+    }
+
+
 async def test_datos_curso_entrega_catalogos_y_siguiente_numero(cliente_api, laboratorio):
     assert (await enviar(cliente_api, excel_personal())).status_code == 201
     respuesta = await cliente_api.get("/api/importaciones/datos-curso")
     assert respuesta.status_code == 200, respuesta.text
     datos = respuesta.json()
-    assert datos["siguiente_codigo"] == "2"
+    assert "siguiente_codigo" not in datos  # ahora va en cada tipo de curso
     assert datos["tipos_curso"] == [
-        {"id": CURSO_PRUEBA["tipo_curso_id"], "codigo": "SIM-CUR", "nombre": "Curso ficticio"}
+        {
+            "id": CURSO_PRUEBA["tipo_curso_id"],
+            "codigo": "SIM-CUR",
+            "nombre": "Curso ficticio",
+            "siguiente_codigo": "SIM-CUR 02",
+        }
     ]
     assert datos["instructores"][0]["id"] == CURSO_PRUEBA["comandante_id"]
 
