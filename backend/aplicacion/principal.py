@@ -15,6 +15,7 @@ from aplicacion import VERSION_APLICACION
 from aplicacion.base_datos.sesion import cerrar_motor_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.nucleo.errores import registrar_manejadores_errores
+from aplicacion.nucleo.front_estatico import registrar_cabeceras_seguridad, registrar_front
 from aplicacion.nucleo.registro import configurar_registro
 from aplicacion.rutas.acciones_seguras import enrutador as enrutador_acciones
 from aplicacion.rutas.administracion import enrutador_administracion
@@ -75,6 +76,9 @@ def crear_aplicacion() -> FastAPI:
 
     registrar_manejadores_errores(aplicacion)
 
+    # Cabeceras de seguridad y no-store en los datos de la API (HU-21).
+    registrar_cabeceras_seguridad(aplicacion, https=configuracion.cookie_segura)
+
     @aplicacion.middleware("http")
     async def no_cachear_autenticacion(request, call_next):
         respuesta = await call_next(request)
@@ -100,6 +104,9 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_totp, prefix="/api/v1")
     aplicacion.include_router(enrutador_acciones, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_acciones, prefix="/api/v1")
+
+    # Al final: la ruta comodín del dashboard no debe tapar ninguna ruta de la API.
+    registrar_front(aplicacion, configuracion.ruta_front)
 
     return aplicacion
 
