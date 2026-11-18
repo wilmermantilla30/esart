@@ -26,6 +26,7 @@ from aplicacion.seguridad.contrasenas import generar_hash_contrasena
 from aplicacion.seguridad.sesion_http import NOMBRE_CABECERA_CSRF, NOMBRE_COOKIE_CSRF, NOMBRE_COOKIE_SESION
 from aplicacion.seguridad.tokens import decodificar_token_sesion
 from aplicacion.servicios.autenticacion import asegurar_administrador_inicial
+from pruebas.soporte_mfa import completar_vinculacion
 
 pytestmark = pytest.mark.anyio
 
@@ -41,7 +42,12 @@ ERROR_CREDENCIALES = {
     "error": {
         "codigo": "CREDENCIALES_INVALIDAS",
         "mensaje": "No fue posible iniciar sesión. Compruebe los datos o inténtelo más tarde.",
-        "detalle": {"captcha_requerido": False, "acceso_temporalmente_restringido": False},
+        # captcha_validado: None porque en el primer fallo todavía no se pide captcha.
+        "detalle": {
+            "captcha_requerido": False,
+            "acceso_temporalmente_restringido": False,
+            "captcha_validado": None,
+        },
     }
 }
 
@@ -137,11 +143,21 @@ async def crear_usuario(
 
 
 async def iniciar_sesion(cliente_api, nombre_usuario: str, contrasena: str = CONTRASENA_CORRECTA):
-    return await cliente_api.post(
+    """
+    Login completo como lo hace el navegador. Toda cuenta exige TOTP: si la cuenta aún no
+    tiene autenticador, el primer paso responde 202 y aquí se completa la vinculación
+    (QR + primer código) para obtener la sesión. Cualquier otra respuesta se devuelve tal cual.
+    """
+    # Como un navegador: el mismo agente en todas las peticiones (la sesión se crea al
+    # final de la vinculación, no en el primer POST).
+    cliente_api.headers["user-agent"] = "navegador-de-prueba"
+    respuesta = await cliente_api.post(
         "/api/auth/login",
         json={"nombre_usuario": nombre_usuario, "contrasena": contrasena},
-        headers={"user-agent": "navegador-de-prueba"},
     )
+    if respuesta.status_code == 202 and respuesta.json().get("configuracion_requerida"):
+        respuesta = await completar_vinculacion(cliente_api, respuesta)
+    return respuesta
 
 
 @requiere_postgresql
@@ -162,15 +178,17 @@ async def test_login_correcto_crea_sesion_y_entrega_cookies(cliente_api, sesion_
     respuesta = await iniciar_sesion(cliente_api, usuario.usuario.upper())
 
     assert respuesta.status_code == 200
-    assert respuesta.json() == {
-        "usuario": {
-            "nombre_usuario": usuario.usuario,
-            "nombre_completo": "MY Juan Carlos Pérez Gómez",
-            "rol": "USUARIO",
-            "requiere_cambio_contrasena": False,
-        },
-        "expira_por_inactividad_segundos": obtener_configuracion().minutos_inactividad_sesion * 60,
+    cuerpo = respuesta.json()
+    assert cuerpo["usuario"] == {
+        "nombre_usuario": usuario.usuario,
+        "nombre_completo": "MY Juan Carlos Pérez Gómez",
+        "rol": "USUARIO",
+        "requiere_cambio_contrasena": False,
     }
+    segundos_inactividad = obtener_configuracion().minutos_inactividad_sesion * 60
+    assert cuerpo["expira_por_inactividad_segundos"] == segundos_inactividad
+    # Al vincular por primera vez se entregan, una sola vez, los 10 códigos de recuperación.
+    assert len(cuerpo["codigos_recuperacion"]) == 10
     cookies = {c.split("=", 1)[0]: c.lower() for c in respuesta.headers.get_list("set-cookie")}
     assert "httponly" in cookies[NOMBRE_COOKIE_SESION] and "samesite=strict" in cookies[NOMBRE_COOKIE_SESION]
     assert "httponly" not in cookies[NOMBRE_COOKIE_CSRF]

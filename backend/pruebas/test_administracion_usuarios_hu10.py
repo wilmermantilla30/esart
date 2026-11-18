@@ -19,6 +19,7 @@ from aplicacion.servicios import administracion_usuarios as servicio
 from aplicacion.servicios.autenticacion import obtener_codigo_rol
 from aplicacion.servicios.seguridad_login import seudonimo
 from herramientas.administrar_usuarios import construir_argumentos
+from pruebas.soporte_mfa import completar_vinculacion
 from pruebas.test_auditoria_y_malla import cabecera_csrf, entrar
 from pruebas.test_login_hu05 import (  # noqa: F401
     CONTRASENA_CORRECTA,
@@ -129,14 +130,15 @@ async def test_crear_usuario_de_un_militar_con_contrasena_temporal(cliente_api, 
     assert evento.nombre_usuario == "consola" and evento.numero_documento_consultado == cedula
     assert CONTRASENA_VALIDA not in str(evento.detalle)
 
-    # Entra, pero con la contraseña temporal solo puede ver /yo y cambiarla.
+    # Con la contraseña temporal el login solo devuelve el desafío de cambio (202):
+    # no hay sesión ni cookie, así que ninguna ruta protegida responde.
     respuesta = await iniciar_sesion(cliente_api, "hu10.creado", CONTRASENA_VALIDA)
-    assert respuesta.status_code == 200
-    assert respuesta.json()["usuario"]["requiere_cambio_contrasena"] is True
-    assert (await cliente_api.get("/api/auth/yo")).json()["requiere_cambio_contrasena"] is True
-    bloqueada = await cliente_api.get("/api/verificar/resumen")
-    assert bloqueada.status_code == 403
-    assert bloqueada.json()["error"]["codigo"] == "CAMBIO_CONTRASENA_REQUERIDO"
+    assert respuesta.status_code == 202
+    assert respuesta.json()["cambio_contrasena_requerido"] is True
+    assert respuesta.json()["metodos"] == ["CAMBIO_CONTRASENA"]
+    assert "esart_sesion" not in cliente_api.cookies
+    assert (await cliente_api.get("/api/auth/yo")).status_code == 401
+    assert (await cliente_api.get("/api/verificar/resumen")).status_code == 401
 
 
 @requiere_postgresql
@@ -175,32 +177,28 @@ async def test_cambiar_contrasena_temporal_habilita_el_sistema(cliente_api, sesi
         documento_identidad=cedula,
         actor=ACTOR_PRUEBAS,
     )
-    await iniciar_sesion(cliente_api, "hu10.cambio", CONTRASENA_VALIDA)
+    # Flujo con TOTP: login -> desafío de cambio -> cambio de contraseña -> vinculación -> sesión.
+    desafio = await iniciar_sesion(cliente_api, "hu10.cambio", CONTRASENA_VALIDA)
+    assert desafio.status_code == 202 and desafio.json()["cambio_contrasena_requerido"]
+    desafio_id = desafio.json()["desafio_id"]
 
-    errada = await cliente_api.post(
-        "/api/auth/cambiar-contrasena",
-        json={"contrasena_actual": "no-es-esta-1", "contrasena_nueva": OTRA_CONTRASENA_VALIDA},
-        headers=cabecera_csrf(cliente_api),
-    )
+    async def cambiar(actual: str, nueva: str):
+        return await cliente_api.post(
+            "/api/auth/cambiar-contrasena-inicial",
+            json={"desafio_id": desafio_id, "contrasena_actual": actual, "contrasena_nueva": nueva},
+        )
+
+    errada = await cambiar("no-es-esta-1", OTRA_CONTRASENA_VALIDA)
     assert errada.status_code == 422 and errada.json()["error"]["codigo"] == "CONTRASENA_ACTUAL_INCORRECTA"
-    sin_csrf = await cliente_api.post(
-        "/api/auth/cambiar-contrasena",
-        json={"contrasena_actual": CONTRASENA_VALIDA, "contrasena_nueva": OTRA_CONTRASENA_VALIDA},
-    )
-    assert sin_csrf.status_code == 403
-    debil = await cliente_api.post(
-        "/api/auth/cambiar-contrasena",
-        json={"contrasena_actual": CONTRASENA_VALIDA, "contrasena_nueva": "corta"},
-        headers=cabecera_csrf(cliente_api),
-    )
+    debil = await cambiar(CONTRASENA_VALIDA, "corta")
     assert debil.status_code == 422
 
-    correcta = await cliente_api.post(
-        "/api/auth/cambiar-contrasena",
-        json={"contrasena_actual": CONTRASENA_VALIDA, "contrasena_nueva": OTRA_CONTRASENA_VALIDA},
-        headers=cabecera_csrf(cliente_api),
-    )
-    assert correcta.status_code == 204
+    # Cambiada la contraseña, sigue la vinculación TOTP; solo al terminarla hay sesión.
+    correcta = await cambiar(CONTRASENA_VALIDA, OTRA_CONTRASENA_VALIDA)
+    assert correcta.status_code == 202 and correcta.json()["configuracion_requerida"]
+    assert "esart_sesion" not in cliente_api.cookies
+    sesion_final = await completar_vinculacion(cliente_api, correcta)
+    assert sesion_final.json()["usuario"]["requiere_cambio_contrasena"] is False
     assert (await cliente_api.get("/api/auth/yo")).json()["requiere_cambio_contrasena"] is False
     assert (await cliente_api.get("/api/verificar/resumen")).status_code == 200
     evento = await ultimo_evento(sesion_bd, "CONTRASENA_CAMBIADA")

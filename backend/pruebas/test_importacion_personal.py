@@ -177,6 +177,7 @@ async def test_endpoint_exige_csrf_y_sesion(cliente_api):
 
 async def test_endpoint_procesa_multipart_y_envia_id_correcto_a_persistencia(cliente_api, monkeypatch):
     from aplicacion.base_datos.sesion import obtener_sesion_base_datos
+    from aplicacion.configuracion import obtener_configuracion
     from aplicacion.principal import aplicacion
     from aplicacion.rutas.importaciones import puede_importar
     from aplicacion.seguridad.sesion_http import obtener_usuario_actual
@@ -188,6 +189,9 @@ async def test_endpoint_procesa_multipart_y_envia_id_correcto_a_persistencia(cli
     aplicacion.dependency_overrides[obtener_usuario_actual] = lambda: actor
     aplicacion.dependency_overrides[obtener_sesion_base_datos] = lambda: sesion
     monkeypatch.setattr(importacion_personal.auditoria, "registrar_evento", AsyncMock())
+    # Esta prueba cubre la importación con una sesión falsa, sin la confirmación TOTP
+    # (que tiene sus propias pruebas): se apaga aunque el entorno de integración la active.
+    monkeypatch.setattr(obtener_configuracion(), "totp_habilitado", False)
     libro = Workbook()
     libro.active.append(CABECERA)
     libro.active.append(["00001", "Ana", "Pérez", "SL", "FEMENINO", "OFICIAL", "  esart  "])

@@ -72,5 +72,6 @@ async def test_codigo_api_adicional_es_obligatorio():
         )
         await dependencia(request=peticion, usuario_id=uuid4(), sesion=sesion)
     assert error.value.estado_http == 403
-    # No consultar una tabla granular inexistente ni inferir concesiones CRUD.
-    assert sesion.scalar.await_count == 1
+    # No consultar una tabla granular inexistente ni inferir concesiones CRUD: solo la
+    # consulta del componente y la de pertenencia a ADMINISTRADOR (único dueño de los códigos).
+    assert sesion.scalar.await_count == 2

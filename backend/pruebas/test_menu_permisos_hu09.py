@@ -110,8 +110,10 @@ async def test_menu_de_administrador_incluye_cargue_y_administracion(cliente_api
         "PERSONAL_CARGUE_EXCEL",
         "PERSONAL_CARGUE_MANUAL",
     ]
+    # ADMINISTRADOR activo tiene todas las operaciones en todo componente (regla de la malla).
+    # La auditoría sigue siendo inmutable por el trigger de la base, no por la malla.
     auditoria = next(e for e in menu if e["codigo"] == "AUDITORIA")
-    assert auditoria["operaciones"] == ["leer"]  # Inmutable: ni el administrador la edita.
+    assert auditoria["operaciones"] == ["crear", "leer", "actualizar", "eliminar"]
     # Los módulos de la segunda entrega están inactivos y no aparecen.
     assert not {"HOJAS_VIDA", "DOCTRINA", "NOTAS"} & {e["codigo"] for e in menu}
 

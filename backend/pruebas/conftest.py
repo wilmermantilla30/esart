@@ -33,7 +33,9 @@ from aplicacion.principal import aplicacion  # noqa: E402
 
 @pytest.fixture(autouse=True)
 def mfa_en_laboratorio_aislado(monkeypatch):
-    if os.environ.get("ESART_SEGURIDAD_TEST_URL"):
+    # Todo login exige TOTP: las pruebas con PostgreSQL real (laboratorio aislado o la base
+    # de integración) necesitan el servicio activo con una clave de cifrado de prueba.
+    if os.environ.get("ESART_SEGURIDAD_TEST_URL") or os.environ.get("ESART_URL_BD_INTEGRACION"):
         from pydantic import SecretStr
 
         from aplicacion.configuracion import obtener_configuracion
