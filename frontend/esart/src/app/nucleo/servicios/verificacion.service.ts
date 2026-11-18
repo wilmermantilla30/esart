@@ -1,5 +1,5 @@
 import { Injectable, inject } from '@angular/core';
-import { Observable } from 'rxjs';
+import { Observable, Subject } from 'rxjs';
 
 import {
   FiltrosHabilitacion,
@@ -16,6 +16,13 @@ import { ClienteApiService } from './cliente-api.service';
 @Injectable({ providedIn: 'root' })
 export class VerificacionService {
   private readonly clienteApi = inject(ClienteApiService);
+  private readonly cambiosPersonal = new Subject<void>();
+  readonly personalActualizado$ = this.cambiosPersonal.asObservable();
+
+  /** Invalida listados activos únicamente tras una importación confirmada por la API. */
+  notificarPersonalActualizado(): void {
+    this.cambiosPersonal.next();
+  }
 
   /** Verifica un artillero por cédula (el backend acepta puntos y espacios). */
   verificarArtillero(numeroDocumento: string): Observable<RespuestaVerificacion> {
@@ -26,12 +33,16 @@ export class VerificacionService {
 
   /** Listado paginado con el estado de cada militar. */
   listarHabilitacion(filtros: FiltrosHabilitacion): Observable<PaginaHabilitacion> {
-    return this.clienteApi.obtener<PaginaHabilitacion>('/verificar/habilitacion', {}, {
-      estado: filtros.estado,
-      texto: filtros.texto.trim(),
-      pagina: filtros.pagina,
-      tamano_pagina: filtros.tamano_pagina,
-    });
+    return this.clienteApi.obtener<PaginaHabilitacion>(
+      '/verificar/habilitacion',
+      {},
+      {
+        estado: filtros.estado,
+        texto: filtros.texto.trim(),
+        pagina: filtros.pagina,
+        tamano_pagina: filtros.tamano_pagina,
+      },
+    );
   }
 
   /** Indicadores del panel de Personal militar. */

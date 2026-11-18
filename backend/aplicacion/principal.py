@@ -19,6 +19,7 @@ from aplicacion.nucleo.registro import configurar_registro
 from aplicacion.rutas.acciones_seguras import enrutador as enrutador_acciones
 from aplicacion.rutas.administracion import enrutador_administracion
 from aplicacion.rutas.autenticacion import enrutador_autenticacion
+from aplicacion.rutas.importaciones import enrutador as enrutador_importaciones
 from aplicacion.rutas.salud import enrutador_salud
 from aplicacion.rutas.totp import enrutador as enrutador_totp
 from aplicacion.rutas.unidades import enrutador as enrutador_catalogos
@@ -84,6 +85,7 @@ def crear_aplicacion() -> FastAPI:
     aplicacion.include_router(enrutador_autenticacion, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_catalogos, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_verificacion, prefix=PREFIJO_API)
+    aplicacion.include_router(enrutador_importaciones, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_administracion, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_totp, prefix=PREFIJO_API)
     aplicacion.include_router(enrutador_autenticacion, prefix="/api/v1")

@@ -73,6 +73,11 @@ def _normalizar(operaciones: Operaciones) -> Operaciones:
     return operaciones
 
 
+def _operaciones_administrador() -> Operaciones:
+    """La política fija de administrador no depende de filas en la malla CRUD."""
+    return Operaciones(acceder=True, crear=True, leer=True, actualizar=True, eliminar=True)
+
+
 async def _componentes(sesion: AsyncSession) -> list:
     return (await sesion.execute(CONSULTA_COMPONENTES)).all()
 
@@ -122,7 +127,12 @@ async def obtener_permisos_rol(sesion: AsyncSession, codigo_rol: str) -> Respues
         ).all()
     }
     filas = [
-        FilaPermisoRol(**_componente_malla(c), permisos=_operaciones_de_fila(permisos.get(c.id)))
+        FilaPermisoRol(
+            **_componente_malla(c),
+            permisos=_operaciones_administrador()
+            if rol.codigo == CODIGO_ROL_ADMINISTRADOR
+            else _operaciones_de_fila(permisos.get(c.id)),
+        )
         for c in await _componentes(sesion)
     ]
     return RespuestaPermisosRol(
@@ -279,7 +289,8 @@ async def obtener_permisos_usuario(sesion: AsyncSession, usuario_id: int) -> Res
 
     filas = []
     for componente in await _componentes(sesion):
-        excepcion = excepciones.get(componente.id)
+        # Las excepciones antiguas se conservan, pero no forman parte de la política fija de admin.
+        excepcion = None if usuario.rol == CODIGO_ROL_ADMINISTRADOR else excepciones.get(componente.id)
         if excepcion is None:
             modo = "HEREDAR"
         elif excepcion.puede_acceder:
@@ -290,7 +301,9 @@ async def obtener_permisos_usuario(sesion: AsyncSession, usuario_id: int) -> Res
         filas.append(
             FilaPermisoUsuario(
                 **_componente_malla(componente),
-                rol=_operaciones_de_fila(por_rol.get(componente.id)),
+                rol=_operaciones_administrador()
+                if usuario.rol == CODIGO_ROL_ADMINISTRADOR
+                else _operaciones_de_fila(por_rol.get(componente.id)),
                 modo=modo,
                 excepcion=_operaciones_de_fila(excepcion) if excepcion is not None else None,
                 efectivo=Operaciones(

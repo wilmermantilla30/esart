@@ -111,12 +111,13 @@ export const routes: Routes = [
                 (m) => m.Habilitados,
               ),
           },
-          rutaEnConstruccion(
-            'cargue-excel',
-            'PERSONAL_CARGUE_EXCEL',
-            'Cargue masivo por Excel',
-            'Importación del personal desde la plantilla oficial.',
-          ),
+          {
+            path: 'cargue-excel',
+            title: 'Cargue masivo por Excel — ESART',
+            canActivate: [exigirPermiso],
+            data: { componente: 'PERSONAL_CARGUE_EXCEL' },
+            loadComponent: () => import('./paginas/personal-militar/cargue-excel/cargue-excel').then((m) => m.CargueExcel),
+          },
           rutaEnConstruccion(
             'cargue-manual',
             'PERSONAL_CARGUE_MANUAL',

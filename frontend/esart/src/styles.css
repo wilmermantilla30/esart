@@ -110,6 +110,33 @@
   box-sizing: content-box;
 }
 
+/* Solo los botones verdes seleccionados; conserva los colores de estado. */
+button.esart-boton-verde {
+  background-color: #22c55e;
+  border-color: #22c55e;
+  color: #052e16;
+  transition: background-color 200ms var(--ease-state-change),
+    border-color 200ms var(--ease-state-change),
+    color 200ms var(--ease-state-change),
+    box-shadow 200ms var(--ease-state-change);
+}
+
+button.esart-boton-verde:hover:not(:disabled) {
+  background-color: #16a34a;
+  border-color: #16a34a;
+  box-shadow: 0 4px 10px rgba(34, 197, 94, 0.30);
+}
+
+button.esart-boton-verde:focus-visible {
+  outline: 2px solid #166534;
+  outline-offset: 2px;
+}
+
+button.esart-boton-verde:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
 /* Respeta a quien pide menos movimiento en su sistema operativo. */
 @media (prefers-reduced-motion: reduce) {
   *,

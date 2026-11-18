@@ -29,6 +29,12 @@ TABLAS_POSTERIORES_A_P0001 = {
     "esart.auditoria_eventos",
 }
 COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
+# p0011: curso de la importación masiva e historial de grados.
+COLUMNAS_P0011 = {
+    ("esart", "instructores"): {"foto", "foto_tipo"},
+    ("esart", "hoja_vida_artillero"): {"grado", "curso_id", "unidad_id"},
+}
+OPCIONALES_P0011 = {("esart", "cursos", "semestre_id")}
 
 
 def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
@@ -42,11 +48,16 @@ def test_todos_los_modelos_corresponden_a_tablas_y_columnas_reales():
         columnas = [
             c for c in referencia["columnas"] if c["esquema"] == tabla.schema and c["tabla"] == tabla.name
         ]
-        agregadas = COLUMNAS_P0002.get((tabla.schema, tabla.name), set())
+        agregadas = COLUMNAS_P0002.get((tabla.schema, tabla.name), set()) | COLUMNAS_P0011.get(
+            (tabla.schema, tabla.name), set()
+        )
         assert set(tabla.c.keys()) - agregadas == {c["columna"] for c in columnas}
         for c in columnas:
             mapped = tabla.c[c["columna"]]
-            assert mapped.nullable == c["permite_null"]
+            if (tabla.schema, tabla.name, c["columna"]) in OPCIONALES_P0011:
+                assert mapped.nullable
+            else:
+                assert mapped.nullable == c["permite_null"]
             if c["tipo"] == "bigint":
                 assert isinstance(mapped.type, BigInteger)
             assert (mapped.server_default is None) == (
@@ -73,7 +84,8 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0010_merge_hu10_totp"]
+    assert script.get_heads() == ["p0011_cursos_importacion"]
+    assert script.get_revision("p0011_cursos_importacion").down_revision == "p0010_merge_hu10_totp"
     assert set(script.get_revision("p0010_merge_hu10_totp").down_revision) == {
         "p0009_gestion_usuarios",
         "p0005_integracion_totp",

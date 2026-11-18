@@ -56,7 +56,7 @@
                 ? activo()
                   ? 'Autenticador activo'
                   : 'Pendiente de vinculación'
-                : modo() === 'AUTORIZAR_ACCION'
+                : modo() === 'AUTORIZAR_ACCION' || modo() === 'CODIGO_OPERACION'
                   ? 'Pendiente de autorización'
                   : 'Verificación requerida'
             }}
@@ -110,6 +110,19 @@
               <div>
                 <small>Recurso:</small>
                 <strong>{{ operacion()?.recurso_id || 'No especificado' }}</strong>
+              </div>
+            </div>
+            <p class="totp-contexto-nota">Confirme la operación mediante su autenticador.</p>
+          }
+          @case ('CODIGO_OPERACION') {
+            <div class="totp-contexto-detalle">
+              <div>
+                <small>Operación solicitada:</small>
+                <strong>{{ operacionEtiqueta() }}</strong>
+              </div>
+              <div>
+                <small>Módulo:</small>
+                <strong>{{ moduloEtiqueta() }}</strong>
               </div>
             </div>
             <p class="totp-contexto-nota">Confirme la operación mediante su autenticador.</p>
@@ -353,7 +366,7 @@
                 ? 'VERIFICANDO…'
                 : modo() === 'CONFIGURAR'
                   ? 'VERIFICAR Y ACTIVAR'
-                  : modo() === 'AUTORIZAR_ACCION'
+                  : modo() === 'AUTORIZAR_ACCION' || modo() === 'CODIGO_OPERACION'
                     ? 'VERIFICAR Y AUTORIZAR'
                     : 'VERIFICAR CÓDIGO'
             }}
