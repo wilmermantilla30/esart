@@ -88,3 +88,18 @@ export interface FiltrosHabilitacion {
   pagina: number;
   tamano_pagina: number;
 }
+
+/** Documentos PDF que se generan desde la verificación (script maestro del backend). */
+export type TipoDocumentoArtillero = 'DIPLOMA' | 'OFICIO_REMISORIO' | 'CERTIFICACION';
+
+export interface OpcionDocumentoArtillero {
+  codigo: TipoDocumentoArtillero;
+  nombre: string;
+}
+
+/** Opciones del selector; deben coincidir con REPORTES de aplicacion/reportes/maestro.py. */
+export const DOCUMENTOS_ARTILLERO: readonly OpcionDocumentoArtillero[] = [
+  { codigo: 'DIPLOMA', nombre: 'Diploma' },
+  { codigo: 'OFICIO_REMISORIO', nombre: 'Oficio remisorio' },
+  { codigo: 'CERTIFICACION', nombre: 'Certificación' },
+];

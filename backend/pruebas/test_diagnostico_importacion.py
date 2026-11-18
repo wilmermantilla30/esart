@@ -17,6 +17,7 @@ from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine
 from aplicacion.base_datos.base import BaseModelo
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.modelos import (
+    ArtilleroCurso,
     AuditoriaEvento,
     Cursos,
     HojaVidaArtillero,
@@ -228,6 +229,11 @@ async def test_200_confirmados_visibles_desde_otra_conexion_aislada(laboratorio)
         async with motor.begin() as limpieza:
             if tipo_id is not None:
                 cursos = select(Cursos.id).where(Cursos.tipo_curso_id == tipo_id).scalar_subquery()
+                # p0016: el curso de cada artillero referencia su fila del historial.
+                historial = select(HojaVidaArtillero.id).where(HojaVidaArtillero.curso_id.in_(cursos))
+                await limpieza.execute(
+                    delete(ArtilleroCurso).where(ArtilleroCurso.hoja_vida_id.in_(historial))
+                )
                 await limpieza.execute(
                     delete(HojaVidaArtillero).where(HojaVidaArtillero.curso_id.in_(cursos))
                 )

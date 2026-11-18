@@ -22,24 +22,31 @@ describe('DatosCurso', () => {
     fixture.detectChanges();
     http.expectOne('/api/importaciones/datos-curso').flush({
       tipos_curso: [
-        { id: 3, codigo: 'CAP-SL', nombre: 'Curso de capacitación SL' },
-        { id: 4, codigo: 'ESP-AR', nombre: 'Especialización artillería' },
+        { id: 3, codigo: 'SACLI', nombre: 'Curso SACLI', siguiente_codigo: 'SACLI 03' },
+        { id: 4, codigo: 'COFUO', nombre: 'Especialización artillería', siguiente_codigo: 'COFUO 01' },
       ],
       instructores: [{ id: 8, nombre: 'MY Juan Pérez' }],
-      siguiente_codigo: '15',
     });
     fixture.detectChanges();
   });
 
   afterEach(() => http.verify());
 
-  it('lista tipos con sigla y nombre, y muestra el número siguiente en solo lectura', () => {
+  it('lista tipos con sigla y nombre, y muestra el número del tipo elegido en solo lectura', () => {
     const opciones = [...fixture.nativeElement.querySelectorAll('select')[0].options].map(
       (o: HTMLOptionElement) => o.textContent?.trim(),
     );
-    expect(opciones).toContain('CAP-SL — Curso de capacitación SL');
+    expect(opciones).toContain('SACLI — Curso SACLI');
     const numero: HTMLInputElement = fixture.nativeElement.querySelector('input[readonly]');
-    expect(numero.value).toBe('15');
+    expect(numero.value).toBe('');
+    expect(numero.placeholder).toBe('Elija el tipo de curso');
+
+    component.elegirTipo('3');
+    fixture.detectChanges();
+    expect(numero.value).toBe('SACLI 03');
+    component.elegirTipo('4');
+    fixture.detectChanges();
+    expect(numero.value).toBe('COFUO 01');
   });
 
   it('precarga el nombre del tipo elegido y permite editarlo', () => {
@@ -62,7 +69,7 @@ describe('DatosCurso', () => {
     component.formulario.patchValue({ fecha_fin: '2026-04-01', estado_curso: 'APLAZADO' });
     expect(emitido).toEqual({
       tipo_curso_id: 3,
-      nombre_curso: 'Curso de capacitación SL',
+      nombre_curso: 'Curso SACLI',
       comandante_id: 8,
       fecha_inicio: '2026-03-01',
       fecha_fin: '2026-04-01',

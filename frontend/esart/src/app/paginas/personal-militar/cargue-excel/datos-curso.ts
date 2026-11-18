@@ -1,11 +1,23 @@
-import { Component, DestroyRef, inject, input, OnInit, output, signal } from '@angular/core';
+import {
+  Component,
+  computed,
+  DestroyRef,
+  inject,
+  input,
+  OnInit,
+  output,
+  signal,
+} from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { leerErrorApi } from '../../../nucleo/modelos/error-api';
 import { DatosCursoImportacion, ESTADOS_CURSO, EstadoCurso, OpcionCatalogo } from './excel-modelos';
 import { ImportacionExcelService } from './importacion-excel.service';
 
-/** Datos del curso que se crea con la importación; el número lo asigna el servidor. */
+/**
+ * Datos del curso que se crea con la importación. El número lo asigna el servidor por tipo de
+ * curso ("SACLI 01", "SACLI 02", "COFUO 01"…); aquí solo se muestra el del tipo elegido.
+ */
 @Component({
   imports: [ReactiveFormsModule],
   selector: 'app-datos-curso',
@@ -22,7 +34,12 @@ export class DatosCurso implements OnInit {
   readonly estados = ESTADOS_CURSO;
   readonly tipos = signal<OpcionCatalogo[]>([]);
   readonly instructores = signal<OpcionCatalogo[]>([]);
-  readonly siguienteCodigo = signal('');
+  /** Tipo elegido en el selector: define qué número de curso se muestra. */
+  private readonly tipoElegido = signal('');
+  /** Número que tendrá el curso: el siguiente del tipo elegido (vacío mientras no haya tipo). */
+  readonly siguienteCodigo = computed(
+    () => this.tipos().find((t) => String(t.id) === this.tipoElegido())?.siguiente_codigo ?? '',
+  );
   readonly cargando = signal(false);
   readonly errorCarga = signal('');
   readonly formulario = this.fb.group({
@@ -55,7 +72,6 @@ export class DatosCurso implements OnInit {
           this.cargando.set(false);
           this.tipos.set(datos.tipos_curso);
           this.instructores.set(datos.instructores);
-          this.siguienteCodigo.set(datos.siguiente_codigo);
         },
         error: (error: unknown) => {
           this.cargando.set(false);
@@ -66,6 +82,7 @@ export class DatosCurso implements OnInit {
   /** Al elegir el tipo se precarga su nombre; el usuario puede editarlo después. */
   elegirTipo(id: string): void {
     const tipo = this.tipos().find((t) => String(t.id) === id);
+    this.tipoElegido.set(id);
     this.formulario.patchValue({ tipo_curso_id: id, nombre_curso: tipo?.nombre ?? '' });
   }
   fechasInvalidas(): boolean {

@@ -27,6 +27,8 @@ class OpcionCatalogo(BaseModel):
     id: int
     nombre: str
     codigo: str | None = None
+    # Solo en tipos de curso: número que tendrá el próximo curso de ese tipo (p. ej. "SACLI 03").
+    siguiente_codigo: str | None = None
 
 
 class DatosFormularioCurso(BaseModel):
@@ -34,4 +36,3 @@ class DatosFormularioCurso(BaseModel):
 
     tipos_curso: list[OpcionCatalogo]
     instructores: list[OpcionCatalogo]
-    siguiente_codigo: str

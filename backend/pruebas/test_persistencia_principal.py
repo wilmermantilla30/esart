@@ -96,8 +96,14 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0015_registro_manual_personal"]
-    assert script.get_revision("p0015_registro_manual_personal").down_revision == "p0014_cursos_del_instructor"
+    assert script.get_heads() == ["p0016_cursos_artilleros_importacion"]
+    assert (
+        script.get_revision("p0016_cursos_artilleros_importacion").down_revision
+        == "p0015_registro_manual_personal"
+    )
+    assert (
+        script.get_revision("p0015_registro_manual_personal").down_revision == "p0014_cursos_del_instructor"
+    )
     assert script.get_revision("p0014_cursos_del_instructor").down_revision == "p0013_panel_instructores"
     assert script.get_revision("p0013_panel_instructores").down_revision == "p0012_panel_parametros"
     assert script.get_revision("p0012_panel_parametros").down_revision == "p0011_cursos_importacion"

@@ -1,5 +1,6 @@
 """Reglas, API y persistencia real opcional con rollback exterior."""
 
+import dataclasses
 import io
 import uuid
 from datetime import date
@@ -44,8 +45,10 @@ FORMULARIO_CURSO = {
 class SesionFalsa:
     """Responde según la sentencia; registra lo escrito sin una base real."""
 
-    def __init__(self, existentes=(), cruces=(), permitido=True, fallo_insercion=None):
+    def __init__(self, existentes=(), cruces=(), permitido=True, fallo_insercion=None, ultimos=None):
         self.existentes = list(existentes)
+        # artillero_id → inicio del curso más reciente de su historial (SQL_ULTIMO_CURSO).
+        self.ultimos = dict(ultimos or {})
         self.cruces = list(cruces)
         self.permitido = permitido
         self.fallo_insercion = fallo_insercion
@@ -56,12 +59,11 @@ class SesionFalsa:
     async def scalar(self, sentencia, parametros=None):
         sql = str(sentencia)
         if "has_column_privilege" in sql:
-            return self.permitido
+            # verificar_estructura recibe la lista de privilegios faltantes (vacía = todo bien).
+            return [] if self.permitido else ["esart.artillero_cursos.nombre INSERT"]
         if sql.startswith("INSERT INTO esart.cursos"):
             self.escrituras.append(("cursos", sentencia.compile().params))
             return 77
-        if "COALESCE(MAX" in sql:
-            return 5
         return 1  # tipo de curso y comandante activos
 
     async def scalars(self, sentencia, parametros=None):
@@ -84,6 +86,18 @@ class SesionFalsa:
             self.escrituras.append(("grado", parametros))
         elif sql.startswith("INSERT INTO esart.hoja_vida_artillero"):
             self.escrituras.append(("historial", parametros))
+            return SimpleNamespace(all=lambda: [SimpleNamespace(id=500 + i) for i in range(len(parametros))])
+        elif sql.startswith("INSERT INTO esart.artillero_cursos"):
+            self.escrituras.append(("artillero_cursos", parametros))
+        elif "FROM esart.tipos_curso t" in sql:
+            # Siguiente número por tipo: el tipo 3 (SACLI) ya tiene hasta SACLI 04.
+            return SimpleNamespace(all=lambda: [SimpleNamespace(id=3, sigla="SACLI", siguiente=5)])
+        elif "max(c.fecha_inicio)" in sql:
+            return SimpleNamespace(
+                all=lambda: [
+                    SimpleNamespace(artillero_id=i, ultimo_inicio=f) for i, f in self.ultimos.items()
+                ]
+            )
         elif "unidades_militares" in sql:
             return tabla(UNIDADES)
         elif "FROM esart.personal_militar" in sql:
@@ -206,7 +220,7 @@ async def test_endpoint_procesa_multipart_y_envia_id_correcto_a_persistencia(cli
     )
     assert respuesta.status_code == 201, respuesta.text
     assert respuesta.json()["filas_validas"] == 1
-    assert respuesta.json()["curso_codigo"] == "5"
+    assert respuesta.json()["curso_codigo"] == "SACLI 05"
     registro = sesion.escrito("personal")[0][0]
     assert registro["unidad_actual_id"] == 712
     assert registro["genero"] == "F"
@@ -259,7 +273,7 @@ async def test_crea_curso_inserta_nuevos_e_historial_en_la_misma_transaccion(mon
     actor = SimpleNamespace(id=1, nombre_usuario="prueba")
     resultado = await guardar_personal(sesion, "PERSONAL", filas(), actor, CURSO, autorizar=autorizar)
     curso = sesion.escrito("cursos")[0]
-    assert curso["codigo"] == "5" and curso["nombre"] == "Curso básico"
+    assert curso["codigo"] == "SACLI 05" and curso["nombre"] == "Curso básico"
     assert curso["observaciones"] is None and curso["creado_por_id"] == 1
     assert sesion.escrito("personal")[0][0]["genero"] == "F"
     assert sesion.escrito("historial")[0] == [
@@ -267,6 +281,19 @@ async def test_crea_curso_inserta_nuevos_e_historial_en_la_misma_transaccion(mon
     ]
     assert not sesion.escrito("grado")
     assert resultado["registros_nuevos"] == 1 and resultado["curso_id"] == 77
+    # El curso queda en artillero_cursos (lo lee la regla y la columna "Curso" del listado).
+    assert sesion.escrito("artillero_cursos")[0] == [
+        {
+            "hoja_vida_id": 500,
+            "tipo_curso_id": 3,
+            "nombre": "Curso básico",
+            "institucion": "Escuela de Artillería",
+            "fecha_inicio": date(2026, 2, 1),
+            "fecha_fin": date(2026, 3, 1),
+            "aprobado": False,  # EN_CURSO
+        }
+    ]
+    assert auditar.await_args.kwargs["detalle"]["cursos_registrados"] == 1
     autorizar.assert_awaited_once()
     assert auditar.await_args.kwargs["confirmar"] is False
     sesion.commit.assert_awaited_once()
@@ -287,25 +314,103 @@ async def test_cedula_repetida_con_otro_grado_actualiza_grado_e_historial(monkey
 
 
 @pytest.mark.parametrize(
-    "existente,cruces,columna,motivo",
+    ("estado", "registrados", "aprobado"),
+    [("CULMINADO", 1, True), ("EN_CURSO", 1, False), ("CANCELADO", 0, None), ("APLAZADO", 0, None)],
+)
+async def test_estado_del_curso_define_si_se_registra_y_si_queda_aprobado(
+    monkeypatch, estado, registrados, aprobado
+):
+    from aplicacion.servicios import importacion_personal
+
+    sesion = SesionFalsa()
+    monkeypatch.setattr(importacion_personal.auditoria, "registrar_evento", AsyncMock())
+    curso = dataclasses.replace(CURSO, estado=estado)
+    await guardar_personal(sesion, "PERSONAL", filas(), SimpleNamespace(id=1, nombre_usuario="p"), curso)
+    escritos = sesion.escrito("artillero_cursos")
+    assert len(escritos) == registrados
+    if registrados:
+        assert escritos[0][0]["aprobado"] is aprobado
+    # El historial se guarda siempre, sea cual sea el estado.
+    assert len(sesion.escrito("historial")) == 1
+
+
+@pytest.mark.parametrize(
+    ("sigla", "numero", "esperado"),
     [
-        ({"id": 40, "documento_identidad": "00001", "grado": " sl "}, [], "grado", "grado SL"),
-        ({"id": 40, "documento_identidad": "00001", "grado": "ST"}, [40], "documento_identidad", "se cruzan"),
+        ("SACLI", 1, "SACLI 01"),
+        (" cofuo ", 2, "COFUO 02"),
+        ("SACLI", 12, "SACLI 12"),
+        ("SACLI", 100, "SACLI 100"),
     ],
 )
-async def test_cedula_repetida_mismo_grado_o_curso_cruzado_es_error(existente, cruces, columna, motivo):
-    sesion = SesionFalsa(existentes=[existente], cruces=cruces)
+def test_codigo_del_curso_usa_la_sigla_del_tipo_y_dos_digitos(sigla, numero, esperado):
+    from aplicacion.servicios.importacion_personal import codigo_curso
+
+    assert codigo_curso(sigla, numero) == esperado
+
+
+@pytest.mark.parametrize("grado_actual", ["ST", " sl "])
+async def test_curso_del_mismo_tipo_con_fechas_cruzadas_es_error(grado_actual):
+    """Con cualquier grado, cruzar fechas con un curso del mismo tipo es cargar dos veces el curso."""
+    existente = {"id": 40, "documento_identidad": "00001", "grado": grado_actual}
+    sesion = SesionFalsa(existentes=[existente], cruces=[40])
     with pytest.raises(ErrorAplicacion) as fallo:
         await guardar_personal(
             sesion, "PERSONAL", filas(), SimpleNamespace(id=1, nombre_usuario="prueba"), CURSO
         )
     incidencia = fallo.value.detalle["errores"][0]
-    assert incidencia["fila"] == 2 and incidencia["columna"] == columna and motivo in incidencia["motivo"]
+    assert incidencia["fila"] == 2 and incidencia["columna"] == "documento_identidad"
+    assert "se cruzan" in incidencia["motivo"]
     assert not sesion.escrituras
     sesion.commit.assert_not_awaited()
 
 
-async def test_sin_migracion_p0011_responde_no_disponible_sin_escribir():
+async def test_repetir_curso_con_el_mismo_grado_guarda_historial_sin_cambiar_grado(monkeypatch):
+    """SV Nicolás repite SACLI en otro año con el mismo grado: no se pierde, queda en el histórico."""
+    from aplicacion.servicios import importacion_personal
+
+    existente = {"id": 40, "documento_identidad": "00001", "grado": " sl "}
+    sesion = SesionFalsa(existentes=[existente], ultimos={40: date(2025, 2, 1)})
+    monkeypatch.setattr(importacion_personal.auditoria, "registrar_evento", AsyncMock())
+    resultado = await guardar_personal(
+        sesion, "PERSONAL", filas(), SimpleNamespace(id=1, nombre_usuario="prueba"), CURSO
+    )
+    assert not sesion.escrito("grado") and not sesion.escrito("personal")
+    assert sesion.escrito("historial")[0] == [
+        {"artillero_id": 40, "grado": "SL", "curso_id": 77, "unidad_id": 712}
+    ]
+    assert len(sesion.escrito("artillero_cursos")[0]) == 1
+    assert resultado["grados_actualizados"] == 0 and resultado["registros_nuevos"] == 0
+
+
+@pytest.mark.parametrize(
+    ("ultimo_inicio", "actualiza"),
+    [
+        (None, True),  # sin cursos previos en su historial
+        (date(2025, 6, 1), True),  # el curso que se carga (2026-02-01) es más reciente
+        (date(2026, 2, 1), True),  # mismo día de inicio
+        (date(2026, 9, 1), False),  # se carga un curso antiguo: el grado actual no baja
+    ],
+)
+async def test_grado_distinto_solo_se_actualiza_con_el_curso_mas_reciente(
+    monkeypatch, ultimo_inicio, actualiza
+):
+    from aplicacion.servicios import importacion_personal
+
+    existente = {"id": 40, "documento_identidad": "00001", "grado": "CS"}
+    ultimos = {40: ultimo_inicio} if ultimo_inicio else {}
+    sesion = SesionFalsa(existentes=[existente], ultimos=ultimos)
+    monkeypatch.setattr(importacion_personal.auditoria, "registrar_evento", AsyncMock())
+    resultado = await guardar_personal(
+        sesion, "PERSONAL", filas(), SimpleNamespace(id=1, nombre_usuario="prueba"), CURSO
+    )
+    assert bool(sesion.escrito("grado")) is actualiza
+    assert resultado["grados_actualizados"] == (1 if actualiza else 0)
+    # Se actualice o no el grado actual, el historial guarda el grado que tenía en ese curso.
+    assert sesion.escrito("historial")[0][0]["grado"] == "SL"
+
+
+async def test_sin_migracion_p0011_responde_no_disponible_sin_escribir(caplog):
     sesion = SesionFalsa(permitido=False)
     with pytest.raises(ErrorAplicacion) as fallo:
         await guardar_personal(
@@ -313,6 +418,9 @@ async def test_sin_migracion_p0011_responde_no_disponible_sin_escribir():
         )
     assert fallo.value.estado_http == 503 and "p0011" in fallo.value.mensaje
     assert not sesion.escrituras
+    # El log dice exactamente qué privilegio falta; el mensaje al usuario no lo expone.
+    assert "faltantes=esart.artillero_cursos.nombre INSERT" in caplog.text
+    assert "artillero_cursos" not in fallo.value.mensaje
 
 
 async def test_fecha_final_anterior_a_inicial_es_error():

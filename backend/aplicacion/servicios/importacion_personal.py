@@ -14,7 +14,7 @@ from openpyxl import load_workbook
 from sqlalchemy import bindparam, func, insert, select, text, update
 from sqlalchemy.exc import IntegrityError, SQLAlchemyError
 
-from aplicacion.modelos import Cursos, HojaVidaArtillero, PersonalMilitar, UnidadMilitar
+from aplicacion.modelos import ArtilleroCurso, Cursos, HojaVidaArtillero, PersonalMilitar, UnidadMilitar
 from aplicacion.nucleo.errores import ErrorAplicacion
 from aplicacion.servicios import auditoria
 from aplicacion.servicios.habilitacion import normalizar_cedula
@@ -278,6 +278,19 @@ def rechazar(errores, total):
 
 
 ESTADOS_CURSO = ("EN_CURSO", "CULMINADO", "CANCELADO", "APLAZADO")
+# Estados con los que el curso se registra en artillero_cursos (ver _registrar_cursos_artilleros).
+ESTADOS_CURSO_REGISTRADOS = ("EN_CURSO", "CULMINADO")
+# Institución de los cursos que se cargan por Excel (los dicta la Escuela).
+INSTITUCION_CURSO = "Escuela de Artillería"
+COLUMNAS_INSERT_ARTILLERO_CURSO = (
+    "hoja_vida_id",
+    "tipo_curso_id",
+    "nombre",
+    "institucion",
+    "fecha_inicio",
+    "fecha_fin",
+    "aprobado",
+)
 
 
 @dataclass(frozen=True)
@@ -316,15 +329,29 @@ PRIVILEGIOS_IMPORTACION = (
     *(("esart.cursos", c, "INSERT") for c in COLUMNAS_INSERT_CURSO),
     ("esart.hoja_vida_artillero", "curso_id", "SELECT"),
     *(("esart.hoja_vida_artillero", c, "INSERT") for c in ("artillero_id", "grado", "curso_id", "unidad_id")),
+    # p0016: RETURNING id del historial y el curso de cada artillero (lo lee la regla de habilitación).
+    ("esart.hoja_vida_artillero", "id", "SELECT"),
+    ("esart.artillero_cursos", "id", "SELECT"),
+    *(("esart.artillero_cursos", c, "INSERT") for c in COLUMNAS_INSERT_ARTILLERO_CURSO),
 )
 MENSAJE_SIN_ESTRUCTURA = (
     "El servicio no tiene habilitado el guardado de cursos y personal "
-    "(migración p0011 pendiente o privilegios insuficientes). "
+    "(migraciones p0011/p0016 pendientes o privilegios insuficientes). "
     "Contacte al administrador; no se guardó ningún registro."
 )
-SQL_SIGUIENTE_CODIGO = text(
-    "SELECT COALESCE(MAX(CAST(codigo AS bigint)), 0) + 1 FROM esart.cursos WHERE codigo ~ '^[0-9]{1,18}$'"
-)
+# Número del curso por tipo: "<SIGLA> <NN>" (SACLI 01, SACLI 02, COMANDO 01…). El siguiente número de
+# cada tipo es el mayor <NN> ya usado con su sigla + 1. Los códigos antiguos solo numéricos ("4") no
+# cuentan (ver propuestas/renumerar_cursos_por_tipo.sql para pasarlos al formato nuevo).
+SQL_SIGUIENTES_POR_TIPO = text("""
+    SELECT t.id, upper(trim(t.codigo)) AS sigla,
+           coalesce(max(CAST(substr(c.codigo, length(trim(t.codigo)) + 2) AS integer)), 0) + 1 AS siguiente
+    FROM esart.tipos_curso t
+    LEFT JOIN esart.cursos c
+      ON upper(left(c.codigo, length(trim(t.codigo)) + 1)) = upper(trim(t.codigo)) || ' '
+     AND substr(c.codigo, length(trim(t.codigo)) + 2) ~ '^[0-9]{1,6}$'
+    WHERE t.id = ANY(CAST(:ids AS bigint[]))
+    GROUP BY t.id, t.codigo
+""")
 SQL_CRUCES = text("""
     SELECT DISTINCT hv.artillero_id
     FROM esart.hoja_vida_artillero hv
@@ -332,6 +359,15 @@ SQL_CRUCES = text("""
     WHERE hv.artillero_id = ANY(CAST(:ids AS bigint[]))
       AND c.tipo_curso_id = :tipo
       AND c.fecha_inicio <= :fin AND c.fecha_fin >= :inicio
+""")
+# Inicio del curso más reciente de cada persona en su historial: el grado de personal_militar solo
+# se actualiza si el curso que se carga es igual o más reciente (cargar un curso antiguo no lo baja).
+SQL_ULTIMO_CURSO = text("""
+    SELECT hv.artillero_id, max(c.fecha_inicio) AS ultimo_inicio
+    FROM esart.hoja_vida_artillero hv
+    JOIN esart.cursos c ON c.id = hv.curso_id
+    WHERE hv.artillero_id = ANY(CAST(:ids AS bigint[]))
+    GROUP BY hv.artillero_id
 """)
 # p0013: el instructor puede ser militar (personal_id o su usuario) o civil (nombres propios),
 # y no necesita usuario de ESART; por eso los JOIN son opcionales.
@@ -380,12 +416,22 @@ def normalizar_curso(curso):
 
 
 async def verificar_estructura(sesion, privilegios=PRIVILEGIOS_IMPORTACION):
-    """Comprueba tablas y privilegios de columna sin fallar si una tabla aún no existe."""
-    permitido = await sesion.scalar(
+    """
+    Comprueba tablas y privilegios de columna sin fallar si una tabla aún no existe.
+
+    Si falta algo, el log nombra cada faltante ("tabla.columna PRIVILEGIO" o "tabla SIN_TABLA") para
+    saber qué migración o GRANT ejecutar; al usuario solo se le muestra el mensaje general.
+    (Sin ":" en los literales: text() de SQLAlchemy los tomaría como parámetros enlazados.)
+    """
+    faltantes = await sesion.scalar(
         text("""
-        SELECT bool_and(
-          CASE WHEN to_regclass(tabla) IS NULL THEN false
-               ELSE has_column_privilege(tabla, columna, privilegio) END)
+        SELECT coalesce(array_agg(
+                 CASE WHEN to_regclass(tabla) IS NULL THEN tabla || ' SIN_TABLA'
+                      ELSE tabla || '.' || columna || ' ' || privilegio END
+                 ORDER BY tabla, columna, privilegio)
+               FILTER (WHERE to_regclass(tabla) IS NULL
+                          OR NOT has_column_privilege(tabla, columna, privilegio)),
+               ARRAY[]::text[])
         FROM unnest(CAST(:tablas AS text[]), CAST(:columnas AS text[]), CAST(:privilegios AS text[]))
           AS p(tabla, columna, privilegio)
     """),
@@ -395,9 +441,25 @@ async def verificar_estructura(sesion, privilegios=PRIVILEGIOS_IMPORTACION):
             "privilegios": [p[2] for p in privilegios],
         },
     )
-    if not permitido:
-        registrador.error("IMPORTACION_NO_DISPONIBLE etapa=privilegios causa=estructura_o_privilegios")
+    if faltantes:
+        registrador.error(
+            "IMPORTACION_NO_DISPONIBLE etapa=privilegios causa=estructura_o_privilegios faltantes=%s",
+            ",".join(sorted(set(faltantes))),
+        )
         raise ErrorAplicacion(503, "IMPORTACION_NO_DISPONIBLE", MENSAJE_SIN_ESTRUCTURA)
+
+
+def codigo_curso(sigla: str, numero: int) -> str:
+    """Código del curso: sigla del tipo + consecutivo de dos dígitos (SACLI 01, SACLI 12, SACLI 100)."""
+    return f"{sigla.strip().upper()} {numero:02d}"
+
+
+async def siguientes_codigos(sesion, ids_tipos) -> dict[int, str]:
+    """Siguiente código de cada tipo de curso: {tipo_id: "SACLI 03"}."""
+    if not ids_tipos:
+        return {}
+    filas = (await sesion.execute(SQL_SIGUIENTES_POR_TIPO, {"ids": [int(i) for i in ids_tipos]})).all()
+    return {int(f.id): codigo_curso(f.sigla, int(f.siguiente)) for f in filas}
 
 
 async def datos_formulario_curso(sesion):
@@ -416,11 +478,11 @@ async def datos_formulario_curso(sesion):
     )
     tipos = (await sesion.execute(consulta_tipos)).mappings().all()
     instructores = (await sesion.execute(SQL_INSTRUCTORES)).mappings().all()
-    siguiente = await sesion.scalar(SQL_SIGUIENTE_CODIGO)
+    siguientes = await siguientes_codigos(sesion, [t["id"] for t in tipos])
     return {
-        "tipos_curso": [dict(t) for t in tipos],
+        # Cada tipo trae su siguiente número: el formulario muestra el del tipo elegido.
+        "tipos_curso": [{**dict(t), "siguiente_codigo": siguientes.get(int(t["id"]))} for t in tipos],
         "instructores": [dict(i) for i in instructores],
-        "siguiente_codigo": str(siguiente or 1),
     }
 
 
@@ -489,26 +551,19 @@ async def _consultar_existentes(sesion, documentos):
 
 
 def validar_repetidos(hoja, filas, registros, existentes, cruces):
-    """Cédula repetida: mismo grado o curso del mismo tipo con fechas cruzadas es error."""
+    """
+    Cédula ya registrada: la persona puede repetir un curso o hacer otro, con el mismo grado o con
+    otro, en otro periodo; todo se guarda como histórico (hoja_vida_artillero + artillero_cursos).
+
+    Único error: que ya figure en un curso del MISMO tipo con fechas que se cruzan con este (sería
+    cargar dos veces el mismo curso). Ej.: CS Nicolás SACLI 2024 y SV Nicolás SACLI 2026 → válido.
+    """
     errores = []
     for (numero, _, _), registro in zip(filas[1:], registros, strict=True):
         previo = existentes.get(registro["documento_identidad"])
         if previo is None:
             continue
-        if clave_grado(previo["grado"]) == clave_grado(registro["grado"]):
-            errores.append(
-                {
-                    "hoja": hoja,
-                    "fila": numero,
-                    "columna": "grado",
-                    "valor": registro["grado"],
-                    "motivo": (
-                        f"El documento ya está registrado con el grado {clave_grado(previo['grado'])}. "
-                        "Solo se actualiza si el grado es distinto."
-                    ),
-                }
-            )
-        elif int(previo["id"]) in cruces:
+        if int(previo["id"]) in cruces:
             errores.append(
                 {
                     "hoja": hoja,
@@ -519,6 +574,69 @@ def validar_repetidos(hoja, filas, registros, existentes, cruces):
                 }
             )
     return errores
+
+
+async def _grados_a_actualizar(sesion, curso, registros, existentes):
+    """
+    Personas ya registradas cuyo grado de personal_militar debe cambiar:
+    - el grado del Excel es distinto del actual (sin distinguir mayúsculas/espacios), y
+    - el curso que se carga empieza el mismo día o después que el más reciente de su historial.
+    Si se carga un curso antiguo (p. ej. el SACLI que hizo de CS cuando hoy es SV), el grado actual
+    no se toca; el grado de ese momento queda igual en su fila del historial.
+    """
+    candidatos = [
+        r
+        for r in registros
+        if r["documento_identidad"] in existentes
+        and clave_grado(existentes[r["documento_identidad"]]["grado"]) != clave_grado(r["grado"])
+    ]
+    if not candidatos:
+        return []
+    ids = [int(existentes[r["documento_identidad"]]["id"]) for r in candidatos]
+    ultimos = {
+        int(fila.artillero_id): fila.ultimo_inicio
+        for fila in (await sesion.execute(SQL_ULTIMO_CURSO, {"ids": ids})).all()
+    }
+    return [
+        r
+        for r in candidatos
+        if ultimos.get(int(existentes[r["documento_identidad"]]["id"])) is None
+        or curso.fecha_inicio >= ultimos[int(existentes[r["documento_identidad"]]["id"])]
+    ]
+
+
+async def _registrar_cursos_artilleros(sesion, curso, hojas_vida):
+    """
+    Registra el curso de la importación en esart.artillero_cursos, una fila por persona.
+
+    Es la tabla que lee la regla de habilitación (servicios/habilitacion.py) y la columna "Curso"
+    del listado de habilitados; sin esta fila el curso solo quedaba en cursos/hoja_vida_artillero
+    y el listado lo mostraba vacío.
+
+    - CULMINADO → aprobado (el Excel no trae resultado individual: se asume que lo aprobaron todos
+      los listados; un caso particular se corrige después en la hoja de vida).
+    - EN_CURSO → no aprobado: el artillero aparece "en curso, aún no aprobado".
+    - CANCELADO / APLAZADO → no se registra: no habilita ni cuenta como curso en progreso.
+      Queda igual en cursos y en el historial (hoja_vida_artillero).
+    Devuelve cuántas filas registró.
+    """
+    if curso.estado not in ESTADOS_CURSO_REGISTRADOS or not hojas_vida:
+        return 0
+    filas = [
+        {
+            "hoja_vida_id": hoja_vida_id,
+            "tipo_curso_id": curso.tipo_curso_id,
+            "nombre": curso.nombre,
+            "institucion": INSTITUCION_CURSO,
+            "fecha_inicio": curso.fecha_inicio,
+            "fecha_fin": curso.fecha_fin,
+            "aprobado": curso.estado == "CULMINADO",
+        }
+        for hoja_vida_id in hojas_vida
+    ]
+    for inicio in range(0, len(filas), 500):
+        await sesion.execute(insert(ArtilleroCurso.__table__), filas[inicio : inicio + 500])
+    return len(filas)
 
 
 async def _guardar_personal(sesion, hoja, filas, actor, curso, request, autorizar):
@@ -558,7 +676,7 @@ async def _guardar_personal(sesion, hoja, filas, actor, curso, request, autoriza
     referencia = str(uuid.uuid4())
     # Serializa la numeración de cursos sin privilegios de LOCK TABLE.
     await sesion.execute(text("SELECT pg_advisory_xact_lock(hashtext('esart.cursos.codigo'))"))
-    codigo = str(await sesion.scalar(SQL_SIGUIENTE_CODIGO))
+    codigo = (await siguientes_codigos(sesion, [curso.tipo_curso_id]))[curso.tipo_curso_id]
     tabla_cursos = Cursos.__table__
     curso_id = await sesion.scalar(
         insert(tabla_cursos)
@@ -576,7 +694,8 @@ async def _guardar_personal(sesion, hoja, filas, actor, curso, request, autoriza
         .returning(tabla_cursos.c.id)
     )
     nuevos = [r for r in registros if r["documento_identidad"] not in existentes]
-    actualizados = [r for r in registros if r["documento_identidad"] in existentes]
+    actualizados = await _grados_a_actualizar(sesion, curso, registros, existentes)
+    repetidos = sum(1 for r in registros if r["documento_identidad"] in existentes)
     registrador.info(
         "IMPORTACION_ETAPA etapa=insercion nuevos=%d actualizados=%d referencia=%s",
         len(nuevos),
@@ -607,8 +726,14 @@ async def _guardar_personal(sesion, hoja, filas, actor, curso, request, autoriza
         }
         for r in registros
     ]
+    tabla_historial = HojaVidaArtillero.__table__
+    hojas_vida = []
     for inicio in range(0, len(historial), 500):
-        await sesion.execute(insert(HojaVidaArtillero.__table__), historial[inicio : inicio + 500])
+        resultado = await sesion.execute(
+            insert(tabla_historial).returning(tabla_historial.c.id), historial[inicio : inicio + 500]
+        )
+        hojas_vida.extend(int(fila.id) for fila in resultado.all())
+    cursos_registrados = await _registrar_cursos_artilleros(sesion, curso, hojas_vida)
     await auditoria.registrar_evento(
         sesion,
         "IMPORTACION_EXCEL",
@@ -624,6 +749,8 @@ async def _guardar_personal(sesion, hoja, filas, actor, curso, request, autoriza
             "curso_codigo": codigo,
             "registros_nuevos": len(nuevos),
             "grados_actualizados": len(actualizados),
+            "personas_existentes": repetidos,
+            "cursos_registrados": cursos_registrados,
         },
         confirmar=False,
     )

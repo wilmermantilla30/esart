@@ -86,4 +86,91 @@ describe('VerificarArtillero', () => {
     await fixture.whenStable();
     expect(pagina.querySelector('[role="alert"]')?.textContent).toContain('No se encontró un militar con esa cédula.');
   });
+
+  describe('Generar documento', () => {
+    async function verificado() {
+      await verificar('9.900.000.004');
+      backend.expectOne('/api/verificar/artillero/9.900.000.004').flush(APTO_POR_VENCER);
+      await fixture.whenStable();
+    }
+
+    it('ofrece diploma, oficio remisorio y certificación', async () => {
+      await verificado();
+      const opciones = [...pagina.querySelectorAll<HTMLOptionElement>('#tipo-documento option')];
+      expect(opciones.map((o) => o.value)).toEqual([
+        'DIPLOMA',
+        'OFICIO_REMISORIO',
+        'CERTIFICACION',
+      ]);
+      expect(opciones.map((o) => o.textContent?.trim())).toEqual([
+        'Diploma',
+        'Oficio remisorio',
+        'Certificación',
+      ]);
+    });
+
+    it('pide el PDF con la cédula consultada y la opción elegida, y lo descarga', async () => {
+      await verificado();
+      const crearUrl = vi.fn(() => 'blob:documento');
+      const revocar = vi.fn();
+      Object.assign(URL, { createObjectURL: crearUrl, revokeObjectURL: revocar });
+      const clic = vi
+        .spyOn(HTMLAnchorElement.prototype, 'click')
+        .mockImplementation(() => undefined);
+
+      const selector = pagina.querySelector<HTMLSelectElement>('#tipo-documento')!;
+      selector.value = 'OFICIO_REMISORIO';
+      selector.dispatchEvent(new Event('change'));
+      const boton = [...pagina.querySelectorAll('button')].find((b) =>
+        b.textContent?.includes('Generar documento'),
+      )!;
+      boton.click();
+      await fixture.whenStable();
+
+      const peticion = backend.expectOne(
+        '/api/verificar/artillero/9.900.000.004/documento?tipo=OFICIO_REMISORIO',
+      );
+      expect(peticion.request.responseType).toBe('blob');
+      peticion.flush(new Blob(['%PDF-1.4'], { type: 'application/pdf' }), {
+        headers: {
+          'Content-Disposition': "attachment; filename*=UTF-8''oficio_remisorio_9900000004.pdf",
+        },
+      });
+      await fixture.whenStable();
+
+      expect(crearUrl).toHaveBeenCalled();
+      expect(clic).toHaveBeenCalled();
+      expect(revocar).toHaveBeenCalledWith('blob:documento');
+      clic.mockRestore();
+    });
+
+    it('muestra el mensaje del backend cuando el documento no aplica (diploma sin curso)', async () => {
+      await verificado();
+      const selector = pagina.querySelector<HTMLSelectElement>('#tipo-documento')!;
+      selector.value = 'DIPLOMA';
+      selector.dispatchEvent(new Event('change'));
+      [...pagina.querySelectorAll('button')]
+        .find((b) => b.textContent?.includes('Generar documento'))!
+        .click();
+      await fixture.whenStable();
+
+      const cuerpo = JSON.stringify({
+        error: {
+          codigo: 'DOCUMENTO_NO_DISPONIBLE',
+          mensaje: 'El artillero no tiene cursos aprobados: no se puede expedir un diploma.',
+          detalle: null,
+        },
+      });
+      backend
+        .expectOne('/api/verificar/artillero/9.900.000.004/documento?tipo=DIPLOMA')
+        .flush(new Blob([cuerpo], { type: 'application/json' }), {
+          status: 409,
+          statusText: 'Conflict',
+        });
+      await new Promise((resolver) => setTimeout(resolver, 0));
+      await fixture.whenStable();
+
+      expect(pagina.textContent).toContain('no se puede expedir un diploma');
+    });
+  });
 });

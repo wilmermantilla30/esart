@@ -90,11 +90,12 @@ export interface OpcionCatalogo {
   id: number;
   nombre: string;
   codigo?: string | null;
+  /** Solo en tipos de curso: número del próximo curso de ese tipo ("SACLI 03"). */
+  siguiente_codigo?: string | null;
 }
 export interface DatosFormularioCurso {
   tipos_curso: OpcionCatalogo[];
   instructores: OpcionCatalogo[];
-  siguiente_codigo: string;
 }
 /** Curso que se crea con la importación; se envía junto al archivo (multipart). */
 export interface DatosCursoImportacion {
