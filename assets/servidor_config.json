@@ -1,0 +1,14 @@
+{
+  "dist": "C:/esart/frontend/esart/dist/esart/browser",
+  "ang_host": "0.0.0.0",
+  "ang_port": "4200",
+  "api": "C:/esart/backend",
+  "proxy": "/api",
+  "proxy_on": true,
+  "modulo": "aplicacion.principal:aplicacion",
+  "python": "C:\\esart\\backend\\.venv\\Scripts\\python.exe",
+  "uvi_host": "0.0.0.0",
+  "uvi_port": "8081",
+  "reload": true,
+  "extra": ""
+}
