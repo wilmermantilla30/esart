@@ -5,12 +5,13 @@ import base64
 import hashlib
 import hmac
 import logging
+import math
 import re
 import secrets
 import time
 import uuid
 from dataclasses import dataclass, field
-from datetime import timedelta
+from datetime import UTC, timedelta
 
 import pyotp
 from cryptography.exceptions import InvalidTag
@@ -151,7 +152,7 @@ class TotpService:
                 503, "TOTP_NO_DISPONIBLE", "Autenticador temporalmente no disponible."
             ) from None
 
-    async def auditar(self, usuario_id, accion, resultado, ip=None, correlacion=None):
+    async def auditar(self, usuario_id, accion, resultado, ip=None, correlacion=None, datos=None):
         registro = AuditoriaSeguridad(
             evento_id=uuid.uuid4(),
             usuario_id=usuario_id,
@@ -161,7 +162,7 @@ class TotpService:
             resultado=resultado,
             ip_origen=ip_canonica(ip),
             correlacion_id=correlacion,
-            datos={},
+            datos=datos or {},
         )
         self.sesion.add(registro)
         return registro
@@ -185,13 +186,27 @@ class TotpService:
                 .execution_options(populate_existing=True)
             )
             ahora = await reloj_servidor(self.sesion)
-            if ahora >= fila.inicio + timedelta(minutes=10):
+            if fila.inicio > ahora:
+                # El reloj del servidor retrocedió (p. ej. corrección NTP): una ventana que
+                # empieza en el futuro bloquearía más de lo previsto. Se ancla al reloj actual
+                # conservando los intentos, así el límite sigue siendo de LIMITE_TOTP por ventana.
+                fila.inicio = ahora
+            if ahora >= fila.inicio + self.VENTANA_LIMITE:
                 fila.inicio, fila.intentos = ahora, 0
-            if fila.intentos >= 10:
+            if fila.intentos >= self.LIMITE_TOTP:
                 await self.auditar(None, "TOTP_LIMITE", "DENEGADO", ip)
                 await self.sesion.commit()
-                raise ErrorAplicacion(429, "INTENTOS_LIMITADOS", "Demasiadas solicitudes. Intente más tarde.")
+                restante = math.ceil((fila.inicio + self.VENTANA_LIMITE - ahora).total_seconds())
+                raise ErrorAplicacion(
+                    429,
+                    "INTENTOS_LIMITADOS",
+                    "Demasiadas solicitudes. Intente más tarde.",
+                    cabeceras={"Retry-After": str(max(1, restante))},
+                )
             fila.intentos += 1
+
+    LIMITE_TOTP = 10
+    VENTANA_LIMITE = timedelta(minutes=10)
 
     async def usuario(self, usuario_id, permitir_bloqueado=False):
         usuario = await self.sesion.scalar(
@@ -264,10 +279,7 @@ class TotpService:
             await self.auditar(usuario_id, "TOTP_CONFIGURACION_RECUPERADA", "CORRECTO", ip)
             await self.sesion.commit()
             return {
-                "uri": pyotp.TOTP(secreto, digits=6, interval=30, digest=hashlib.sha1).provisioning_uri(
-                    name=await self.sesion.scalar(select(Usuario.usuario).where(Usuario.id == usuario_id)),
-                    issuer_name="ESART",
-                ),
+                "uri": await self.uri_vinculacion(usuario_id, secreto, registro.expira_configuracion_en),
                 "expira_en": registro.expira_configuracion_en,
             }
         secreto = pyotp.random_base32()
@@ -276,18 +288,30 @@ class TotpService:
             self.sesion.add(registro)
         registro.secreto_cifrado = self.cifrar(usuario_id, secreto)
         registro.estado = "PENDIENTE"
-        registro.expira_configuracion_en = ahora + timedelta(minutes=10)
+        registro.expira_configuracion_en = ahora + self.VIGENCIA_PENDIENTE
         registro.activado_en = registro.revocado_en = registro.ultimo_intervalo_aceptado = None
         registro.actualizado_en = ahora
         await self.auditar(usuario_id, "TOTP_CONFIGURACION_PENDIENTE", "CORRECTO", ip)
         await self.sesion.commit()
         return {
-            "uri": pyotp.TOTP(secreto, digits=6, interval=30, digest=hashlib.sha1).provisioning_uri(
-                name=await self.sesion.scalar(select(Usuario.usuario).where(Usuario.id == usuario_id)),
-                issuer_name="ESART",
-            ),
+            "uri": await self.uri_vinculacion(usuario_id, secreto, registro.expira_configuracion_en),
             "expira_en": registro.expira_configuracion_en,
         }
+
+    VIGENCIA_PENDIENTE = timedelta(minutes=10)
+
+    @classmethod
+    def etiqueta_vinculacion(cls, nombre, expira_configuracion_en):
+        """Nombre visible en el autenticador con la fecha de creación del secreto pendiente (UTC).
+        Sin ':' en la hora: en el formato otpauth ':' separa emisor y cuenta."""
+        creado = (expira_configuracion_en - cls.VIGENCIA_PENDIENTE).astimezone(UTC)
+        return f"{nombre} ({creado:%d-%m %Hh%M} UTC)"
+
+    async def uri_vinculacion(self, usuario_id, secreto, expira_configuracion_en):
+        nombre = await self.sesion.scalar(select(Usuario.usuario).where(Usuario.id == usuario_id))
+        return pyotp.TOTP(secreto, digits=6, interval=30, digest=hashlib.sha1).provisioning_uri(
+            name=self.etiqueta_vinculacion(nombre, expira_configuracion_en), issuer_name="ESART"
+        )
 
     async def confirmar(self, usuario_id, codigo, ip, confirmar_transaccion=True, identidad_verificada=False):
         if not identidad_verificada:
