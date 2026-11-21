@@ -389,6 +389,12 @@ class Cursos(BaseModelo):
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.Column("creado_por_id", sa.BigInteger(), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        # p0017: versión de la malla que usa el curso; la asigna un trigger al crearlo (NULL en
+        # los cursos anteriores a la malla en la plataforma).
+        sa.Column("malla_version_id", sa.BigInteger(), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["malla_version_id"], ["esart.versiones_malla.id"], name=conv("fk_cursos_malla_version_id")
+        ),
         sa.CheckConstraint(
             ("estado IN ('EN_CURSO', 'CULMINADO', 'CANCELADO', 'APLAZADO')"),
             name=conv("ck_cursos_estado"),
@@ -517,7 +523,7 @@ class EgresadosCurso(BaseModelo):
         ),
         sa.CheckConstraint("((dias_en_curso >= 0))", name=conv("egresados_curso_dias_en_curso_check")),
         sa.CheckConstraint(
-            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))",
+            "nota_final >= 0 AND nota_final <= 5",
             name=conv("egresados_curso_nota_final_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("egresados_curso_pkey")),
@@ -586,11 +592,11 @@ class Habilitaciones(BaseModelo):
             ["registrado_por_id"], ["esart_ref.usuarios.id"], name=conv("fk_habilitaciones_registrado_por_id")
         ),
         sa.CheckConstraint(
-            "(((nota_obtenida >= (0)::numeric) AND (nota_obtenida <= (100)::numeric)))",
+            "nota_obtenida >= 0 AND nota_obtenida <= 5",
             name=conv("habilitaciones_nota_obtenida_check"),
         ),
         sa.CheckConstraint(
-            "(((numero_habilitacion >= 1) AND (numero_habilitacion <= 2)))",
+            "numero_habilitacion = 1",
             name=conv("habilitaciones_numero_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("habilitaciones_pkey")),
@@ -659,7 +665,7 @@ class InscripcionesCurso(BaseModelo):
             ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_inscripciones_curso_personal_id")
         ),
         sa.CheckConstraint(
-            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))",
+            "nota_final >= 0 AND nota_final <= 5",
             name=conv("inscripciones_curso_nota_final_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("inscripciones_curso_pkey")),
@@ -735,20 +741,58 @@ class MallaCurricular(BaseModelo):
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
         sa.Column("tipo_curso_id", sa.BigInteger(), nullable=False),
         sa.Column("materia_id", sa.BigInteger(), nullable=False),
-        sa.Column("nota_minima_aprobacion", sa.Numeric(4, 2), nullable=False),
         sa.Column("orden", sa.Integer(), nullable=False),
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
+        # p0017: versión de la malla, área y módulo del documento de la Escuela, y si lleva nota.
+        sa.Column("version_id", sa.BigInteger(), nullable=False),
+        sa.Column("area", sa.String(100), nullable=True),
+        sa.Column("modulo", sa.String(100), nullable=True),
+        sa.Column("evaluable", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.ForeignKeyConstraint(
             ["materia_id"], ["esart.materias.id"], name=conv("fk_malla_curricular_materia_id")
         ),
         sa.ForeignKeyConstraint(
             ["tipo_curso_id"], ["esart.tipos_curso.id"], name=conv("fk_malla_curricular_tipo_curso_id")
         ),
-        sa.CheckConstraint(
-            "(((nota_minima_aprobacion >= (0)::numeric) AND (nota_minima_aprobacion <= (100)::numeric)))",
-            name=conv("malla_curricular_nota_minima_aprobacion_check"),
+        sa.ForeignKeyConstraint(
+            ["version_id"], ["esart.versiones_malla.id"], name=conv("fk_malla_curricular_version_id")
         ),
+        sa.CheckConstraint("orden >= 1", name=conv("ck_malla_curricular_orden")),
         sa.PrimaryKeyConstraint("id", name=conv("malla_curricular_pkey")),
+        schema="esart",
+    )
+
+
+class VersionMalla(BaseModelo):
+    """p0017: versión de la malla de un tipo de curso. Solo una VIGENTE por tipo; las anteriores
+    quedan HISTORICA y los cursos que ya la usaban la conservan."""
+
+    __table__ = sa.Table(
+        "versiones_malla",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("tipo_curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("numero", sa.Integer(), nullable=False),
+        sa.Column("anio", sa.Integer(), nullable=False),
+        sa.Column(
+            "estado", sa.String(20), server_default=sa.text("'VIGENTE'::character varying"), nullable=False
+        ),
+        sa.Column("observacion", sa.Text(), nullable=True),
+        sa.Column("creado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["tipo_curso_id"], ["esart.tipos_curso.id"], name=conv("fk_versiones_malla_tipo_curso_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["creado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_versiones_malla_creado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint("estado IN ('VIGENTE', 'HISTORICA')", name=conv("ck_versiones_malla_estado")),
+        sa.CheckConstraint("numero >= 1", name=conv("ck_versiones_malla_numero")),
+        sa.CheckConstraint("anio BETWEEN 2000 AND 2100", name=conv("ck_versiones_malla_anio")),
+        sa.PrimaryKeyConstraint("id", name=conv("versiones_malla_pkey")),
         schema="esart",
     )
 
@@ -785,11 +829,11 @@ class NotasFinalesEgresado(BaseModelo):
             ["materia_id"], ["esart.materias.id"], name=conv("fk_notas_finales_egresado_materia_id")
         ),
         sa.CheckConstraint(
-            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric)))",
+            "nota >= 0 AND nota <= 5",
             name=conv("notas_finales_egresado_nota_check"),
         ),
         sa.CheckConstraint(
-            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))",
+            "nota_habilitacion >= 0 AND nota_habilitacion <= 5",
             name=conv("notas_finales_egresado_nota_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("notas_finales_egresado_pkey")),
@@ -818,10 +862,10 @@ class NotasMateria(BaseModelo):
             ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_notas_materia_malla_id")
         ),
         sa.CheckConstraint(
-            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric)))", name=conv("notas_materia_nota_check")
+            "nota >= 0 AND nota <= 5", name=conv("notas_materia_nota_check")
         ),
         sa.CheckConstraint(
-            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))",
+            "nota_habilitacion >= 0 AND nota_habilitacion <= 5",
             name=conv("notas_materia_nota_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("notas_materia_pkey")),
@@ -1503,12 +1547,47 @@ sa.Index(
     _table=BaseModelo.metadata.tables["esart.instructores_especialidades"],
     unique=True,
 )
+# p0017: una materia una sola vez por versión, con un orden único; nombres de materia únicos;
+# una sola versión VIGENTE por tipo de curso.
 sa.Index(
-    "uq_malla_tipo_materia",
-    sa.text("tipo_curso_id"),
+    "uq_malla_version_materia",
+    sa.text("version_id"),
     sa.text("materia_id"),
     _table=BaseModelo.metadata.tables["esart.malla_curricular"],
     unique=True,
+)
+sa.Index(
+    "uq_malla_version_orden",
+    sa.text("version_id"),
+    sa.text("orden"),
+    _table=BaseModelo.metadata.tables["esart.malla_curricular"],
+    unique=True,
+)
+sa.Index(
+    "uq_materias_nombre",
+    sa.text("upper(nombre)"),
+    _table=BaseModelo.metadata.tables["esart.materias"],
+    unique=True,
+)
+sa.Index(
+    "uq_versiones_malla_numero",
+    sa.text("tipo_curso_id"),
+    sa.text("numero"),
+    _table=BaseModelo.metadata.tables["esart.versiones_malla"],
+    unique=True,
+)
+sa.Index(
+    "uq_versiones_malla_vigente",
+    sa.text("tipo_curso_id"),
+    _table=BaseModelo.metadata.tables["esart.versiones_malla"],
+    unique=True,
+    postgresql_where=sa.text("estado = 'VIGENTE'"),
+)
+sa.Index(
+    "ix_cursos_malla_version_id",
+    sa.text("malla_version_id"),
+    _table=BaseModelo.metadata.tables["esart.cursos"],
+    unique=False,
 )
 sa.Index(
     "ix_notas_finales_egresado_egresado_id",

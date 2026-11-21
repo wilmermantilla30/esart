@@ -112,3 +112,21 @@ usuario del sistema operativo que la ejecutó.
   `p0009_gestion_usuarios`: permisos de la API sobre esas columnas y acciones de auditoría nuevas).
 - `desbloquear` pone en cero los intentos y quita el bloqueo de 3 horas; `desbloquear-ip` pone en
   cero el contador de una IP.
+
+## Malla curricular (S2-01)
+
+Carga inicial de las mallas desde el Excel revisado por la Escuela (formato de
+`docs/backlog_sprint2_esart.xlsx`: hojas *Materias* y *Malla por curso*). Usa la conexión del `.env`
+y cada malla queda en la auditoría (`MALLA_CURRICULAR_CARGADA`) como `consola`.
+
+```powershell
+.venv/Scripts/python.exe -m herramientas.cargar_malla_curricular listar
+.venv/Scripts/python.exe -m herramientas.cargar_malla_curricular cargar ..\docs\backlog_sprint2_esart.xlsx --anio 2026
+.venv/Scripts/python.exe -m herramientas.cargar_malla_curricular cargar ..\docs\backlog_sprint2_esart.xlsx --anio 2026 --ejecutar
+```
+
+- Sin `--ejecutar` solo revisa el archivo y muestra qué cargaría.
+- Rechaza el archivo si alguna materia no está "Confirmada" en la hoja *Materias*
+  (`--aceptar-pendientes` solo funciona con `ENTORNO=desarrollo`).
+- Un tipo de curso que ya tiene malla vigente se omite: los cambios se harán desde Parámetros (S2-09).
+- Todo va en una transacción: se cargan todas las mallas o ninguna.
