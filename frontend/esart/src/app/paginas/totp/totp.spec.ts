@@ -221,4 +221,93 @@ describe('Totp', () => {
     expect(componente.claveManual()).toBe('');
     expect(componente.qr()).toBe('');
   });
+  it('descarga exactamente los c?digos visibles en TXT UTF-8 y libera la URL temporal', async () => {
+    crear();
+    http.expectOne('/api/auth/totp/estado').flush({ configurado: false, activo: false });
+    await fixture.whenStable();
+    const componente = fixture.componentInstance;
+    const codigos = ['00000000000000000000000000000001', 'abcdefabcdefabcdefabcdefabcdefab'];
+    componente.codigosRecuperacion.set(codigos);
+    fixture.detectChanges();
+
+    let archivoDescargado: Blob | undefined;
+    let nombreDescargado = '';
+    let liberarUrl: (() => void) | undefined;
+    const crearUrl = vi.fn((archivo: Blob) => {
+      archivoDescargado = archivo;
+      return 'blob:codigos-recuperacion';
+    });
+    const revocarUrl = vi.fn();
+    const urlOriginal = globalThis.URL;
+    vi.stubGlobal('URL', {
+      canParse: urlOriginal.canParse.bind(urlOriginal),
+      createObjectURL: crearUrl,
+      revokeObjectURL: revocarUrl,
+    });
+    const click = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      nombreDescargado = this.download;
+    });
+    const temporizador = vi.spyOn(window, 'setTimeout').mockImplementation(((
+      callback: TimerHandler,
+      demora?: number,
+    ) => {
+      if (demora === 1000) liberarUrl = callback as () => void;
+      return 0;
+    }) as typeof window.setTimeout);
+
+    fixture.nativeElement.querySelector('.totp-descarga').click();
+    expect(crearUrl).toHaveBeenCalledOnce();
+    const hoy = new Date();
+    const fecha = [
+      hoy.getFullYear(),
+      String(hoy.getMonth() + 1).padStart(2, '0'),
+      String(hoy.getDate()).padStart(2, '0'),
+    ].join('-');
+    expect(nombreDescargado).toBe(`ESART_Codigos_Recuperacion_${fecha}.txt`);
+    expect(archivoDescargado?.type).toBe('text/plain;charset=utf-8');
+    const contenido = await new Promise<string>((resolve, reject) => {
+      const lector = new FileReader();
+      lector.onload = () => resolve(String(lector.result));
+      lector.onerror = () => reject(lector.error);
+      lector.readAsText(archivoDescargado!);
+    });
+    expect(contenido).toBe(
+      [
+        'ESCUELA DE ARTILLER\u00cdA \u2014 ESART',
+        '',
+        'C\u00d3DIGOS DE RECUPERACI\u00d3N DE AUTENTICACI\u00d3N TOTP',
+        '',
+        `Fecha de generaci\u00f3n: ${fecha}`,
+        '',
+        'C\u00d3DIGOS DE RECUPERACI\u00d3N',
+        '1. 00000000000000000000000000000001',
+        '2. abcdefabcdefabcdefabcdefabcdefab',
+        '',
+        'INSTRUCCIONES DE SEGURIDAD',
+        '- Cada c\u00f3digo puede utilizarse una sola vez.',
+        '- Guarde este archivo en un lugar seguro.',
+        '- No comparta estos c\u00f3digos.',
+        '- No almacene el archivo en carpetas compartidas.',
+        '- Si pierde el autenticador, utilice uno de estos c\u00f3digos para recuperar el acceso.',
+        '- Al generar nuevos c\u00f3digos, los anteriores dejar\u00e1n de ser v\u00e1lidos.',
+      ].join('\n'),
+    );
+    expect(contenido.match(/00000000000000000000000000000001/g)).toHaveLength(1);
+    expect(contenido.match(/abcdefabcdefabcdefabcdefabcdefab/g)).toHaveLength(1);
+    expect(componente.codigosRecuperacion()).toEqual(codigos);
+    expect(liberarUrl).toBeDefined();
+    liberarUrl?.();
+    expect(revocarUrl).toHaveBeenCalledWith('blob:codigos-recuperacion');
+
+    componente.confirmarGuardado();
+    fixture.detectChanges();
+    expect(componente.codigosRecuperacion()).toEqual([]);
+    expect(fixture.nativeElement.querySelector('.totp-descarga')).toBeNull();
+    expect(http.match(() => true)).toHaveLength(0);
+    click.mockRestore();
+    temporizador.mockRestore();
+    vi.unstubAllGlobals();
+  });
 });

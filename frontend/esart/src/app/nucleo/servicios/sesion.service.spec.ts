@@ -245,6 +245,20 @@ describe('SesionService', () => {
     expect(sesion.puede('AUDITORIA', 'leer')).toBe(false);
   });
 
+  it('puede() también lee los permisos especiales (sin pantalla) como Firma documental', () => {
+    sesion.comprobarSesion().subscribe();
+    backend.expectOne('/api/auth/yo').flush({
+      ...usuarioDePrueba,
+      permisos: ['FIRMA_DOCUMENTOS', 'VER_DOCUMENTO_COMPLETO'],
+      permisos_especiales: { FIRMA_DOCUMENTOS: ['crear', 'leer'], VER_DOCUMENTO_COMPLETO: ['leer'] },
+      menu: [],
+      expira_por_inactividad_segundos: 1800,
+    });
+    expect(sesion.puede('FIRMA_DOCUMENTOS', 'crear')).toBe(true);
+    expect(sesion.puede('FIRMA_DOCUMENTOS', 'eliminar')).toBe(false);
+    expect(sesion.puede('VER_DOCUMENTO_COMPLETO', 'crear')).toBe(false);
+  });
+
   it('comprobarSesion responde false (sin lanzar error) si no hay sesión', () => {
     let resultado: boolean | undefined;
     sesion.comprobarSesion().subscribe((valor) => (resultado = valor));

@@ -113,6 +113,16 @@
               }}</span>
               {{ generando() ? 'Generando…' : 'Generar documento' }}
             </button>
+            @if (esFirmable()) {
+              <button
+                type="button"
+                (click)="firmandoEnCelular.set(true)"
+                class="inline-flex items-center gap-2 py-2 px-4 border border-azul-institucional text-azul-institucional rounded-sm font-headline text-label-lg hover:bg-azul-hielo"
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">phone_iphone</span>
+                Firmar desde el celular
+              </button>
+            }
           </div>
           @if (errorDocumento(); as mensaje) {
             <p class="text-xs text-error max-w-xs md:text-right" role="alert">{{ mensaje }}</p>
@@ -240,3 +250,11 @@
     </div>
   }
 </div>
+
+@if (firmandoEnCelular()) {
+  <esart-solicitud-firma
+    [cedula]="cedulaConsultada"
+    [tipo]="$any(tipoDocumento())"
+    (cerrar)="firmandoEnCelular.set(false)"
+  />
+}

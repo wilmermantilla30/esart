@@ -369,6 +369,14 @@ Componente `PERSONAL_CARGUE_MANUAL`, operación **crear** (sesión + CSRF). Deta
   → **201** con el registro + `"nombre_completo"`, `"unidad_nombre"`. **409** `DOCUMENTO_EXISTENTE`, **422** `DATOS_INVALIDOS`
   (grado fuera de la categoría, unidad inexistente o inactiva), **503** `REGISTRO_NO_DISPONIBLE` (falta p0015). Auditoría `PERSONAL_REGISTRADO`.
 
+## 5f. Firma desde el celular
+
+Rúbrica dibujada en el celular + TOTP del firmante autorizado; detalle en `ESART_FIRMA_MOVIL.md`.
+PC (sesión + CSRF): `GET /api/firma/firmantes?tipo=`, `POST /api/firma/solicitudes`, `GET /api/firma/solicitudes/{id}`,
+`GET|POST /api/firma/autorizaciones` (FIRMA_DOCUMENTOS). Celular (sin sesión, token de un solo uso del QR):
+`GET /api/firma-movil/{token}`, `GET /api/firma-movil/{token}/pdf`, `POST /api/firma-movil/{token}/firmar`
+`{rubrica_png, codigo_totp, acepto}`. Migraciones p0018 + p0019.
+
 ---
 
 ## 6. Salud
@@ -407,3 +415,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.12 | 2026-11-17 | §5d panel de instructores (militares y civiles, foto y especialidades) y cursos del instructor. Migraciones p0013 y p0014 |
 | 0.13 | 2026-11-18 | §5e registro manual de personal militar y accesos a Instructores / Usuarios con `?cedula=`. Migración p0015 |
 | 0.14 | 2026-11-18 | §3 documentos PDF del artillero (diploma, oficio remisorio, certificación) con ReportLab |
+| 0.15 | 2026-11-19 | §5f firma desde el celular (rúbrica + TOTP) para certificación y oficio. Migración p0019 |

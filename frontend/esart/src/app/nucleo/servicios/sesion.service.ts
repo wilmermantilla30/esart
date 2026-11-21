@@ -36,6 +36,8 @@ export class SesionService {
   private readonly usuarioActual = signal<UsuarioEnSesion | null>(null);
   private readonly menuActual = signal<ElementoMenu[] | null>(null);
   private readonly permisosActuales = signal<ReadonlySet<string>>(new Set());
+  /** Operaciones de los permisos especiales (no son menú: FIRMA_DOCUMENTOS, VER_DOCUMENTO_COMPLETO…). */
+  private readonly especialesActuales = signal<Readonly<Record<string, string[]>>>({});
   private readonly cambioInicial = signal<DesafioSegundoFactor | null>(null);
   private readonly pasoMfa = signal<DesafioSegundoFactor | null>(null);
   readonly cambioInicialPendiente = this.cambioInicial.asReadonly();
@@ -78,7 +80,12 @@ export class SesionService {
       }
       return undefined;
     };
-    return buscar(this.menuActual() ?? [])?.operaciones.includes(operacion) ?? false;
+    const enMenu = buscar(this.menuActual() ?? []);
+    if (enMenu) {
+      return enMenu.operaciones.includes(operacion);
+    }
+    // Permisos especiales: no están en el menú porque no tienen pantalla propia.
+    return this.especialesActuales()[codigoComponente]?.includes(operacion) ?? false;
   }
 
   /**
@@ -237,6 +244,7 @@ export class SesionService {
         });
         this.menuActual.set(respuesta.menu ?? []);
         this.permisosActuales.set(new Set(respuesta.permisos ?? []));
+        this.especialesActuales.set(respuesta.permisos_especiales ?? {});
       }),
       map(() => true),
       catchError(() => {
@@ -263,6 +271,7 @@ export class SesionService {
     this.usuarioActual.set(null);
     this.menuActual.set(null);
     this.permisosActuales.set(new Set());
+    this.especialesActuales.set({});
     this.cambioInicial.set(null);
     this.pasoMfa.set(null);
   }

@@ -85,6 +85,16 @@ export class AdministracionService {
     });
   }
 
+  restablecerTotp(
+    usuarioId: number,
+    datos: { contrasena: string; codigo_totp: string; justificacion: string },
+  ): Observable<{ restablecido: boolean; estado_totp: string }> {
+    return this.clienteApi.enviar<{ restablecido: boolean; estado_totp: string }>(
+      `/administracion/usuarios/${usuarioId}/restablecer-totp`,
+      datos,
+    );
+  }
+
   consultarAuditoria(filtros: FiltrosAuditoria): Observable<PaginaAuditoria> {
     return this.clienteApi.obtener<PaginaAuditoria>('/administracion/auditoria', {}, { ...filtros });
   }

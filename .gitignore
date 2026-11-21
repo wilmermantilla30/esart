@@ -36,6 +36,7 @@ cargas/
 *.dump
 *.backup
 respaldos/
+backend/almacen_privado/
 
 # --- Archivos temporales de Office (Excel los crea mientras el archivo está abierto) ---
 ~$*

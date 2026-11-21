@@ -306,6 +306,45 @@ export class Totp implements OnInit, AfterViewInit {
     this.codigosRecuperacion.set([]);
     this.completado.emit({ modo: 'CONFIGURAR' });
   }
+  descargarCodigosRecuperacion(): void {
+    const codigos = this.codigosRecuperacion();
+    if (!codigos.length) return;
+
+    const ahora = new Date();
+    const fecha = [
+      ahora.getFullYear(),
+      String(ahora.getMonth() + 1).padStart(2, '0'),
+      String(ahora.getDate()).padStart(2, '0'),
+    ].join('-');
+    const lineas = [
+      'ESCUELA DE ARTILLERÍA — ESART',
+      '',
+      'CÓDIGOS DE RECUPERACIÓN DE AUTENTICACIÓN TOTP',
+      '',
+      `Fecha de generación: ${fecha}`,
+      '',
+      'CÓDIGOS DE RECUPERACIÓN',
+      ...codigos.map((codigo, indice) => `${indice + 1}. ${codigo}`),
+      '',
+      'INSTRUCCIONES DE SEGURIDAD',
+      '- Cada código puede utilizarse una sola vez.',
+      '- Guarde este archivo en un lugar seguro.',
+      '- No comparta estos códigos.',
+      '- No almacene el archivo en carpetas compartidas.',
+      '- Si pierde el autenticador, utilice uno de estos códigos para recuperar el acceso.',
+      '- Al generar nuevos códigos, los anteriores dejarán de ser válidos.',
+    ];
+    const archivo = new Blob([lineas.join('\n')], { type: 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(archivo);
+    const enlace = document.createElement('a');
+    enlace.href = url;
+    enlace.download = `ESART_Codigos_Recuperacion_${fecha}.txt`;
+    enlace.style.display = 'none';
+    document.body.append(enlace);
+    enlace.click();
+    enlace.remove();
+    window.setTimeout(() => URL.revokeObjectURL(url), 1000);
+  }
   renovarRecuperacion(): void {
     if (this.formulario.controls.contrasena.invalid || this.digitos.invalid) return;
     this.ejecutar(

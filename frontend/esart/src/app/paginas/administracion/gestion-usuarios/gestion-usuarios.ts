@@ -92,6 +92,20 @@ export class GestionUsuarios {
   protected readonly contrasenaRestablecida = signal('');
   protected readonly errorRestablecer = signal<ErrorApi | null>(null);
 
+  // --- Restablecer TOTP ---
+  protected readonly restableciendoTotp = signal<UsuarioGestion | null>(null);
+  protected contrasenaAdminTotp = '';
+  protected codigoAdminTotp = '';
+  protected justificacionTotp = '';
+  protected readonly errorRestablecerTotp = signal<ErrorApi | null>(null);
+  protected puedeConfirmarRestablecimientoTotp(): boolean {
+    return (
+      !!this.contrasenaAdminTotp &&
+      /^\d{6}$/.test(this.codigoAdminTotp) &&
+      this.justificacionTotp.trim().length >= 12
+    );
+  }
+
   /** Credencial para entregar al usuario: se muestra una vez y se borra al cerrar el aviso. */
   protected readonly credencial = signal<CredencialEntregable | null>(null);
 
@@ -287,6 +301,59 @@ export class GestionUsuarios {
         this.ocupado.set(null);
       },
     });
+  }
+
+  protected abrirRestablecerTotp(usuario: UsuarioGestion): void {
+    this.restableciendoTotp.set(usuario);
+    this.contrasenaAdminTotp = '';
+    this.codigoAdminTotp = '';
+    this.justificacionTotp = '';
+    this.errorRestablecerTotp.set(null);
+  }
+
+  protected cerrarRestablecerTotp(): void {
+    this.restableciendoTotp.set(null);
+    this.contrasenaAdminTotp = '';
+    this.codigoAdminTotp = '';
+    this.justificacionTotp = '';
+    this.errorRestablecerTotp.set(null);
+  }
+
+  protected confirmarRestablecerTotp(): void {
+    const usuario = this.restableciendoTotp();
+    const justificacion = this.justificacionTotp.trim();
+    if (
+      !usuario ||
+      !this.contrasenaAdminTotp ||
+      !/^\d{6}$/.test(this.codigoAdminTotp) ||
+      justificacion.length < 12 ||
+      this.ocupado() === usuario.id
+    ) {
+      return;
+    }
+    this.ocupado.set(usuario.id);
+    this.errorRestablecerTotp.set(null);
+    this.administracion
+      .restablecerTotp(usuario.id, {
+        contrasena: this.contrasenaAdminTotp,
+        codigo_totp: this.codigoAdminTotp,
+        justificacion,
+      })
+      .subscribe({
+        next: () => {
+          this.cerrarRestablecerTotp();
+          this.aviso.set(
+            `Autenticador de ${usuario.usuario} restablecido. Deberá configurarlo al iniciar sesión.`,
+          );
+          this.ocupado.set(null);
+        },
+        error: (error: unknown) => {
+          this.errorRestablecerTotp.set(leerErrorApi(error));
+          this.contrasenaAdminTotp = '';
+          this.codigoAdminTotp = '';
+          this.ocupado.set(null);
+        },
+      });
   }
 
   protected copiar(texto: string): void {

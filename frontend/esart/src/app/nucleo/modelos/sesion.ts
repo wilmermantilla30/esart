@@ -96,6 +96,8 @@ export interface ElementoMenu {
 export interface RespuestaUsuarioActual extends UsuarioEnSesion {
   /** Códigos de los componentes a los que puede acceder (incluye permisos sin menú). */
   permisos: string[];
+  /** Permisos especiales (sin pantalla) con sus operaciones, p. ej. { FIRMA_DOCUMENTOS: ['crear'] }. */
+  permisos_especiales?: Record<string, string[]>;
   menu: ElementoMenu[];
   expira_por_inactividad_segundos: number;
 }

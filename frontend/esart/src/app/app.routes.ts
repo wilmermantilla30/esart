@@ -42,6 +42,13 @@ function rutaEnConstruccion(
  */
 export const routes: Routes = [
   {
+    // Página pública del QR de firma: el celular del firmante no tiene sesión de ESART.
+    // La protegen el token de un solo uso y el código TOTP del firmante (backend /api/firma-movil).
+    path: 'firma/:token',
+    title: 'Firma electrónica — ESART',
+    loadComponent: () => import('./paginas/firma-movil/firma-movil').then((m) => m.FirmaMovil),
+  },
+  {
     path: 'totp',
     title: 'Seguridad del autenticador — ESART',
     canActivate: [exigirSesion],

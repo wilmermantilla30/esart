@@ -4,6 +4,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { InsigniaEstado } from '../../../compartido/insignia-estado/insignia-estado';
+import { SolicitudFirma } from './solicitud-firma';
 import { ErrorApi, leerErrorApi } from '../../../nucleo/modelos/error-api';
 import {
   DOCUMENTOS_ARTILLERO,
@@ -27,7 +28,7 @@ const PATRON_CEDULA = /^[\d.\s-]{5,20}$/;
  */
 @Component({
   selector: 'esart-verificar-artillero',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, InsigniaEstado],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, InsigniaEstado, SolicitudFirma],
   templateUrl: './verificar-artillero.html',
 })
 export class VerificarArtillero {
@@ -49,7 +50,12 @@ export class VerificarArtillero {
   protected readonly generando = signal(false);
   protected readonly errorDocumento = signal<string | null>(null);
   /** Cédula tal como se consultó: la del resultado puede venir enmascarada (****1234). */
-  private cedulaConsultada = '';
+  protected cedulaConsultada = '';
+  /** Ventana "Firmar desde el celular" (solo certificación y oficio remisorio). */
+  protected readonly firmandoEnCelular = signal(false);
+  protected readonly esFirmable = computed(() =>
+    ['CERTIFICACION', 'OFICIO_REMISORIO'].includes(this.tipoDocumento()),
+  );
 
   protected readonly obligatorios = computed(() =>
     (this.resultado()?.criterios ?? []).filter((c) => c.tipo === 'OBLIGATORIO'),

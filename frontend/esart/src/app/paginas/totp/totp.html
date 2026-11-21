@@ -25,7 +25,9 @@
         <h1 id="totp-titulo">
           {{
             modo() === 'CONFIGURAR'
-              ? activo() ? 'ADMINISTRAR AUTENTICADOR' : 'CONFIGURAR AUTENTICADOR'
+              ? activo()
+                ? 'ADMINISTRAR AUTENTICADOR'
+                : 'CONFIGURAR AUTENTICADOR'
               : modo() === 'DESBLOQUEO'
                 ? 'RECUPERAR ACCESO'
                 : modo() === 'LOGIN'
@@ -37,7 +39,9 @@
         <p>
           {{
             modo() === 'CONFIGURAR'
-              ? activo() ? 'Consulte y administre la protección de su cuenta institucional' : 'Vincule su dispositivo para proteger su cuenta institucional'
+              ? activo()
+                ? 'Consulte y administre la protección de su cuenta institucional'
+                : 'Vincule su dispositivo para proteger su cuenta institucional'
               : 'Confirme su identidad para continuar con esta operación'
           }}
         </p>
@@ -68,7 +72,9 @@
             <div class="totp-contexto-detalle">
               <div>
                 <small>Operación solicitada:</small>
-                <strong>{{ activo() ? 'Administración del autenticador' : 'Vinculación de autenticador' }}</strong>
+                <strong>{{
+                  activo() ? 'Administración del autenticador' : 'Vinculación de autenticador'
+                }}</strong>
               </div>
               <div>
                 <small>Módulo:</small>
@@ -156,6 +162,14 @@
               <code>{{ codigo }}</code>
             </div>
           }
+          <p class="totp-advertencia-descarga">
+            El archivo TXT no está cifrado. Descárguelo solo en un dispositivo seguro y guárdelo en
+            un lugar privado.
+          </p>
+          <button type="button" class="totp-descarga" (click)="descargarCodigosRecuperacion()">
+            <span class="material-symbols-outlined" aria-hidden="true">download</span>
+            DESCARGAR CÓDIGOS (.TXT)
+          </button>
           <button type="button" (click)="confirmarGuardado()">He guardado los códigos</button>
         </div>
       }
