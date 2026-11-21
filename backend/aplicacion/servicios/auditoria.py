@@ -47,6 +47,8 @@ INSTRUCTOR_ACTIVADO = "INSTRUCTOR_ACTIVADO"
 INSTRUCTOR_DESACTIVADO = "INSTRUCTOR_DESACTIVADO"
 # Registro manual de personal militar (migración p0015).
 PERSONAL_REGISTRADO = "PERSONAL_REGISTRADO"
+# Malla curricular versionada (migración p0017, S2-01).
+MALLA_CURRICULAR_CARGADA = "MALLA_CURRICULAR_CARGADA"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")

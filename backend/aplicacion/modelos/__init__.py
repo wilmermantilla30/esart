@@ -45,6 +45,7 @@ from .persistencia import (
     Usuario,
     UsuarioPermiso,
     UsuarioRoles,
+    VersionMalla,
 )
 from .seguridad import IntentoInicioSesion, SesionUsuario
 
@@ -96,6 +97,7 @@ __all__ = [
     "SistemasEnOperacion",
     "UnidadMilitar",
     "Usuario",
+    "VersionMalla",
 ]
 
 MODELOS_PENDIENTES = {

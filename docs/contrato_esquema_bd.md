@@ -237,13 +237,21 @@ Si falla cualquiera, es **NO APTO** y se devuelve cada motivo, por ejemplo:
 `id`, `personal_militar_id` (FK, nulo — puede ser instructor externo), `numero_documento`,
 `nombre_completo`, `grado`, `activo`.
 
-### 6.4 `materias_curso` *(segunda entrega)*
-`id`, `tipo_curso_id` (FK), `codigo`, `nombre`, `intensidad_horaria` (INTEGER), `activa`.
-Único: `(tipo_curso_id, codigo)`.
-
-### 6.5 `artillero_notas_materia` *(segunda entrega)*
-`id`, `artillero_curso_id` (FK), `materia_curso_id` (FK), `instructor_id` (FK, nulo),
-`nota` (NUMERIC(4,2)), `observaciones`. Único: `(artillero_curso_id, materia_curso_id)`.
+### 6.4 Malla curricular *(segunda entrega, S2-01, migración `p0017_malla_curricular`)*
+Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las tablas reales de la fase 1.
+- `materias`: catálogo único. `codigo` (`MAT-001`...), `nombre` único sin distinguir mayúsculas
+  (`uq_materias_nombre`). Una materia se reutiliza en todas las mallas que la tengan.
+- `versiones_malla`: `tipo_curso_id`, `numero` (1, 2...), `anio`, `estado` `VIGENTE` | `HISTORICA`,
+  `observacion`, `creado_por_id`. Solo una `VIGENTE` por tipo de curso (`uq_versiones_malla_vigente`).
+- `malla_curricular`: `version_id`, `tipo_curso_id`, `materia_id`, `orden` (≥ 1, único en la versión),
+  `area`, `modulo`, `evaluable` (Tiempo del comandante y Entrenamiento físico = `false`: no cuentan en el
+  promedio). Se eliminó `nota_minima_aprobacion`: la nota mínima será un parámetro general (S2-10).
+- `cursos.malla_version_id`: la asigna el trigger `tg_cursos_asignar_malla` al crear el curso (versión
+  vigente de su tipo) y rechaza una versión de otro tipo de curso. Los cursos anteriores quedan en `NULL`.
+- Escala de notas **0 a 5 con 2 decimales** en `notas_materia`, `habilitaciones`, `notas_finales_egresado`,
+  `egresados_curso` e `inscripciones_curso`. Una sola habilitación por materia (`numero_habilitacion = 1`).
+- Carga inicial: `python -m herramientas.cargar_malla_curricular cargar <Excel> --anio 2026 --ejecutar`
+  (formato de `docs/backlog_sprint2_esart.xlsx`, hojas *Materias* y *Malla por curso*).
 
 ---
 
@@ -363,3 +371,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.2 | 2026-11-15 | Punto 7 cerrado: códigos de rol `ADMINISTRADOR` y `USUARIO` (§7.1) |
 | 1.3 | 2026-11-15 | Modelo vigente de HU-04 y cadena Alembic p0000→p0001→p0002 (§10 punto 6). Login: usuario por `esart_ref.usuarios.usuario`; rol informado ADMINISTRADOR si lo tiene, si no USUARIO; nombre visible desde `personal_militar` |
 | 1.4 | 2026-11-16 | Punto 8 cerrado: permisos por componente. `p0005`: componentes (Personal militar con pestañas hijas), módulos de segunda entrega inactivos y malla inicial ADMINISTRADOR/USUARIO (USUARIO ve la cédula completa) |
+| 1.5 | 2026-11-21 | §6.4: malla curricular versionada por tipo de curso, escala de notas 0 a 5 y una sola habilitación (S2-01, `p0017`) |
