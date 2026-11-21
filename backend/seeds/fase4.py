@@ -59,10 +59,15 @@ def cargar_documentos():
     exigir(sha256(ruta.read_bytes()).hexdigest() == matriz["snapshot_sha256"], "Snapshot alterado")
     snapshot = json.loads(ruta.read_text(encoding="utf-8"))
     for nombre, huella in snapshot["migraciones_sha256"].items():
-        exigir(
-            sha256((RAIZ.parent / "migraciones/versions" / nombre).read_bytes()).hexdigest() == huella,
-            "Migracion alterada",
-        )
+        contenido = (RAIZ.parent / "migraciones/versions" / nombre).read_bytes()
+        # El snapshot contiene huellas generadas con LF y CRLF. Aceptar la
+        # huella exacta o su forma LF permite validar el mismo contenido en
+        # ambos sistemas sin ignorar cambios distintos de los finales de linea.
+        huellas_posibles = {
+            sha256(contenido).hexdigest(),
+            sha256(contenido.replace(b"\r\n", b"\n")).hexdigest(),
+        }
+        exigir(huella in huellas_posibles, "Migracion alterada")
     return snapshot, matriz
 
 

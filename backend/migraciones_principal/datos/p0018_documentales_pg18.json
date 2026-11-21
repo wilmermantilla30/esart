@@ -1,0 +1,358 @@
+{
+  "documentos": {
+    "columnas": [
+      [
+        "id",
+        "uuid",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "tipo",
+        "character varying(30)",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "numero",
+        "character varying(80)",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "personal_id",
+        "bigint",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "curso_id",
+        "bigint",
+        false,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "datos_emitidos",
+        "jsonb",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "estado",
+        "character varying(24)",
+        true,
+        "'BORRADOR'::character varying",
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "version_actual",
+        "integer",
+        true,
+        "1",
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "creado_por",
+        "bigint",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "creado_en",
+        "timestamp with time zone",
+        true,
+        "now()",
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "emitido_en",
+        "timestamp with time zone",
+        false,
+        null,
+        "",
+        "",
+        true,
+        null
+      ]
+    ],
+    "restricciones": [
+      [
+        "c",
+        "ck_documentos_estado",
+        "CHECK (estado::text = ANY (ARRAY['BORRADOR'::character varying, 'PENDIENTE_FIRMA'::character varying, 'FIRMADO'::character varying, 'EMITIDO'::character varying, 'ANULADO'::character varying]::text[]))",
+        true
+      ],
+      [
+        "c",
+        "ck_documentos_tipo",
+        "CHECK (tipo::text = ANY (ARRAY['CERTIFICACION'::character varying, 'OFICIO_REMISORIO'::character varying]::text[]))",
+        true
+      ],
+      [
+        "c",
+        "ck_documentos_version",
+        "CHECK (version_actual > 0)",
+        true
+      ],
+      [
+        "p",
+        "documentos_pkey",
+        "PRIMARY KEY (id)",
+        true
+      ],
+      [
+        "f",
+        "fk_documentos_creado_por",
+        "FOREIGN KEY (creado_por) REFERENCES esart_ref.usuarios(id) ON DELETE RESTRICT",
+        true
+      ],
+      [
+        "f",
+        "fk_documentos_curso",
+        "FOREIGN KEY (curso_id) REFERENCES esart.cursos(id) ON DELETE RESTRICT",
+        true
+      ],
+      [
+        "f",
+        "fk_documentos_personal",
+        "FOREIGN KEY (personal_id) REFERENCES esart.personal_militar(id) ON DELETE RESTRICT",
+        true
+      ],
+      [
+        "u",
+        "uq_documentos_numero",
+        "UNIQUE (numero)",
+        true
+      ]
+    ],
+    "indices": [
+      [
+        "documentos_pkey",
+        "CREATE UNIQUE INDEX documentos_pkey ON esart_firma.documentos USING btree (id)",
+        true
+      ],
+      [
+        "ix_documentos_personal_fecha",
+        "CREATE INDEX ix_documentos_personal_fecha ON esart_firma.documentos USING btree (personal_id, creado_en DESC)",
+        true
+      ],
+      [
+        "uq_documentos_numero",
+        "CREATE UNIQUE INDEX uq_documentos_numero ON esart_firma.documentos USING btree (numero)",
+        true
+      ]
+    ],
+    "disparadores": []
+  },
+  "versiones_documento": {
+    "columnas": [
+      [
+        "id",
+        "uuid",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "documento_id",
+        "uuid",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "numero_version",
+        "integer",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "sha256",
+        "character(64)",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "ubicacion_privada",
+        "text",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "tamano_bytes",
+        "bigint",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "mime_type",
+        "character varying(40)",
+        true,
+        "'application/pdf'::character varying",
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "creado_por",
+        "bigint",
+        true,
+        null,
+        "",
+        "",
+        true,
+        null
+      ],
+      [
+        "creado_en",
+        "timestamp with time zone",
+        true,
+        "now()",
+        "",
+        "",
+        true,
+        null
+      ]
+    ],
+    "restricciones": [
+      [
+        "c",
+        "ck_versiones_documento_mime",
+        "CHECK (mime_type::text = 'application/pdf'::text)",
+        true
+      ],
+      [
+        "c",
+        "ck_versiones_documento_numero",
+        "CHECK (numero_version > 0)",
+        true
+      ],
+      [
+        "c",
+        "ck_versiones_documento_sha256",
+        "CHECK (sha256 ~ '^[0-9a-f]{64}$'::text)",
+        true
+      ],
+      [
+        "c",
+        "ck_versiones_documento_tamano",
+        "CHECK (tamano_bytes > 0)",
+        true
+      ],
+      [
+        "f",
+        "fk_versiones_documento_creado_por",
+        "FOREIGN KEY (creado_por) REFERENCES esart_ref.usuarios(id) ON DELETE RESTRICT",
+        true
+      ],
+      [
+        "f",
+        "fk_versiones_documento_documento",
+        "FOREIGN KEY (documento_id) REFERENCES esart_firma.documentos(id) ON DELETE RESTRICT",
+        true
+      ],
+      [
+        "u",
+        "uq_versiones_documento_id",
+        "UNIQUE (documento_id, id)",
+        true
+      ],
+      [
+        "u",
+        "uq_versiones_documento_numero",
+        "UNIQUE (documento_id, numero_version)",
+        true
+      ],
+      [
+        "p",
+        "versiones_documento_pkey",
+        "PRIMARY KEY (id)",
+        true
+      ]
+    ],
+    "indices": [
+      [
+        "uq_versiones_documento_id",
+        "CREATE UNIQUE INDEX uq_versiones_documento_id ON esart_firma.versiones_documento USING btree (documento_id, id)",
+        true
+      ],
+      [
+        "uq_versiones_documento_numero",
+        "CREATE UNIQUE INDEX uq_versiones_documento_numero ON esart_firma.versiones_documento USING btree (documento_id, numero_version)",
+        true
+      ],
+      [
+        "versiones_documento_pkey",
+        "CREATE UNIQUE INDEX versiones_documento_pkey ON esart_firma.versiones_documento USING btree (id)",
+        true
+      ]
+    ],
+    "disparadores": [
+      [
+        "trg_inmutable",
+        "CREATE TRIGGER trg_inmutable BEFORE DELETE OR UPDATE ON esart_firma.versiones_documento FOR EACH ROW EXECUTE FUNCTION esart_firma.bloquear_mutacion_evidencia()",
+        "O"
+      ]
+    ]
+  }
+}

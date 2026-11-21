@@ -18,6 +18,7 @@ import unicodedata
 from dataclasses import dataclass
 from datetime import UTC, datetime
 
+import pyotp
 from fastapi import Request
 from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
@@ -25,6 +26,12 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.modelos import PersonalMilitar, Rol, SesionUsuario, UnidadMilitar, Usuario, UsuarioRoles
 from aplicacion.modelos.seguridad import LimiteInicioIP
+from aplicacion.modelos.totp import (
+    CambioSeguridad,
+    DesafioTotp,
+    RecuperacionTotp,
+    UsuarioTotp,
+)
 from aplicacion.nucleo.errores import ErrorAplicacion
 from aplicacion.seguridad.contrasenas import generar_hash_contrasena, verificar_contrasena
 from aplicacion.servicios import auditoria
@@ -35,7 +42,7 @@ from aplicacion.servicios.autenticacion import (
     obtener_nombre_completo,
 )
 from aplicacion.servicios.malla_permisos import exigir_administrador_de_malla
-from aplicacion.servicios.seguridad_login import ip_canonica, seudonimo
+from aplicacion.servicios.seguridad_login import seudonimo
 
 # Quien actúa desde la consola no tiene sesión web: así se identifica en la auditoría.
 NOMBRE_ACTOR_CONSOLA = "consola"
@@ -383,6 +390,125 @@ async def restablecer_contrasena(
     await _revocar_sesiones(sesion, usuario_id)
     await _auditar(sesion, auditoria.CONTRASENA_RESTABLECIDA, actor, {"usuario_afectado": usuario.usuario})
     return await obtener_estado_usuario(sesion, usuario_id)
+
+
+async def restablecer_totp(
+    sesion: AsyncSession,
+    *,
+    usuario_id: int,
+    contrasena_administrador: str,
+    codigo_totp: str,
+    justificacion: str,
+    actor: UsuarioAutenticado,
+    request: Request,
+    ip_cliente: str | None,
+) -> None:
+    """Revoca el factor del usuario sin borrar su historial y exige enrolamiento al próximo login."""
+    from aplicacion.servicios.totp import TotpService
+
+    if actor.id == usuario_id:
+        raise ErrorAplicacion(
+            409,
+            "AUTORESTABLECIMIENTO_TOTP",
+            "Use el cambio de autenticador de su propia cuenta.",
+        )
+
+    ip = ip_cliente
+    servicio = TotpService(sesion)
+    await servicio.preparar()
+    politica = await servicio.politica("USUARIO_RESTABLECER_TOTP")
+    if politica.permiso_requerido != "usuarios:restablecer_totp":
+        raise ErrorAplicacion(503, "POLITICA_NO_DISPONIBLE", "Política de restablecimiento no disponible.")
+
+    # Bloqueo y verificación del administrador: sesión válida, contraseña y un TOTP vigente
+    # que aún no se haya utilizado. El endpoint está además protegido por el permiso admin.
+    await servicio.limitar(ip, actor.id)
+    administrador = await servicio.usuario(actor.id)
+    if not administrador.contrasena_hash or not await asyncio.to_thread(
+        verificar_contrasena, contrasena_administrador, administrador.contrasena_hash
+    ):
+        await servicio.rechazar(actor.id, ip, "TOTP_ADMIN_RESET_REAUTENTICACION_INVALIDA")
+    factor_admin = await servicio.registro(actor.id)
+    if not factor_admin or factor_admin.estado != "ACTIVO" or not await servicio.verificar(
+        factor_admin, codigo_totp
+    ):
+        await servicio.rechazar(actor.id, ip, "TOTP_ADMIN_RESET_TOTP_INVALIDO")
+
+    objetivo = await sesion.scalar(
+        select(Usuario)
+        .where(Usuario.id == usuario_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if not objetivo or not objetivo.activo:
+        raise ErrorAplicacion(404, "USUARIO_NO_ENCONTRADO", "No se encontró un usuario activo para restablecer.")
+    factor = await sesion.scalar(
+        select(UsuarioTotp)
+        .where(UsuarioTotp.usuario_id == usuario_id)
+        .with_for_update()
+        .execution_options(populate_existing=True)
+    )
+    if not factor or factor.estado != "ACTIVO":
+        raise ErrorAplicacion(
+            409,
+            "TOTP_NO_ACTIVO",
+            "El usuario no tiene un autenticador activo para restablecer.",
+        )
+
+    ahora = await reloj_servidor(sesion)
+    estado_anterior = factor.estado
+    # Sobrescribe el secreto cifrado anterior con uno nuevo, aleatorio e inaccesible al operador.
+    # Sin vencimiento de configuración, el login del usuario generará una clave/QR nuevo.
+    factor.secreto_cifrado = servicio.cifrar(usuario_id, pyotp.random_base32())
+    factor.estado = "PENDIENTE"
+    factor.activado_en = None
+    factor.expira_configuracion_en = None
+    factor.revocado_en = ahora
+    factor.ultimo_intervalo_aceptado = None
+    factor.actualizado_en = ahora
+    await sesion.execute(
+        update(RecuperacionTotp)
+        .where(RecuperacionTotp.usuario_id == usuario_id, RecuperacionTotp.revocado_en.is_(None))
+        .values(revocado_en=ahora)
+    )
+    await sesion.execute(
+        update(DesafioTotp)
+        .where(DesafioTotp.usuario_id == usuario_id, DesafioTotp.estado.in_(["PENDIENTE", "VERIFICADO"]))
+        .values(estado="CANCELADO")
+    )
+    await sesion.execute(
+        update(SesionUsuario)
+        .where(SesionUsuario.usuario_id == usuario_id, SesionUsuario.revocada.is_(False))
+        .values(revocada=True, fecha_revocacion=ahora)
+    )
+
+    evento = await servicio.auditar(usuario_id, "TOTP_RESTABLECIDO_POR_ADMIN", "CORRECTO", ip)
+    await sesion.flush()
+    sesion.add(
+        CambioSeguridad(
+            auditoria_id=evento.id,
+            campo="estado_totp",
+            valor_anterior=estado_anterior,
+            valor_nuevo="PENDIENTE",
+        )
+    )
+    await auditoria.registrar_evento(
+        sesion,
+        auditoria.TOTP_RESTABLECIDO,
+        request,
+        usuario_id=actor.id,
+        nombre_usuario=actor.nombre_usuario,
+        resultado="EXITOSO",
+        detalle={
+            "usuario_afectado": objetivo.usuario,
+            "estado_anterior": estado_anterior,
+            "estado_nuevo": "PENDIENTE",
+            "justificacion": justificacion,
+            "sesion_id": str(actor.sesion_id),
+        },
+        confirmar=False,
+    )
+    await sesion.commit()
 
 
 async def cambiar_contrasena_propia(

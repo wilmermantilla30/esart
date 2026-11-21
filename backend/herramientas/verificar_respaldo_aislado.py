@@ -100,6 +100,9 @@ async def inventariar(puerto, clave, directorio):
             resultado = {
                 "tablas": [],
                 "catalogos": {},
+                "revision_alembic": await conexion.fetchval(
+                    "SELECT version_num FROM esart.alembic_version"
+                ),
                 "identidad": {
                     "base": await conexion.fetchval("SELECT current_database()"),
                     "data_directory": str(directorio),
@@ -143,12 +146,14 @@ async def inventariar(puerto, clave, directorio):
                     ]
             resultado["restricciones_no_validadas"] = await conexion.fetchval(
                 "SELECT count(*) FROM pg_constraint co JOIN pg_namespace n ON n.oid=co.connamespace "
-                "WHERE n.nspname IN ('esart','esart_ref','public') AND NOT co.convalidated"
+                "WHERE n.nspname IN ('esart','esart_ref','esart_firma','seguridad','public') "
+                "AND NOT co.convalidated"
             )
             resultado["indices_invalidos"] = await conexion.fetchval(
                 "SELECT count(*) FROM pg_index i JOIN pg_class c ON c.oid=i.indrelid "
                 "JOIN pg_namespace n ON n.oid=c.relnamespace "
-                "WHERE n.nspname IN ('esart','esart_ref','public') AND NOT i.indisvalid"
+                "WHERE n.nspname IN ('esart','esart_ref','esart_firma','seguridad','public') "
+                "AND NOT i.indisvalid"
             )
             fks = await conexion.fetch(
                 "SELECT co.conname,co.conrelid::regclass::text origen,co.confrelid::regclass::text destino, "
@@ -157,7 +162,8 @@ async def inventariar(puerto, clave, directorio):
                 "ARRAY(SELECT attname FROM unnest(co.confkey) WITH ORDINALITY x(num,pos) "
                 "JOIN pg_attribute a ON a.attrelid=co.confrelid AND a.attnum=x.num ORDER BY pos) referencias "
                 "FROM pg_constraint co JOIN pg_namespace n ON n.oid=co.connamespace "
-                "WHERE co.contype='f' AND n.nspname IN ('esart','esart_ref','public')"
+                "WHERE co.contype='f' "
+                "AND n.nspname IN ('esart','esart_ref','esart_firma','seguridad','public')"
             )
             resultado["fk_revisadas"] = len(fks)
             resultado["huerfanos"] = 0

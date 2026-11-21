@@ -34,6 +34,9 @@ PATRONES_DATOS_SENSIBLES: tuple[tuple[re.Pattern[str], str], ...] = (
     # La trazabilidad de quién consultó qué cédula está en la tabla de auditoría,
     # que tiene acceso controlado; los logs de texto no la necesitan.
     (re.compile(r"(/artillero/)[^/?\s\"]+"), r"\1[CEDULA_OCULTA]"),
+    # Token de un solo uso de la firma desde el celular (va en la ruta del QR): quien lo lea en
+    # un log podría abrir la solicitud. El backend solo guarda su sha256.
+    (re.compile(r"(/firma(?:-movil)?/)[A-Za-z0-9_\-]{20,}"), r"\1[TOKEN_FIRMA_OCULTO]"),
 )
 
 

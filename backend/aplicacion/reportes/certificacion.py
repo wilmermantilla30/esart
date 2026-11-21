@@ -167,6 +167,6 @@ def generar(datos: DatosDocumento) -> bytes:
             "actualizan los cursos o reentrenamientos del artillero.",
             e["pequeno"],
         ),
-        *bloque_firma(e),
+        *bloque_firma(e, datos.firma),
     ]
     return construir_pdf(datos, TITULO, contenido)

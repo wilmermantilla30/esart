@@ -73,6 +73,16 @@ class Configuracion(BaseSettings):
     totp_habilitado: bool = False
     totp_clave_cifrado: SecretStr | None = None
 
+    # La persistencia documental se activa solo despues de aplicar p0018 en desarrollo.
+    # En produccion se exige una ruta privada administrada fuera del despliegue web.
+    documentos_persistencia_habilitada: bool = False
+    directorio_documentos_privados: Path = (
+        Path(__file__).resolve().parents[1] / "almacen_privado" / "documentos"
+    )
+    # Firma desde el celular: dirección que abre el QR (la del PC en la red WiFi, p. ej.
+    # http://192.168.1.50:4200). Sin valor, el front usa su propia dirección y avisa si es localhost.
+    url_base_firma_movil: str | None = None
+
     # --- Administrador inicial ---
     admin_usuario: str = Field(min_length=3, max_length=60)
     admin_hash_contrasena: SecretStr
@@ -122,6 +132,20 @@ class Configuracion(BaseSettings):
             raise ValueError("En producción COOKIE_SEGURA debe ser true.")
 
         validar_url_base_datos(url_base_datos, self.entorno)
+
+        if self.documentos_persistencia_habilitada and self.es_produccion:
+            if "directorio_documentos_privados" not in self.model_fields_set:
+                raise ValueError(
+                    "En produccion defina DIRECTORIO_DOCUMENTOS_PRIVADOS fuera del directorio web."
+                )
+        if self.documentos_persistencia_habilitada:
+            ruta_documentos = self.directorio_documentos_privados.resolve()
+            es_publica = any(
+                parte.lower() in {"frontend", "static", "public", "dist"}
+                for parte in ruta_documentos.parts
+            )
+            if es_publica:
+                raise ValueError("DIRECTORIO_DOCUMENTOS_PRIVADOS no puede estar en una ruta publica.")
 
         return self
 

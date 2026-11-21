@@ -65,6 +65,8 @@ class RespuestaUsuarioActual(UsuarioEnSesion):
 
     # Códigos de los componentes a los que puede acceder (malla de permisos, HU-09).
     permisos: list[str]
+    # Permisos especiales (sin pantalla) con sus operaciones, p. ej. {"FIRMA_DOCUMENTOS": ["crear"]}.
+    permisos_especiales: dict[str, list[str]] = {}
     # Menú ya filtrado por permisos: el front lo dibuja tal cual.
     menu: list[ElementoMenu]
     expira_por_inactividad_segundos: int

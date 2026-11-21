@@ -3,8 +3,9 @@ Menú del usuario para el front (sidebar y pestañas), a partir de sus permisos 
 
 - Primer nivel: componentes padre con ruta a los que el usuario puede acceder (sidebar).
 - Segundo nivel: sus hijos accesibles (pestañas dentro del módulo).
-- Los componentes sin ruta (por ejemplo VER_DOCUMENTO_COMPLETO) no son menú: van solo
-  en la lista de permisos.
+- Los componentes sin ruta (por ejemplo VER_DOCUMENTO_COMPLETO o FIRMA_DOCUMENTOS) no son menú:
+  van en la lista de permisos y, con sus operaciones, en `especiales` (el front decide con ellas si
+  muestra, por ejemplo, el formulario para autorizar firmantes).
 
 El menú es comodidad de navegación: cada endpoint vuelve a verificar su permiso en el servidor.
 """
@@ -40,6 +41,8 @@ class MenuYPermisos:
     menu: list[ElementoMenu]
     # Códigos de todos los componentes a los que puede acceder (incluidos los que no son menú).
     permisos: list[str]
+    # Permisos especiales (sin ruta) con sus operaciones: {"FIRMA_DOCUMENTOS": ["crear", "leer"]}.
+    especiales: dict[str, list[str]] = field(default_factory=dict)
 
 
 def _a_elemento(permiso: PermisoEfectivo) -> ElementoMenu:
@@ -59,7 +62,10 @@ def construir_menu(permisos_efectivos: list[PermisoEfectivo]) -> MenuYPermisos:
         # Un hijo solo aparece si también puede entrar al módulo padre.
         if permiso.codigo_padre in padres and permiso.ruta_angular:
             padres[permiso.codigo_padre].hijos.append(_a_elemento(permiso))
-    return MenuYPermisos(menu=list(padres.values()), permisos=[p.codigo for p in accesibles])
+    especiales = {p.codigo: _a_elemento(p).operaciones for p in accesibles if not p.ruta_angular}
+    return MenuYPermisos(
+        menu=list(padres.values()), permisos=[p.codigo for p in accesibles], especiales=especiales
+    )
 
 
 async def obtener_menu_y_permisos(sesion: AsyncSession, usuario_id: int) -> MenuYPermisos:

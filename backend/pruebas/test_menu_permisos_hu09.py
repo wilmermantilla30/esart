@@ -66,6 +66,20 @@ def test_construir_menu_oculta_lo_no_accesible_y_lo_que_no_es_menu():
     assert "USUARIOS" not in resultado.permisos
 
 
+def test_permisos_especiales_llevan_sus_operaciones():
+    """FIRMA_DOCUMENTOS no es menú, pero el front necesita saber si puede crear (autorizar firmantes)."""
+    resultado = construir_menu(
+        [
+            permiso("DASHBOARD"),
+            permiso("FIRMA_DOCUMENTOS", ruta=None, crear=True),
+            permiso("VER_DOCUMENTO_COMPLETO", ruta=None),
+            permiso("OTRO_ESPECIAL", ruta=None, acceder=False, crear=True),
+        ]
+    )
+    assert resultado.especiales == {"FIRMA_DOCUMENTOS": ["crear", "leer"], "VER_DOCUMENTO_COMPLETO": ["leer"]}
+    assert [e.codigo for e in resultado.menu] == ["DASHBOARD"]
+
+
 # --- Con PostgreSQL (malla inicial de p0005) ---------------------------------------
 
 

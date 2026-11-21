@@ -77,7 +77,7 @@ def generar(datos: DatosDocumento) -> bytes:
         ),
         Spacer(1, 0.3 * cm),
         Paragraph(f"Dado en {CIUDAD}, el {fecha_larga(datos.fecha_expedicion)}.", texto),
-        *bloque_firma(e),
+        *bloque_firma(e, datos.firma),
     ]
     return construir_pdf(
         datos, TITULO, contenido, pagina=landscape(LETTER), margen_superior=2.8 * cm, marco=True

@@ -1,6 +1,7 @@
 """Contrato real auditado y protección HTTP. No crea registros ni abre otra base."""
 
 import json
+import runpy
 from pathlib import Path
 
 import pytest
@@ -96,11 +97,11 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0016_cursos_artilleros_importacion"]
-    assert (
-        script.get_revision("p0016_cursos_artilleros_importacion").down_revision
-        == "p0015_registro_manual_personal"
-    )
+    assert script.get_heads() == ["p0019_firma_movil"]
+    assert script.get_revision("p0019_firma_movil").down_revision == "p0018_firma_documental"
+    assert script.get_revision("p0018_firma_documental").down_revision == "p0017_restablecer_totp_admin"
+    assert script.get_revision("p0017_restablecer_totp_admin").down_revision == "p0016_cursos_artilleros"
+    assert script.get_revision("p0016_cursos_artilleros").down_revision == "p0015_registro_manual_personal"
     assert (
         script.get_revision("p0015_registro_manual_personal").down_revision == "p0014_cursos_del_instructor"
     )
@@ -125,6 +126,14 @@ def test_historial_operativo_unico_y_sin_stamp():
     assert historico.get_heads() == ["0002"]
 
 
+def test_p0017_conserva_todas_las_acciones_de_auditoria_de_p0015():
+    directorio = RAIZ / "migraciones_principal" / "versions"
+    p0015 = runpy.run_path(str(directorio / "p0015_registro_manual_personal.py"))
+    p0017 = runpy.run_path(str(directorio / "p0017_restablecer_totp_admin.py"))
+    acciones_p0015 = set(p0015["ACCIONES_ANTERIORES"] + p0015["ACCIONES_NUEVAS"])
+    assert set(p0017["ACCIONES"]) == acciones_p0015 | {"TOTP_RESTABLECIDO"}
+
+
 def test_tls_no_se_degrada_para_servidores_remotos():
     assert opciones_tls_local("postgresql+asyncpg://127.0.0.1/esart_db") == {"ssl": False}
     assert opciones_tls_local("postgresql+asyncpg://servidor/esart_db") == {}
@@ -146,3 +155,10 @@ def test_tls_no_se_degrada_para_servidores_remotos():
 async def test_catalogos_no_omiten_autenticacion(cliente_api, ruta):
     respuesta = await cliente_api.get("/api/catalogos/" + ruta)
     assert respuesta.status_code == 401
+
+
+def test_identificadores_de_revision_caben_en_alembic_version():
+    """alembic_version.version_num es varchar(32): un id más largo falla al final del upgrade."""
+    script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
+    largos = [r.revision for r in script.walk_revisions() if len(r.revision) > 32]
+    assert largos == []

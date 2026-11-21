@@ -1,0 +1,6 @@
+-- RETIRADO: no ejecutar manualmente.
+-- La propuesta anterior duplicaba identidad, roles, sesiones y TOTP, y vinculaba las solicitudes
+-- solo a certificados. La implementacion alineada con las tablas de ESART esta en la migracion
+-- Alembic backend/migraciones_principal/versions/p0018_firma_documental.py.
+-- Esa migracion usa esart_ref.usuarios, esart.personal_militar, esart.cursos y la malla existente.
+-- No la ejecute hasta revisar el respaldo local y autorizar expresamente la migracion.

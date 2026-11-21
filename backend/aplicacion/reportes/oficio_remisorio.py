@@ -94,6 +94,6 @@ def generar(datos: DatosDocumento) -> bytes:
         ),
         Spacer(1, 0.4 * cm),
         Paragraph("Atentamente,", e["izquierda"]),
-        *bloque_firma(e),
+        *bloque_firma(e, datos.firma),
     ]
     return construir_pdf(datos, TITULO, contenido)

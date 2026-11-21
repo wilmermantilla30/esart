@@ -219,6 +219,7 @@ async def obtener_datos_usuario_actual(
         rol=usuario.rol,
         requiere_cambio_contrasena=usuario.requiere_cambio_contrasena,
         permisos=menu_y_permisos.permisos,
+        permisos_especiales=menu_y_permisos.especiales,
         menu=[asdict(elemento) for elemento in menu_y_permisos.menu],
         expira_por_inactividad_segundos=segundos_de_inactividad_permitidos(),
     )

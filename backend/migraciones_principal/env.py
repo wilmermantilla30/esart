@@ -15,11 +15,57 @@ target_metadata = BaseModelo.metadata
 
 
 def ejecutar(conexion):
-    if conexion.scalar(text("SELECT current_database()")) != "esart_db":
-        raise RuntimeError("Alembic operativo solo admite esart_db")
-    # La tabla de versiones vive en el esquema esart: en una base vacía hay que crearlo
-    # antes de que Alembic la cree (p0000 instala el resto de la estructura).
-    conexion.execute(text("CREATE SCHEMA IF NOT EXISTS esart"))
+    from sqlalchemy.engine import make_url
+
+    from aplicacion.base_datos.configuracion import obtener_configuracion_conexion
+
+    configuracion = obtener_configuracion_conexion()
+    url_aplicacion = make_url(configuracion.url_base_datos.get_secret_value())
+    if (
+        configuracion.entorno != "desarrollo"
+        or url_aplicacion.database != "esart_db"
+        or url_aplicacion.host not in {"127.0.0.1", "localhost", "::1"}
+    ):
+        raise RuntimeError("Alembic operativo requiere la configuracion local de desarrollo.")
+    identidad = conexion.execute(
+        text("""
+        SELECT current_database(), current_user, host(inet_server_addr()), r.rolsuper
+        FROM pg_roles r WHERE r.rolname=current_user
+    """)
+    ).one_or_none()
+    if identidad is None:
+        raise RuntimeError("No fue posible validar la cuenta migradora.")
+    base, usuario, servidor, superusuario = identidad
+    prueba_p0018 = os.environ.get("ESART_VALIDAR_P0018_COPIA") == "1"
+
+    bases_prueba_permitidas = {
+        "esart_db_p0018_restore_test",
+        "esart_ensayo",
+    }
+
+    base_permitida = base == "esart_db" or (prueba_p0018 and base in bases_prueba_permitidas)
+    if (
+        not base_permitida
+        or usuario != "esart_migrador"
+        or servidor not in ("127.0.0.1", "::1")
+        or superusuario
+    ):
+        raise RuntimeError(
+            "Alembic requiere esart_migrador no-superusuario en PostgreSQL local de desarrollo."
+        )
+    # PostgreSQL exige CREATE sobre la base incluso con IF NOT EXISTS.
+    existe_esart = conexion.scalar(
+        text("SELECT EXISTS (SELECT FROM pg_catalog.pg_namespace WHERE nspname = 'esart')")
+    )
+    if not existe_esart:
+        puede_crear = conexion.scalar(
+            text("SELECT pg_catalog.has_database_privilege(current_database(), 'CREATE')")
+        )
+        if not puede_crear:
+            raise RuntimeError(
+                f"Falta el esquema esart en {base}. El rol {usuario} requiere CREATE sobre la base."
+            )
+        conexion.execute(text("CREATE SCHEMA IF NOT EXISTS esart"))
     context.configure(
         connection=conexion,
         target_metadata=target_metadata,

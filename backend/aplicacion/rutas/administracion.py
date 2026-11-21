@@ -12,6 +12,7 @@ from datetime import date, timedelta
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, Query, Request
+from pydantic import BaseModel, ConfigDict, Field
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
@@ -31,7 +32,13 @@ from aplicacion.esquemas.administracion import (
     UsuarioMalla,
 )
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
-from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual, verificar_csrf
+from aplicacion.nucleo.errores import ErrorAplicacion
+from aplicacion.seguridad.sesion_http import (
+    obtener_id_usuario_actual,
+    obtener_ip_cliente,
+    obtener_usuario_actual,
+    verificar_csrf,
+)
 from aplicacion.servicios import administracion_usuarios, malla_permisos
 from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
@@ -50,6 +57,12 @@ puede_crear_usuarios = requerir_permiso_componente(
 )
 puede_editar_usuarios = requerir_permiso_componente(
     "USUARIOS", OperacionCRUD.UPDATE, obtener_id_usuario_actual
+)
+puede_restablecer_totp = requerir_permiso_componente(
+    "USUARIOS",
+    OperacionCRUD.UPDATE,
+    obtener_id_usuario_actual,
+    codigo_permiso="usuarios:restablecer_totp",
 )
 puede_leer_auditoria = requerir_permiso_componente("AUDITORIA", OperacionCRUD.READ, obtener_id_usuario_actual)
 
@@ -230,6 +243,42 @@ async def restablecer_contrasena(
         actor=Actor.web(actor, request),
     )
     return UsuarioGestion(**asdict(estado))
+
+
+class SolicitudRestablecerTotp(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+    contrasena: str = Field(min_length=1, max_length=72, repr=False)
+    codigo_totp: str = Field(pattern=r"^[0-9]{6}$", repr=False)
+    justificacion: str = Field(min_length=12, max_length=1000)
+
+
+@enrutador_administracion.post(
+    "/usuarios/{usuario_id}/restablecer-totp",
+    status_code=200,
+    dependencies=[Depends(verificar_csrf), Depends(puede_restablecer_totp)],
+)
+async def restablecer_totp(
+    usuario_id: int,
+    solicitud: SolicitudRestablecerTotp,
+    request: Request,
+    sesion: Sesion,
+    actor: UsuarioActual,
+) -> dict:
+    """Exige permiso admin, contraseña y TOTP actual; conserva auditoría y fuerza nuevo enrolamiento."""
+    justificacion = solicitud.justificacion.strip()
+    if len(justificacion) < 12:
+        raise ErrorAplicacion(422, "DATOS_INVALIDOS", "La justificación debe tener al menos 12 caracteres.")
+    await administracion_usuarios.restablecer_totp(
+        sesion,
+        usuario_id=usuario_id,
+        contrasena_administrador=solicitud.contrasena,
+        codigo_totp=solicitud.codigo_totp,
+        justificacion=justificacion,
+        actor=actor,
+        request=request,
+        ip_cliente=obtener_ip_cliente(request),
+    )
+    return {"restablecido": True, "estado_totp": "PENDIENTE"}
 
 
 # --- Auditoría ---------------------------------------------------------------------------

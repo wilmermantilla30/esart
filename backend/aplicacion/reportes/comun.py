@@ -10,8 +10,8 @@ archivo para cambiarlos en un solo lugar.
 """
 
 from collections.abc import Callable
-from dataclasses import dataclass, field
-from datetime import date
+from dataclasses import asdict, dataclass, field
+from datetime import date, datetime
 from io import BytesIO
 
 from reportlab.lib import colors
@@ -22,6 +22,7 @@ from reportlab.lib.units import cm
 from reportlab.pdfgen.canvas import Canvas
 from reportlab.platypus import (
     Flowable,
+    Image,
     KeepTogether,
     Paragraph,
     SimpleDocTemplate,
@@ -84,6 +85,17 @@ class CriterioDocumento:
 
 
 @dataclass(frozen=True)
+class FirmaDocumento:
+    """Rúbrica electrónica que se estampa en la línea de firma (firma desde el celular)."""
+
+    rubrica_png: bytes  # PNG ya validado y sin metadatos (servicios/firma_movil.py)
+    firmante: str  # grado y nombre del firmante autorizado
+    cargo: str
+    firmado_en: datetime
+    codigo_verificacion: str  # referencia corta de la firma (aparece bajo la rúbrica)
+
+
+@dataclass(frozen=True)
 class DatosDocumento:
     """Todo lo que un documento necesita del artillero; lo arma el servicio a partir de la verificación."""
 
@@ -102,6 +114,8 @@ class DatosDocumento:
     criterios: list[CriterioDocumento] = field(default_factory=list)
     cursos: list[CursoDocumento] = field(default_factory=list)
     reentrenamientos: list[ReentrenamientoDocumento] = field(default_factory=list)
+    # Sin firma: línea en blanco para el Director. Con firma: la rúbrica, el firmante y la fecha.
+    firma: FirmaDocumento | None = None
 
     @property
     def nombre_completo(self) -> str:
@@ -140,6 +154,9 @@ def estilos() -> dict[str, ParagraphStyle]:
         "centro": ParagraphStyle("Centro", parent=normal, alignment=TA_CENTER),
         "izquierda": ParagraphStyle("Izquierda", parent=normal, alignment=TA_LEFT),
         "pequeno": ParagraphStyle("Pequeno", parent=normal, fontSize=8.5, leading=11, textColor=GRIS),
+        "pequeno_centro": ParagraphStyle(
+            "PequenoCentro", parent=normal, fontSize=7.5, leading=10, textColor=GRIS, alignment=TA_CENTER
+        ),
         "titulo": ParagraphStyle(
             "Titulo", parent=normal, fontName="Helvetica-Bold", fontSize=16, leading=20,
             alignment=TA_CENTER, textColor=AZUL, spaceAfter=6,
@@ -183,19 +200,93 @@ def tabla(filas: list[list], anchos: list[float], estilos_parrafo: dict[str, Par
     return resultado
 
 
-def bloque_firma(estilos_parrafo: dict[str, ParagraphStyle]) -> list[Flowable]:
-    """Línea de firma del Director (centrada). KeepTogether evita que la línea quede en una página
-    y el nombre del firmante en la siguiente."""
+def bloque_firma(
+    estilos_parrafo: dict[str, ParagraphStyle], firma: FirmaDocumento | None = None
+) -> list[Flowable]:
+    """
+    Línea de firma (centrada). Sin firma: espacio en blanco y el cargo del Director.
+    Con firma (rúbrica dibujada en el celular): la rúbrica sobre la línea, el nombre y cargo del
+    firmante autorizado, la fecha y hora y el código de verificación de la firma.
+    KeepTogether evita que la rúbrica quede en una página y el nombre en la siguiente.
+    """
+    if firma is None:
+        encima = [Spacer(1, 1.3 * cm)]
+        nombre, cargo, pie = FIRMANTE_NOMBRE, FIRMANTE_CARGO, []
+    else:
+        rubrica = Image(BytesIO(firma.rubrica_png), width=6 * cm, height=2.2 * cm, kind="proportional")
+        rubrica.hAlign = "CENTER"
+        encima = [Spacer(1, 0.2 * cm), rubrica]
+        nombre, cargo = escapar(firma.firmante), escapar(firma.cargo)
+        pie = [
+            Paragraph(
+                f"Firmado electrónicamente el {firma.firmado_en:%d/%m/%Y %H:%M} · "
+                f"Código {escapar(firma.codigo_verificacion)}",
+                estilos_parrafo["pequeno_centro"],
+            )
+        ]
     return [
         KeepTogether(
             [
-                Spacer(1, 1.3 * cm),
+                *encima,
                 Paragraph("_______________________________________", estilos_parrafo["centro"]),
-                Paragraph(f"<b>{FIRMANTE_NOMBRE}</b>", estilos_parrafo["centro"]),
-                Paragraph(FIRMANTE_CARGO, estilos_parrafo["centro"]),
+                Paragraph(f"<b>{nombre}</b>", estilos_parrafo["centro"]),
+                Paragraph(cargo, estilos_parrafo["centro"]),
+                *pie,
             ]
         )
     ]
+
+
+def datos_a_json(datos: DatosDocumento) -> dict:
+    """DatosDocumento → dict JSON (sin la firma). Se guarda en documentos.datos_emitidos para poder
+    regenerar exactamente el mismo documento al firmarlo."""
+    salida = asdict(datos)
+    salida.pop("firma", None)
+
+    def convertir(valor):
+        if isinstance(valor, dict):
+            return {k: convertir(v) for k, v in valor.items()}
+        if isinstance(valor, list):
+            return [convertir(v) for v in valor]
+        if isinstance(valor, date):
+            return valor.isoformat()
+        return valor
+
+    return convertir(salida)
+
+
+def datos_desde_json(datos: dict, firma: FirmaDocumento | None = None) -> DatosDocumento:
+    """Inverso de datos_a_json; agrega la firma si se indica."""
+
+    def fecha(valor):
+        return date.fromisoformat(valor) if valor else None
+
+    return DatosDocumento(
+        **{
+            k: v
+            for k, v in datos.items()
+            if k not in ("fecha_expedicion", "criterios", "cursos", "reentrenamientos")
+        },
+        fecha_expedicion=fecha(datos["fecha_expedicion"]),
+        criterios=[CriterioDocumento(**c) for c in datos.get("criterios", [])],
+        cursos=[
+            CursoDocumento(
+                **{**c, "fecha_inicio": fecha(c["fecha_inicio"]), "fecha_fin": fecha(c["fecha_fin"])}
+            )
+            for c in datos.get("cursos", [])
+        ],
+        reentrenamientos=[
+            ReentrenamientoDocumento(
+                **{
+                    **r,
+                    "fecha_expedicion": fecha(r["fecha_expedicion"]),
+                    "fecha_vencimiento": fecha(r["fecha_vencimiento"]),
+                }
+            )
+            for r in datos.get("reentrenamientos", [])
+        ],
+        firma=firma,
+    )
 
 
 class DocumentoNoDisponible(ValueError):

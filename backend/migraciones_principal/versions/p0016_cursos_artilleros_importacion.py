@@ -17,7 +17,8 @@ El downgrade solo revoca permisos: los cursos reparados son datos válidos y se 
 
 from alembic import op
 
-revision = "p0016_cursos_artilleros_importacion"
+# Máximo 32 caracteres: alembic_version.version_num es varchar(32).
+revision = "p0016_cursos_artilleros"
 down_revision = "p0015_registro_manual_personal"
 branch_labels = None
 depends_on = None

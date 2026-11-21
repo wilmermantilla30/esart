@@ -5,15 +5,19 @@ Cada ruta exige su permiso de la malla (HU-09). La cédula sale enmascarada a qu
 tenga VER_DOCUMENTO_COMPLETO. La lógica de la regla vive en servicios/habilitacion.py.
 """
 
+import hashlib
 import secrets
 from datetime import UTC, datetime
 from typing import Annotated, Literal
 from urllib.parse import quote
+from uuid import UUID
 
 from fastapi import APIRouter, Depends, Query, Request, Response
+from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
+from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.verificacion import (
     ArtilleroVerificado,
     CriterioVerificacion,
@@ -38,6 +42,10 @@ from aplicacion.reportes.maestro import REPORTES, generar_documento
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente, tiene_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual
 from aplicacion.servicios import auditoria, habilitacion
+from aplicacion.servicios.almacenamiento_documental import (
+    registrar_documento,
+    resolver_archivo_privado,
+)
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 
 enrutador_verificacion = APIRouter(prefix="/verificar", tags=["Verificación"])
@@ -339,18 +347,11 @@ async def opciones_documento() -> list[OpcionDocumentoArtillero]:
     return [OpcionDocumentoArtillero(codigo=codigo, nombre=r.nombre) for codigo, r in REPORTES.items()]
 
 
-@enrutador_verificacion.get("/artillero/{numero_documento}/documento")
-async def generar_documento_artillero(
-    numero_documento: str,
-    request: Request,
-    sesion: Sesion,
-    tipo: OpcionDocumento = Query(..., description="DIPLOMA, OFICIO_REMISORIO o CERTIFICACION"),
-    usuario_id: int = Depends(puede_verificar),
-    usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
-) -> Response:
-    """PDF del documento elegido. 404 si la cédula no existe; 409 si el documento no aplica
-    (diploma sin curso aprobado)."""
-    cedula = habilitacion.normalizar_cedula(numero_documento)
+async def armar_datos_documento(sesion: AsyncSession, cedula: str, usuario_id: int, nombre_usuario: str):
+    """
+    Datos del documento del artillero (los mismos para descargarlo o para firmarlo desde el celular).
+    Devuelve (fila_de_estado, DatosDocumento). 404 si la cédula no existe.
+    """
     fila, criterios, cursos, reentrenamientos, parametros = await habilitacion.verificar_artillero(
         sesion, cedula
     )
@@ -369,7 +370,7 @@ async def generar_documento_artillero(
         resultado=fila.resultado,
         fecha_expedicion=fila.hoy,
         numero=numero,
-        expedido_por=usuario.nombre_usuario,
+        expedido_por=nombre_usuario,
         motivos=habilitacion.motivos_no_apto(criterios),
         criterios=[CriterioDocumento(c.descripcion, c.tipo, c.cumple, c.detalle) for c in criterios],
         cursos=[
@@ -395,25 +396,177 @@ async def generar_documento_artillero(
             for c in reentrenamientos
         ],
     )
+    return fila, datos
+
+
+@enrutador_verificacion.get("/artillero/{numero_documento}/documento")
+async def generar_documento_artillero(
+    numero_documento: str,
+    request: Request,
+    sesion: Sesion,
+    tipo: OpcionDocumento = Query(..., description="DIPLOMA, OFICIO_REMISORIO o CERTIFICACION"),
+    usuario_id: int = Depends(puede_verificar),
+    usuario: UsuarioAutenticado = Depends(obtener_usuario_actual),
+) -> Response:
+    """PDF del documento elegido. 404 si la cédula no existe; 409 si el documento no aplica
+    (diploma sin curso aprobado)."""
+    cedula = habilitacion.normalizar_cedula(numero_documento)
+    fila, datos = await armar_datos_documento(sesion, cedula, usuario_id, usuario.nombre_usuario)
+    numero = datos.numero
     try:
         pdf, nombre = generar_documento(tipo, datos)
     except DocumentoNoDisponible as error:
         raise ErrorAplicacion(409, "DOCUMENTO_NO_DISPONIBLE", str(error)) from None
+    configuracion = obtener_configuracion()
+    documento_id: UUID | None = None
+    correlacion_id: UUID | None = None
+    destino_guardado = None
+    if configuracion.documentos_persistencia_habilitada and tipo in {
+        "CERTIFICACION",
+        "OFICIO_REMISORIO",
+    }:
+        try:
+            documento_id, destino_guardado, _, correlacion_id = await registrar_documento(
+                sesion,
+                directorio=configuracion.directorio_documentos_privados,
+                pdf=pdf,
+                numero=numero,
+                tipo=tipo,
+                personal_id=fila.id,
+                usuario_id=usuario.id,
+                datos_emitidos={
+                    "cedula": datos.cedula,
+                    "grado": datos.grado,
+                    "nombres": datos.nombres,
+                    "apellidos": datos.apellidos,
+                    "categoria": datos.categoria,
+                    "resultado": datos.resultado,
+                    "fecha_expedicion": datos.fecha_expedicion.isoformat(),
+                    "expedido_por": datos.expedido_por,
+                },
+                request=request,
+            )
+            await auditoria.registrar_evento(
+                sesion,
+                auditoria.CONSULTA_ARTILLERO,
+                request,
+                usuario_id=usuario.id,
+                nombre_usuario=usuario.nombre_usuario,
+                documento=cedula,
+                resultado=f"DOC_{tipo}"[:20],
+                detalle={
+                    "documento_generado": tipo,
+                    "numero": numero,
+                    "documento_id": str(documento_id),
+                },
+                confirmar=False,
+            )
+            await sesion.commit()
+        except Exception:
+            await sesion.rollback()
+            if destino_guardado is not None:
+                destino_guardado.unlink(missing_ok=True)
+            raise
+    else:
+        await auditoria.registrar_evento(
+            sesion,
+            auditoria.CONSULTA_ARTILLERO,
+            request,
+            usuario_id=usuario.id,
+            nombre_usuario=usuario.nombre_usuario,
+            documento=cedula,
+            resultado=f"DOC_{tipo}"[:20],
+            detalle={"documento_generado": tipo, "numero": numero},
+        )
+    encabezados = {
+        "Content-Disposition": f"attachment; filename*=UTF-8''{quote(nombre)}",
+        "X-Content-Type-Options": "nosniff",
+        "Cache-Control": "no-store",
+    }
+    if documento_id:
+        encabezados["X-ESART-Documento-Id"] = str(documento_id)
+        encabezados["X-ESART-Correlacion-Id"] = str(correlacion_id)
+    return Response(
+        content=pdf,
+        media_type="application/pdf",
+        headers=encabezados,
+    )
+
+
+@enrutador_verificacion.get("/documentos/{documento_id}/archivo")
+async def descargar_documento_persistido(
+    documento_id: UUID,
+    request: Request,
+    sesion: Sesion,
+    usuario_id: int = Depends(puede_verificar),
+) -> Response:
+    """Entrega un PDF privado solo a su emisor o a quien tenga el permiso de firma documental."""
+    configuracion = obtener_configuracion()
+    if not configuracion.documentos_persistencia_habilitada:
+        raise ErrorAplicacion(
+            503,
+            "ALMACENAMIENTO_NO_DISPONIBLE",
+            "El almacenamiento documental no esta habilitado.",
+        )
+    fila = (
+        (
+            await sesion.execute(
+                text("""
+                SELECT d.numero,d.tipo,d.creado_por,v.ubicacion_privada,v.sha256
+                FROM esart_firma.documentos d
+                JOIN esart_firma.versiones_documento v
+                  ON v.documento_id=d.id AND v.numero_version=d.version_actual
+                WHERE d.id=:id
+            """),
+                {"id": documento_id},
+            )
+        )
+        .mappings()
+        .one_or_none()
+    )
+    if fila is None:
+        raise ErrorAplicacion(404, "DOCUMENTO_NO_ENCONTRADO", "El documento no existe.")
+    tiene_permiso_firma = await tiene_permiso_componente(
+        sesion, usuario_id, "FIRMA_DOCUMENTOS", OperacionCRUD.READ
+    )
+    if fila["creado_por"] != usuario_id and not tiene_permiso_firma:
+        raise ErrorAplicacion(404, "DOCUMENTO_NO_ENCONTRADO", "El documento no existe.")
+    try:
+        ruta = resolver_archivo_privado(
+            configuracion.directorio_documentos_privados, fila["ubicacion_privada"]
+        )
+        contenido = ruta.read_bytes()
+    except (FileNotFoundError, OSError, ValueError):
+        raise ErrorAplicacion(
+            503, "DOCUMENTO_NO_DISPONIBLE", "El archivo documental no esta disponible."
+        ) from None
+    if hashlib.sha256(contenido).hexdigest() != fila["sha256"]:
+        await auditoria.registrar_evento(
+            sesion,
+            auditoria.ACCESO_DENEGADO,
+            request,
+            usuario_id=usuario_id,
+            resultado="FALLO",
+            detalle={"documento_id": str(documento_id)},
+        )
+        raise ErrorAplicacion(
+            503,
+            "DOCUMENTO_INTEGRO_NO_VERIFICADO",
+            "No se pudo validar la integridad del documento.",
+        )
     await auditoria.registrar_evento(
         sesion,
         auditoria.CONSULTA_ARTILLERO,
         request,
-        usuario_id=usuario.id,
-        nombre_usuario=usuario.nombre_usuario,
-        documento=cedula,
-        resultado=f"DOC_{tipo}"[:20],
-        detalle={"documento_generado": tipo, "numero": numero},
+        usuario_id=usuario_id,
+        resultado="DESCARGA_DOCUMENTO",
+        detalle={"documento_id": str(documento_id), "documento_descargado": fila["tipo"]},
     )
     return Response(
-        content=pdf,
+        content=contenido,
         media_type="application/pdf",
         headers={
-            "Content-Disposition": f"attachment; filename*=UTF-8''{quote(nombre)}",
+            "Content-Disposition": f"inline; filename*=UTF-8''{quote(fila['numero'] + '.pdf')}",
             "X-Content-Type-Options": "nosniff",
             "Cache-Control": "no-store",
         },
