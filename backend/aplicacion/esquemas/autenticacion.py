@@ -67,4 +67,6 @@ class RespuestaUsuarioActual(UsuarioEnSesion):
     permisos: list[str]
     # Menú ya filtrado por permisos: el front lo dibuja tal cual.
     menu: list[ElementoMenu]
+    # Operaciones de cada componente accesible, incluidos los permisos sin menú (S2-09).
+    operaciones: dict[str, list[str]] = {}
     expira_por_inactividad_segundos: int

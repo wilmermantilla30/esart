@@ -3,13 +3,18 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import {
+  DetalleMalla,
   FormatoPlantilla,
+  MallaEditada,
+  MateriaCatalogo,
   NotaMinima,
   NuevaPlantilla,
+  NuevoTipoCurso,
   ParametrosSeguridad,
   Plantilla,
   ReglaHabilitacion,
   SimulacionRegla,
+  TipoCursoMalla,
   ValoresRegla,
 } from '../modelos/parametros';
 import { ClienteApiService } from './cliente-api.service';
@@ -74,6 +79,41 @@ export class ParametrosService {
     return this.api.reemplazar<NotaMinima>('/parametros/nota-minima', {
       valor,
       version,
+      codigo_totp: codigoTotp,
+    });
+  }
+
+  // --- Mallas curriculares (S2-09) ---
+
+  listarMallas(): Observable<TipoCursoMalla[]> {
+    return this.api.obtener<TipoCursoMalla[]>('/parametros/mallas');
+  }
+
+  /** Malla vigente del tipo de curso, o la versión indicada (historial). */
+  obtenerMalla(codigoTipo: string, version: number | null = null): Observable<DetalleMalla> {
+    return this.api.obtener<DetalleMalla>(
+      `/parametros/mallas/${encodeURIComponent(codigoTipo)}`,
+      {},
+      { version },
+    );
+  }
+
+  listarMaterias(): Observable<MateriaCatalogo[]> {
+    return this.api.obtener<MateriaCatalogo[]>('/parametros/mallas/materias');
+  }
+
+  /** Guarda la malla como versión nueva. Sin código responde 409 TOTP_REQUERIDO. */
+  guardarMalla(codigoTipo: string, malla: MallaEditada, codigoTotp = ''): Observable<DetalleMalla> {
+    return this.api.reemplazar<DetalleMalla>(
+      `/parametros/mallas/${encodeURIComponent(codigoTipo)}`,
+      { ...malla, codigo_totp: codigoTotp },
+    );
+  }
+
+  /** Crea un tipo de curso sin malla. Sin código responde 409 TOTP_REQUERIDO. */
+  crearTipoCurso(tipo: NuevoTipoCurso, codigoTotp = ''): Observable<DetalleMalla> {
+    return this.api.enviar<DetalleMalla>('/parametros/mallas', {
+      ...tipo,
       codigo_totp: codigoTotp,
     });
   }

@@ -62,6 +62,42 @@ describe('ParametrosService', () => {
     peticion.flush({});
   });
 
+  it('guarda la malla como versión nueva con el código del autenticador (S2-09)', () => {
+    const malla = {
+      anio: 2026,
+      filas: [{ orden: 1, materia: 'Topografía', evaluable: true, area: null, modulo: null }],
+      observacion: null,
+      version: 1,
+    };
+    servicio.guardarMalla('SACLI', malla, '112233').subscribe();
+    const peticion = backend.expectOne('/api/parametros/mallas/SACLI');
+    expect(peticion.request.method).toBe('PUT');
+    expect(peticion.request.body).toEqual({ ...malla, codigo_totp: '112233' });
+    peticion.flush({});
+  });
+
+  it('pide una versión histórica de la malla solo si se indica (S2-09)', () => {
+    servicio.obtenerMalla('SACLI').subscribe();
+    backend.expectOne('/api/parametros/mallas/SACLI').flush({});
+    servicio.obtenerMalla('SACLI', 2).subscribe();
+    backend.expectOne('/api/parametros/mallas/SACLI?version=2').flush({});
+  });
+
+  it('crea el tipo de curso con POST (S2-09)', () => {
+    const tipo = {
+      codigo: 'CAPFU',
+      nombre: 'Curso de fuegos',
+      tipo: 'ESPECIALIZACION' as const,
+      modalidad: 'PRESENCIAL' as const,
+      duracion_semanas: 6,
+    };
+    servicio.crearTipoCurso(tipo).subscribe();
+    const peticion = backend.expectOne('/api/parametros/mallas');
+    expect(peticion.request.method).toBe('POST');
+    expect(peticion.request.body).toEqual({ ...tipo, codigo_totp: '' });
+    peticion.flush({});
+  });
+
   it('simula sin guardar (POST a /simular)', () => {
     servicio.simularRegla(valores).subscribe();
     const peticion = backend.expectOne('/api/parametros/habilitacion/simular');

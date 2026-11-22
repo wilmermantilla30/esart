@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.6 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.7 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -257,6 +257,10 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   `cursos.nota_minima_aprobacion` (`NUMERIC(3,2)`, 0 a 5) la copia el trigger `tg_cursos_asignar_nota_minima`
   al crear el curso: un cambio del parámetro solo aplica a los cursos nuevos. Los cursos anteriores a la malla
   quedan en `NULL` (solo aprobado / no aprobado).
+- Edición desde Parámetros *(S2-09, migración `p0020_mallas_en_parametros`)*: el componente `MALLAS_CURRICULARES`
+  pasa a ser hijo de `PARAMETROS_HABILITACION`; política TOTP `MALLAS_MODIFICAR`; acción de auditoría
+  `TIPO_CURSO_CREADO`; la cuenta de la API puede insertar en `tipos_curso` (`codigo`, `nombre`, `tipo`,
+  `modalidad`, `duracion_semanas`), no editarlos ni borrarlos.
 
 ---
 
@@ -378,3 +382,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.4 | 2026-11-16 | Punto 8 cerrado: permisos por componente. `p0005`: componentes (Personal militar con pestañas hijas), módulos de segunda entrega inactivos y malla inicial ADMINISTRADOR/USUARIO (USUARIO ve la cédula completa) |
 | 1.5 | 2026-11-21 | §6.4: malla curricular versionada por tipo de curso, escala de notas 0 a 5 y una sola habilitación (S2-01, `p0017`) |
 | 1.6 | 2026-11-21 | §6.4: nota mínima de aprobación como parámetro general y copiada en cada curso al crearse (S2-10, `p0019`) |
+| 1.7 | 2026-11-21 | §6.4: mallas y tipos de curso editables desde Parámetros (S2-09, `p0020`) |

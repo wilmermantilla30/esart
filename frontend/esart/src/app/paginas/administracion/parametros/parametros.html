@@ -67,6 +67,9 @@
         <esart-nota-minima />
       </div>
     }
+    @case ('mallas') {
+      <esart-mallas-curriculares />
+    }
     @case ('plantillas') {
       <esart-plantillas-formatos (cantidad)="cantidadPlantillas.set($event)" />
     }

@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.17 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.18 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -132,11 +132,16 @@ Datos del usuario en sesión. El front lo llama al cargar cada página para **ar
         { "codigo": "PERSONAL_HABILITADOS", "nombre": "Habilitados", "ruta": "/personal/habilitados", "operaciones": ["leer"], "hijos": [] }
       ] }
   ],
+  "operaciones": { "DASHBOARD": ["leer"], "PERSONAL_MILITAR": ["leer"], "VER_DOCUMENTO_COMPLETO": ["leer"] },
   "expira_por_inactividad_segundos": 1800
 }
 ```
 `permisos`: códigos de los componentes a los que puede acceder (incluye permisos sin menú).
-`menu`: módulos del sidebar con sus pestañas (`hijos`), ya filtrados por la malla (HU-09).
+`menu`: módulos del sidebar con sus pestañas (`hijos`), ya filtrados por la malla (HU-09). Un permiso
+especial (sin ruta) que es hijo de un módulo da entrada a ese módulo aunque el usuario no tenga el padre
+(S2-09: `MALLAS_CURRICULARES` abre Parámetros, donde solo se ve la pestaña de mallas).
+`operaciones` (S2-09): lo que puede hacer en cada componente accesible, incluidos los permisos sin menú;
+el front lo usa para mostrar u ocultar botones.
 Las respuestas autenticadas traen `X-Sesion-Expira-En` (HU-08).
 
 ### `POST /api/auth/cerrar-sesion`
@@ -332,7 +337,7 @@ Auditoría (componente `AUDITORIA`, solo lectura):
 - `GET /api/administracion/auditoria?accion=&usuario=&documento=&desde=AAAA-MM-DD&hasta=AAAA-MM-DD` → paginado (§1.3) con
   `{ "id", "fecha", "usuario_id", "nombre_usuario", "accion", "numero_documento_consultado", "resultado", "direccion_ip", "detalle" }`.
 
-## 5c. Parámetros (regla de habilitación, nota mínima, plantillas y seguridad)
+## 5c. Parámetros (regla de habilitación, nota mínima, mallas curriculares, plantillas y seguridad)
 Todo bajo el componente `PARAMETROS_HABILITACION` de la malla (leer, crear, actualizar, eliminar según la ruta).
 Las rutas que cambian datos exigen CSRF.
 
@@ -356,6 +361,23 @@ Cursos y Capacitaciones — nota mínima de aprobación (S2-10):
   Solo aplica a los cursos que se creen después (cada curso guarda la nota vigente al crearse). Auditoría
   `PARAMETROS_ACTUALIZADOS` con `cambios.NOTA_MINIMA_APROBACION = { "anterior", "nuevo" }` (texto con 2 decimales).
   Cambiar la nota no altera la `version` de la regla de habilitación ni al revés.
+
+Mallas curriculares (S2-09) — componente propio `MALLAS_CURRICULARES` (hijo de Parámetros; se puede dar por excepción):
+- `GET /api/parametros/mallas` (leer) → `[{ "codigo", "nombre", "tipo", "modalidad", "duracion_semanas", "activo", "version", "anio",
+  "materias", "evaluables" }]` (`version` null = sin malla, como TECNICA).
+- `GET /api/parametros/mallas/materias` (leer) → `[{ "codigo", "nombre" }]`: catálogo para sugerir nombres.
+- `GET /api/parametros/mallas/{tipo}?version=N` (leer) → `{ "tipo_curso", "version": { "numero", "anio", "estado", "observacion",
+  "creado_en", "creado_por", "materias", "cursos" } | null, "filas": [{ "orden", "codigo_materia", "materia", "area", "modulo",
+  "evaluable" }], "versiones": [...] }`. Sin `version`, la vigente. **404** `TIPO_CURSO_NO_ENCONTRADO` / `VERSION_NO_ENCONTRADA`.
+- `PUT /api/parametros/mallas/{tipo}` (actualizar) cuerpo `{ "anio", "filas": [{ "orden", "materia", "evaluable", "area", "modulo" }],
+  "observacion", "version": <número vigente editado o null>, "codigo_totp" }` → crea la **versión nueva** (la anterior queda HISTORICA;
+  los cursos ya creados conservan la suya). Antes de pedir el código: **422** `MALLA_INVALIDA` (vacía, materia repetida, sin materias con
+  nota...), **422** `SIN_CAMBIOS`, **409** `MALLA_DESACTUALIZADA` (otro usuario guardó antes). Luego **409** `TOTP_REQUERIDO`
+  (política `MALLAS_MODIFICAR`) y **422** `TOTP_INVALIDO`. Éxito: el detalle nuevo; auditoría `MALLA_CURRICULAR_CARGADA` con
+  `origen: PARAMETROS`, `antes`, `despues` y `cambios` (agregadas, quitadas, cambian_evaluable, orden_cambiado).
+- `POST /api/parametros/mallas` (crear) cuerpo `{ "codigo", "nombre", "tipo": EDUCACION_MILITAR|ESPECIALIZACION|EDUCACION_SUPERIOR,
+  "modalidad": PRESENCIAL|VIRTUAL|MIXTA, "duracion_semanas": 1–104, "codigo_totp" }` → **201** el detalle (sin malla). **409**
+  `TIPO_CURSO_DUPLICADO`, **422** `DATOS_INVALIDOS`, TOTP igual que arriba. Auditoría `TIPO_CURSO_CREADO`.
 
 Plantillas y Formatos:
 - `GET /api/parametros/plantillas?formato=XLSX|XLS|PDF|DOCX` (leer) → `[{ "id", "nombre_oficial", "nombre_archivo", "formato", "version",
@@ -445,3 +467,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.15 | 2026-11-18 | §3b estadísticas del panel principal (cursos por año y semestre, grados y género por curso, egresados, seguimiento de cursos en curso) |
 | 0.16 | 2026-11-21 | S2-11: §5b usuario para instructores civiles (`tipo_persona`); permisos especiales MALLAS_CURRICULARES, NOTAS_CARGA, NOTAS_REVISION y CONSEJO_ACADEMICO en la malla (sin menú hasta sus pantallas). Migración p0018 |
 | 0.17 | 2026-11-21 | S2-10: §5c nota mínima de aprobación (leer y guardar con TOTP), solo para cursos nuevos. Migración p0019 |
+| 0.18 | 2026-11-21 | S2-09: §5c mallas curriculares y tipos de curso en Parámetros (versiones con TOTP y auditoría); §2 `operaciones` por componente en `/auth/yo` y permiso especial hijo que abre su módulo. Migración p0020 |

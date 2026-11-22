@@ -2,6 +2,7 @@
 
 from datetime import datetime
 from decimal import Decimal
+from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -69,6 +70,99 @@ class SolicitudGuardarNotaMinima(BaseModel):
 
     valor: Decimal = Field(max_digits=3, decimal_places=2)
     version: datetime | None
+    codigo_totp: str = Field(default="", max_length=6, repr=False)
+
+
+# --- Mallas curriculares (S2-09) -------------------------------------------------------------
+
+
+class TipoCursoMalla(BaseModel):
+    """Un tipo de curso en el listado de la pestaña, con su versión vigente (si tiene)."""
+
+    codigo: str
+    nombre: str
+    tipo: str | None
+    modalidad: str
+    duracion_semanas: int
+    activo: bool
+    version: int | None
+    anio: int | None
+    materias: int
+    evaluables: int
+
+
+class DatosTipoCurso(BaseModel):
+    codigo: str
+    nombre: str
+    tipo: str | None
+    modalidad: str
+    duracion_semanas: int
+    activo: bool
+
+
+class VersionMallaResumen(BaseModel):
+    numero: int
+    anio: int
+    estado: str
+    observacion: str | None
+    creado_en: datetime
+    creado_por: str | None
+    materias: int
+    # Cursos creados con esta versión (la conservan aunque haya versiones nuevas).
+    cursos: int
+
+
+class FilaMallaRespuesta(BaseModel):
+    orden: int
+    codigo_materia: str
+    materia: str
+    area: str | None
+    modulo: str | None
+    evaluable: bool
+
+
+class DetalleMalla(BaseModel):
+    tipo_curso: DatosTipoCurso
+    version: VersionMallaResumen | None
+    filas: list[FilaMallaRespuesta]
+    versiones: list[VersionMallaResumen]
+
+
+class MateriaCatalogo(BaseModel):
+    codigo: str
+    nombre: str
+
+
+class FilaMallaSolicitud(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    orden: int = Field(ge=1, le=500)
+    materia: str = Field(min_length=1, max_length=200)
+    evaluable: bool
+    area: str | None = Field(default=None, max_length=100)
+    modulo: str | None = Field(default=None, max_length=100)
+
+
+class SolicitudGuardarMalla(BaseModel):
+    """Malla completa editada. version = número de la vigente que se editó (null si no tenía)."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    anio: int = Field(ge=2000, le=2100)
+    filas: list[FilaMallaSolicitud] = Field(min_length=1, max_length=200)
+    observacion: str | None = Field(default=None, max_length=500)
+    version: int | None
+    codigo_totp: str = Field(default="", max_length=6, repr=False)
+
+
+class SolicitudCrearTipoCurso(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    codigo: str = Field(min_length=2, max_length=20)
+    nombre: str = Field(min_length=3, max_length=200)
+    tipo: Literal["EDUCACION_MILITAR", "ESPECIALIZACION", "EDUCACION_SUPERIOR"]
+    modalidad: Literal["PRESENCIAL", "VIRTUAL", "MIXTA"]
+    duracion_semanas: int = Field(ge=1, le=104)
     codigo_totp: str = Field(default="", max_length=6, repr=False)
 
 

@@ -220,6 +220,7 @@ async def obtener_datos_usuario_actual(
         requiere_cambio_contrasena=usuario.requiere_cambio_contrasena,
         permisos=menu_y_permisos.permisos,
         menu=[asdict(elemento) for elemento in menu_y_permisos.menu],
+        operaciones=menu_y_permisos.operaciones,
         expira_por_inactividad_segundos=segundos_de_inactividad_permitidos(),
     )
 
