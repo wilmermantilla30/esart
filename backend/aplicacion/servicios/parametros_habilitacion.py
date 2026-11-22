@@ -60,7 +60,11 @@ async def cursos_disponibles(sesion: AsyncSession) -> list[CursoDisponible]:
 
 async def version_vigente(sesion: AsyncSession) -> datetime | None:
     """Fecha del último cambio de la regla: el front la devuelve al guardar (control de concurrencia)."""
-    return await sesion.scalar(text("SELECT max(actualizado_en) FROM esart.parametros_habilitacion"))
+    # Solo los parámetros de la regla: cambiar la nota mínima (S2-10) no invalida este formulario.
+    return await sesion.scalar(
+        text("SELECT max(actualizado_en) FROM esart.parametros_habilitacion WHERE codigo = ANY(:codigos)"),
+        {"codigos": list(CAMPOS)},
+    )
 
 
 async def obtener_regla(sesion: AsyncSession) -> dict:
@@ -72,8 +76,10 @@ async def obtener_regla(sesion: AsyncSession) -> dict:
                 SELECT p.actualizado_en, u.usuario AS actualizado_por
                 FROM esart.parametros_habilitacion p
                 LEFT JOIN esart_ref.usuarios u ON u.id = p.actualizado_por_id
+                WHERE p.codigo = ANY(:codigos)
                 ORDER BY p.actualizado_en DESC LIMIT 1
-            """)
+            """),
+            {"codigos": list(CAMPOS)},
         )
     ).one_or_none()
     return {

@@ -36,6 +36,17 @@ export interface SimulacionRegla {
   pasan_a_apto: number;
 }
 
+/** Nota mínima de aprobación (S2-10). Cada curso guarda la vigente al crearse. */
+export interface NotaMinima {
+  /** Escala 0 a 5 con 2 decimales. */
+  valor: number;
+  /** Versión: se devuelve al guardar para no pisar el cambio de otro administrador. */
+  actualizado_en: string;
+  actualizado_por: string | null;
+  /** Cursos en curso que ya tienen su nota guardada (no cambian al guardar otra). */
+  cursos_en_curso: number;
+}
+
 export type FormatoPlantilla = 'XLSX' | 'XLS' | 'PDF' | 'DOCX';
 
 export interface Plantilla {

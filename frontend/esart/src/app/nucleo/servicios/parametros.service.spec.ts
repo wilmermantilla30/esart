@@ -50,6 +50,18 @@ describe('ParametrosService', () => {
     peticion.flush({});
   });
 
+  it('guarda la nota mínima con la versión editada y el código del autenticador (S2-10)', () => {
+    servicio.guardarNotaMinima(3.5, '2026-11-21T20:00:00Z', '654321').subscribe();
+    const peticion = backend.expectOne('/api/parametros/nota-minima');
+    expect(peticion.request.method).toBe('PUT');
+    expect(peticion.request.body).toEqual({
+      valor: 3.5,
+      version: '2026-11-21T20:00:00Z',
+      codigo_totp: '654321',
+    });
+    peticion.flush({});
+  });
+
   it('simula sin guardar (POST a /simular)', () => {
     servicio.simularRegla(valores).subscribe();
     const peticion = backend.expectOne('/api/parametros/habilitacion/simular');

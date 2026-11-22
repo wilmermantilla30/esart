@@ -2,6 +2,7 @@ import { Component, computed, inject, signal, viewChild } from '@angular/core';
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { SesionService } from '../../../nucleo/servicios/sesion.service';
+import { NotaMinimaTarjeta } from './nota-minima/nota-minima';
 import { ParametrosSeguridadPestana } from './parametros-seguridad/parametros-seguridad';
 import { PlantillasFormatosPestana } from './plantillas-formatos/plantillas-formatos';
 import { ReglaHabilitacionPestana } from './regla-habilitacion/regla-habilitacion';
@@ -24,7 +25,7 @@ const PESTANAS: ReadonlyArray<{
     valor: 'cursos',
     texto: 'Cursos y Capacitaciones',
     icono: 'school',
-    titulo: 'Cursos y Capacitaciones — Regla de habilitación',
+    titulo: 'Cursos y Capacitaciones — Regla de habilitación y nota mínima',
   },
   {
     valor: 'plantillas',
@@ -40,13 +41,18 @@ const PESTANA_INICIAL: PestanaParametros = 'plantillas';
 /**
  * Parámetros del sistema (componente PARAMETROS_HABILITACION), con el diseño de la Escuela:
  * - Parámetros de Seguridad: solo consulta.
- * - Cursos y Capacitaciones: la regla APTO / NO APTO.
+ * - Cursos y Capacitaciones: la regla APTO / NO APTO y la nota mínima de aprobación (S2-10).
  * - Plantillas y Formatos: repositorio de documentos institucionales.
  * La pestaña elegida queda en la dirección (?pestana=...) para poder recargar o compartirla.
  */
 @Component({
   selector: 'esart-parametros',
-  imports: [ParametrosSeguridadPestana, PlantillasFormatosPestana, ReglaHabilitacionPestana],
+  imports: [
+    NotaMinimaTarjeta,
+    ParametrosSeguridadPestana,
+    PlantillasFormatosPestana,
+    ReglaHabilitacionPestana,
+  ],
   templateUrl: './parametros.html',
 })
 export class Parametros {

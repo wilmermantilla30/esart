@@ -61,7 +61,11 @@
       <esart-parametros-seguridad />
     }
     @case ('cursos') {
-      <esart-regla-habilitacion />
+      <div class="space-y-5">
+        <esart-regla-habilitacion />
+        <!-- S2-10: nota mínima de aprobación para los cursos nuevos -->
+        <esart-nota-minima />
+      </div>
     }
     @case ('plantillas') {
       <esart-plantillas-formatos (cantidad)="cantidadPlantillas.set($event)" />
