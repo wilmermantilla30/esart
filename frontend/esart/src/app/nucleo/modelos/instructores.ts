@@ -67,4 +67,16 @@ export interface CursosDelInstructor {
   comandante: CursoDelInstructor[];
   /** Cursos donde participa con otro rol. */
   participa: (CursoDelInstructor & { rol_en_curso: string })[];
+  /** S2-02: materias que dicta como titular en cada curso. */
+  materias?: MateriaDelInstructor[];
+}
+
+export interface MateriaDelInstructor {
+  curso_id: number;
+  curso: string;
+  nombre_curso: string;
+  estado: string;
+  tipo_curso: string;
+  materia: string;
+  fecha_inicio: string;
 }

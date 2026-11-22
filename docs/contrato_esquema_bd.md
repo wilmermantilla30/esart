@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.7 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.8 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -261,6 +261,12 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   pasa a ser hijo de `PARAMETROS_HABILITACION`; política TOTP `MALLAS_MODIFICAR`; acción de auditoría
   `TIPO_CURSO_CREADO`; la cuenta de la API puede insertar en `tipos_curso` (`codigo`, `nombre`, `tipo`,
   `modalidad`, `duracion_semanas`), no editarlos ni borrarlos.
+- Instructor por materia *(S2-02, migración `p0021_instructor_por_materia`)*: `cursos_materias_instructor` (`curso_id`,
+  `malla_id` → fila de `malla_curricular`, `instructor_id`, `asignado_por_id`, `asignado_en`), única por (`curso_id`,
+  `malla_id`): un instructor titular por materia. El servicio exige que la fila sea de la malla del curso y con nota, y
+  que el instructor esté activo. Se activa el componente `CURSOS`; acciones de auditoría `INSTRUCTOR_MATERIA_ASIGNADO` y
+  `CURSO_MALLA_ASIGNADA`; la API puede actualizar `cursos.malla_version_id` y `nota_minima_aprobacion` (asignar la malla
+  vigente a un curso que no tenía).
 
 ---
 
@@ -383,3 +389,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.5 | 2026-11-21 | §6.4: malla curricular versionada por tipo de curso, escala de notas 0 a 5 y una sola habilitación (S2-01, `p0017`) |
 | 1.6 | 2026-11-21 | §6.4: nota mínima de aprobación como parámetro general y copiada en cada curso al crearse (S2-10, `p0019`) |
 | 1.7 | 2026-11-21 | §6.4: mallas y tipos de curso editables desde Parámetros (S2-09, `p0020`) |
+| 1.8 | 2026-11-21 | §6.4: instructor titular por materia en cada curso y módulo Cursos (S2-02, `p0021`) |

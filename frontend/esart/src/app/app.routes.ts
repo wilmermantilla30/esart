@@ -134,6 +134,21 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'cursos',
+        title: 'Cursos — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'CURSOS' },
+        loadComponent: () => import('./paginas/cursos/cursos').then((m) => m.Cursos),
+      },
+      {
+        path: 'cursos/:id',
+        title: 'Detalle del curso — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'CURSOS' },
+        loadComponent: () =>
+          import('./paginas/cursos/detalle-curso/detalle-curso').then((m) => m.DetalleCursoPagina),
+      },
+      {
         path: 'instructores',
         title: 'Instructores — ESART',
         canActivate: [exigirPermiso],

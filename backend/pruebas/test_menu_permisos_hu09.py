@@ -114,6 +114,7 @@ async def test_menu_de_administrador_incluye_cargue_y_administracion(cliente_api
     assert [e["codigo"] for e in menu] == [
         "DASHBOARD",
         "PERSONAL_MILITAR",
+        "CURSOS",  # S2-02 (p0021)
         "INSTRUCTORES",
         "USUARIOS",
         "PARAMETROS_HABILITACION",

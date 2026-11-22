@@ -389,9 +389,50 @@
               }
             </section>
           }
-          <p class="text-xs text-azul-pizarra/50">
-            Las materias que dicta se mostrarán cuando se cargue la malla curricular de cada curso.
-          </p>
+          <!-- S2-02: materias que dicta como titular (las asigna el Inspector en Cursos) -->
+          <section class="space-y-2">
+            <h3 class="flex items-center gap-2 font-headline font-bold text-negro-institucional">
+              <span class="material-symbols-outlined text-azul-institucional" aria-hidden="true"
+                >menu_book</span
+              >
+              Materias que dicta
+              <span class="text-xs font-normal text-azul-pizarra/60"
+                >({{ cursos()!.materias?.length ?? 0 }})</span
+              >
+            </h3>
+            @if (cursos()!.materias?.length) {
+              <ul class="divide-y divide-gris-bordes border border-gris-bordes rounded-xl">
+                @for (
+                  asignacion of cursos()!.materias;
+                  track asignacion.curso_id + asignacion.materia
+                ) {
+                  <li class="px-4 py-3 flex flex-wrap items-center justify-between gap-2">
+                    <div class="min-w-0">
+                      <p class="font-headline font-semibold text-sm text-negro-institucional">
+                        {{ asignacion.materia }}
+                      </p>
+                      <p class="text-xs text-azul-pizarra/70">
+                        {{ asignacion.tipo_curso }} · Curso {{ asignacion.curso }} ·
+                        {{ asignacion.fecha_inicio | date: 'd MMM y' }}
+                      </p>
+                    </div>
+                    <span
+                      [class]="
+                        'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                        estiloEstado(asignacion.estado)
+                      "
+                    >
+                      {{ textoEstado(asignacion.estado) }}
+                    </span>
+                  </li>
+                }
+              </ul>
+            } @else {
+              <p class="text-body-md text-azul-pizarra/60">
+                No tiene materias asignadas. Se asignan en Cursos, en el detalle de cada curso.
+              </p>
+            }
+          </section>
         }
       </div>
     </div>

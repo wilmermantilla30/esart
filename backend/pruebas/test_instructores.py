@@ -291,7 +291,7 @@ async def test_cursos_donde_es_comandante_y_donde_participa(cliente_api, sesion_
         )
     ).json()
     sin_cursos = (await cliente_api.get(f"/api/instructores/{instructor['id']}/cursos")).json()
-    assert sin_cursos == {"comandante": [], "participa": []}
+    assert sin_cursos == {"comandante": [], "participa": [], "materias": []}
 
     # Un curso donde es comandante (con un alumno) y otro donde participa como docente.
     alumno = await crear_militar(sesion_bd, "sacli", 71)

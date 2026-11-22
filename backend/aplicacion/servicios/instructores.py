@@ -40,6 +40,12 @@ FORMATOS_IMAGEN_ADMITIDOS = {"JPEG", "PNG", "WEBP"}
 PIXELES_MAXIMOS = 40_000_000
 
 # Columnas del listado: nombre y grado del militar o datos propios del civil.
+# Nombre del instructor para listados: "SV Laura Gómez" (militar, con grado) o "María López" (civil).
+# Exige los alias i (instructores) y p (personal_militar, con LEFT JOIN) en la consulta.
+NOMBRE_VISIBLE_INSTRUCTOR = (
+    "trim(concat_ws(' ', p.grado, COALESCE(p.nombres, i.nombres), COALESCE(p.apellidos, i.apellidos)))"
+)
+
 CONSULTA_INSTRUCTORES = """
     SELECT i.id, i.tipo, i.activo, i.fecha_ingreso_escuela, i.profesion, i.actualizado_en,
            i.foto IS NOT NULL AS tiene_foto,
@@ -510,7 +516,8 @@ COLUMNAS_CURSO = """
 async def cursos_del_instructor(sesion: AsyncSession, instructor_id: int) -> dict:
     """
     Cursos donde el instructor es comandante (cursos.comandante_id, lo llena el cargue por
-    Excel) y cursos donde participa con otro rol (cursos_instructores). Los más recientes primero.
+    Excel), cursos donde participa con otro rol (cursos_instructores) y, desde S2-02, las materias
+    que dicta como titular en cada curso. Los más recientes primero.
     """
     if not await sesion.scalar(
         text("SELECT 1 FROM esart.instructores WHERE id = :id"), {"id": instructor_id}
@@ -537,9 +544,24 @@ async def cursos_del_instructor(sesion: AsyncSession, instructor_id: int) -> dic
         """),  # noqa: S608
         {"id": instructor_id},
     )
+    materias = await sesion.execute(
+        text("""
+            SELECT c.id AS curso_id, c.codigo AS curso, c.nombre AS nombre_curso, c.estado,
+                   tc.codigo AS tipo_curso, mt.nombre AS materia, c.fecha_inicio
+            FROM esart.cursos_materias_instructor a
+            JOIN esart.cursos c ON c.id = a.curso_id
+            JOIN esart.tipos_curso tc ON tc.id = c.tipo_curso_id
+            JOIN esart.malla_curricular m ON m.id = a.malla_id
+            JOIN esart.materias mt ON mt.id = m.materia_id
+            WHERE a.instructor_id = :id
+            ORDER BY c.fecha_inicio DESC, c.id DESC, m.orden
+        """),
+        {"id": instructor_id},
+    )
     return {
         "comandante": [dict(fila._mapping) for fila in comandante],
         "participa": [dict(fila._mapping) for fila in participa],
+        "materias": [dict(fila._mapping) for fila in materias],
     }
 
 
