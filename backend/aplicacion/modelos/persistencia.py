@@ -392,8 +392,15 @@ class Cursos(BaseModelo):
         # p0017: versión de la malla que usa el curso; la asigna un trigger al crearlo (NULL en
         # los cursos anteriores a la malla en la plataforma).
         sa.Column("malla_version_id", sa.BigInteger(), nullable=True),
+        # p0019: nota mínima vigente al crear el curso (la copia un trigger desde Parámetros). Un
+        # cambio posterior del parámetro no la altera. NULL en los cursos anteriores a la malla.
+        sa.Column("nota_minima_aprobacion", sa.Numeric(3, 2), nullable=True),
         sa.ForeignKeyConstraint(
             ["malla_version_id"], ["esart.versiones_malla.id"], name=conv("fk_cursos_malla_version_id")
+        ),
+        sa.CheckConstraint(
+            "nota_minima_aprobacion >= 0 AND nota_minima_aprobacion <= 5",
+            name=conv("ck_cursos_nota_minima_aprobacion"),
         ),
         sa.CheckConstraint(
             ("estado IN ('EN_CURSO', 'CULMINADO', 'CANCELADO', 'APLAZADO')"),
@@ -861,9 +868,7 @@ class NotasMateria(BaseModelo):
         sa.ForeignKeyConstraint(
             ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_notas_materia_malla_id")
         ),
-        sa.CheckConstraint(
-            "nota >= 0 AND nota <= 5", name=conv("notas_materia_nota_check")
-        ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("notas_materia_nota_check")),
         sa.CheckConstraint(
             "nota_habilitacion >= 0 AND nota_habilitacion <= 5",
             name=conv("notas_materia_nota_habilitacion_check"),

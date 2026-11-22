@@ -1,6 +1,7 @@
 """Esquemas del panel de Parámetros (contrato de API §6)."""
 
 from datetime import datetime
+from decimal import Decimal
 
 from pydantic import BaseModel, ConfigDict, Field
 
@@ -48,6 +49,25 @@ class SimulacionRegla(BaseModel):
 class SolicitudGuardarRegla(ValoresRegla):
     """Guardar exige la versión que se editó (concurrencia) y, si aplica, el código TOTP."""
 
+    version: datetime | None
+    codigo_totp: str = Field(default="", max_length=6, repr=False)
+
+
+class NotaMinima(BaseModel):
+    """Nota mínima de aprobación (S2-10): la vigente y cuántos cursos en curso conservan la suya."""
+
+    valor: float
+    actualizado_en: datetime
+    actualizado_por: str | None
+    cursos_en_curso: int
+
+
+class SolicitudGuardarNotaMinima(BaseModel):
+    """Nota nueva (0 a 5, 2 decimales), versión editada (concurrencia) y, si aplica, el código TOTP."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    valor: Decimal = Field(max_digits=3, decimal_places=2)
     version: datetime | None
     codigo_totp: str = Field(default="", max_length=6, repr=False)
 

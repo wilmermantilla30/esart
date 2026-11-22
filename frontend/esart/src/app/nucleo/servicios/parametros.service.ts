@@ -4,6 +4,7 @@ import { Observable, map } from 'rxjs';
 
 import {
   FormatoPlantilla,
+  NotaMinima,
   NuevaPlantilla,
   ParametrosSeguridad,
   Plantilla,
@@ -33,7 +34,7 @@ export function nombreDesdeCabecera(cabecera: string | null, respaldo: string): 
   }
 }
 
-/** Panel de Parámetros: regla de habilitación, plantillas y seguridad (solo consulta). */
+/** Panel de Parámetros: regla de habilitación, nota mínima, plantillas y seguridad (solo consulta). */
 @Injectable({ providedIn: 'root' })
 export class ParametrosService {
   private readonly api = inject(ClienteApiService);
@@ -57,6 +58,21 @@ export class ParametrosService {
   ): Observable<ReglaHabilitacion> {
     return this.api.reemplazar<ReglaHabilitacion>('/parametros/habilitacion', {
       ...valores,
+      version,
+      codigo_totp: codigoTotp,
+    });
+  }
+
+  // --- Cursos y Capacitaciones: nota mínima de aprobación (S2-10) ---
+
+  obtenerNotaMinima(): Observable<NotaMinima> {
+    return this.api.obtener<NotaMinima>('/parametros/nota-minima');
+  }
+
+  /** Guarda la nota. Sin código responde 409 TOTP_REQUERIDO y se reintenta con él. */
+  guardarNotaMinima(valor: number, version: string, codigoTotp = ''): Observable<NotaMinima> {
+    return this.api.reemplazar<NotaMinima>('/parametros/nota-minima', {
+      valor,
       version,
       codigo_totp: codigoTotp,
     });

@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.4 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.6 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -245,13 +245,18 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   `observacion`, `creado_por_id`. Solo una `VIGENTE` por tipo de curso (`uq_versiones_malla_vigente`).
 - `malla_curricular`: `version_id`, `tipo_curso_id`, `materia_id`, `orden` (≥ 1, único en la versión),
   `area`, `modulo`, `evaluable` (Tiempo del comandante y Entrenamiento físico = `false`: no cuentan en el
-  promedio). Se eliminó `nota_minima_aprobacion`: la nota mínima será un parámetro general (S2-10).
+  promedio). Se eliminó `nota_minima_aprobacion`: la nota mínima es un parámetro general (S2-10).
 - `cursos.malla_version_id`: la asigna el trigger `tg_cursos_asignar_malla` al crear el curso (versión
   vigente de su tipo) y rechaza una versión de otro tipo de curso. Los cursos anteriores quedan en `NULL`.
 - Escala de notas **0 a 5 con 2 decimales** en `notas_materia`, `habilitaciones`, `notas_finales_egresado`,
   `egresados_curso` e `inscripciones_curso`. Una sola habilitación por materia (`numero_habilitacion = 1`).
 - Carga inicial: `python -m herramientas.cargar_malla_curricular cargar <Excel> --anio 2026 --ejecutar`
   (formato de `docs/backlog_sprint2_esart.xlsx`, hojas *Materias* y *Malla por curso*).
+- Nota mínima de aprobación *(S2-10, migración `p0019_nota_minima_aprobacion`)*: parámetro
+  `NOTA_MINIMA_APROBACION` en `parametros_habilitacion` (0 a 5, inicial `3.00`, editable en Parámetros con TOTP).
+  `cursos.nota_minima_aprobacion` (`NUMERIC(3,2)`, 0 a 5) la copia el trigger `tg_cursos_asignar_nota_minima`
+  al crear el curso: un cambio del parámetro solo aplica a los cursos nuevos. Los cursos anteriores a la malla
+  quedan en `NULL` (solo aprobado / no aprobado).
 
 ---
 
@@ -372,3 +377,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.3 | 2026-11-15 | Modelo vigente de HU-04 y cadena Alembic p0000→p0001→p0002 (§10 punto 6). Login: usuario por `esart_ref.usuarios.usuario`; rol informado ADMINISTRADOR si lo tiene, si no USUARIO; nombre visible desde `personal_militar` |
 | 1.4 | 2026-11-16 | Punto 8 cerrado: permisos por componente. `p0005`: componentes (Personal militar con pestañas hijas), módulos de segunda entrega inactivos y malla inicial ADMINISTRADOR/USUARIO (USUARIO ve la cédula completa) |
 | 1.5 | 2026-11-21 | §6.4: malla curricular versionada por tipo de curso, escala de notas 0 a 5 y una sola habilitación (S2-01, `p0017`) |
+| 1.6 | 2026-11-21 | §6.4: nota mínima de aprobación como parámetro general y copiada en cada curso al crearse (S2-10, `p0019`) |

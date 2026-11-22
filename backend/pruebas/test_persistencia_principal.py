@@ -47,7 +47,7 @@ COLUMNAS_P0011 = {
     ("esart", "hoja_vida_artillero"): {"grado", "curso_id", "unidad_id"},
     # p0017: malla curricular versionada.
     ("esart", "malla_curricular"): {"version_id", "area", "modulo", "evaluable"},
-    ("esart", "cursos"): {"malla_version_id"},
+    ("esart", "cursos"): {"malla_version_id", "nota_minima_aprobacion"},
 }
 # p0017: la nota mínima sale de la malla (será un parámetro general, S2-10).
 COLUMNAS_ELIMINADAS = {("esart", "malla_curricular"): {"nota_minima_aprobacion"}}
@@ -105,8 +105,8 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0018_permisos_notas"]
-    assert script.get_revision("p0018_permisos_notas").down_revision == "p0017_malla_curricular"
+    assert script.get_heads() == ["p0019_nota_minima_aprobacion"]
+    assert script.get_revision("p0019_nota_minima_aprobacion").down_revision == "p0018_permisos_notas"
     assert (
         script.get_revision("p0017_malla_curricular").down_revision == "p0016_cursos_artilleros_importacion"
     )

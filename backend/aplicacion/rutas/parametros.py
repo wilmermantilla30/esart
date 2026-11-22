@@ -2,7 +2,8 @@
 Rutas del panel de Parámetros: /api/parametros (contrato de API §6).
 
 Tres pestañas, todas bajo el componente PARAMETROS_HABILITACION de la malla:
-- Cursos y Capacitaciones: la regla APTO / NO APTO (leer, simular y guardar con TOTP).
+- Cursos y Capacitaciones: la regla APTO / NO APTO (leer, simular y guardar con TOTP) y la nota
+  mínima de aprobación (S2-10, leer y guardar con TOTP).
 - Plantillas y Formatos: repositorio de documentos (listar, publicar, descargar y retirar).
 - Parámetros de Seguridad: solo consulta.
 """
@@ -18,17 +19,19 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.parametros import (
+    NotaMinima,
     ParametrosSeguridad,
     Plantilla,
     PoliticaSeguridad,
     ReglaHabilitacion,
     SimulacionRegla,
+    SolicitudGuardarNotaMinima,
     SolicitudGuardarRegla,
     ValoresRegla,
 )
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual, verificar_csrf
-from aplicacion.servicios import parametros_habilitacion, plantillas
+from aplicacion.servicios import nota_minima, parametros_habilitacion, plantillas
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 from aplicacion.servicios.seguridad_login import HORAS_BLOQUEO
 
@@ -110,6 +113,45 @@ async def guardar_regla(
         request=request,
     )
     return _regla(resultado)
+
+
+# --- Cursos y Capacitaciones: nota mínima de aprobación (S2-10) ---------------------------
+
+
+def _nota_minima(estado: nota_minima.EstadoNotaMinima) -> NotaMinima:
+    return NotaMinima(
+        valor=float(estado.valor),
+        actualizado_en=estado.actualizado_en,
+        actualizado_por=estado.actualizado_por,
+        cursos_en_curso=estado.cursos_en_curso,
+    )
+
+
+@enrutador_parametros.get("/nota-minima", response_model=NotaMinima, dependencies=[Depends(puede_leer)])
+async def obtener_nota_minima(sesion: Sesion) -> NotaMinima:
+    """Nota mínima vigente para los cursos nuevos y su último cambio."""
+    return _nota_minima(await nota_minima.obtener(sesion))
+
+
+@enrutador_parametros.put(
+    "/nota-minima",
+    response_model=NotaMinima,
+    dependencies=[Depends(verificar_csrf), Depends(puede_actualizar)],
+)
+async def guardar_nota_minima(
+    datos: SolicitudGuardarNotaMinima, request: Request, sesion: Sesion, usuario: UsuarioActual
+) -> NotaMinima:
+    """Cambia la nota mínima (con TOTP). Solo aplica a los cursos que se creen desde ahora."""
+    estado = await nota_minima.guardar(
+        sesion,
+        datos.valor,
+        datos.version,
+        usuario_id=usuario.id,
+        nombre_usuario=usuario.nombre_usuario,
+        codigo_totp=datos.codigo_totp,
+        request=request,
+    )
+    return _nota_minima(estado)
 
 
 # --- Plantillas y Formatos ------------------------------------------------------------------

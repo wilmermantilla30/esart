@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.16 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.17 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -332,7 +332,7 @@ Auditoría (componente `AUDITORIA`, solo lectura):
 - `GET /api/administracion/auditoria?accion=&usuario=&documento=&desde=AAAA-MM-DD&hasta=AAAA-MM-DD` → paginado (§1.3) con
   `{ "id", "fecha", "usuario_id", "nombre_usuario", "accion", "numero_documento_consultado", "resultado", "direccion_ip", "detalle" }`.
 
-## 5c. Parámetros (regla de habilitación, plantillas y seguridad)
+## 5c. Parámetros (regla de habilitación, nota mínima, plantillas y seguridad)
 Todo bajo el componente `PARAMETROS_HABILITACION` de la malla (leer, crear, actualizar, eliminar según la ruta).
 Las rutas que cambian datos exigen CSRF.
 
@@ -346,6 +346,16 @@ Cursos y Capacitaciones — regla APTO / NO APTO:
   **409** `TOTP_REQUERIDO` sin código (política `PARAMETROS_MODIFICAR`), **422** `TOTP_INVALIDO`, **409** `PARAMETROS_DESACTUALIZADOS`
   si otro administrador guardó antes, **422** `SIN_CAMBIOS` o `DATOS_INVALIDOS` (vigencia 1–60 meses, alerta 1–365 días y menor que la
   vigencia, cursos existentes y activos). Éxito: la regla guardada (misma forma del GET); auditoría `PARAMETROS_ACTUALIZADOS` con antes y después.
+
+Cursos y Capacitaciones — nota mínima de aprobación (S2-10):
+- `GET /api/parametros/nota-minima` (leer) → `{ "valor": 3.0, "actualizado_en", "actualizado_por", "cursos_en_curso" }`.
+  `cursos_en_curso` = cursos `EN_CURSO` que ya tienen su nota guardada (no cambian al guardar otra).
+- `PUT /api/parametros/nota-minima` (actualizar) cuerpo `{ "valor": 3.5, "version": <actualizado_en leído>, "codigo_totp" }`:
+  mismos errores que la regla (**409** `TOTP_REQUERIDO`, **422** `TOTP_INVALIDO`, **409** `PARAMETROS_DESACTUALIZADOS`,
+  **422** `SIN_CAMBIOS`) y **422** `DATOS_INVALIDOS` si no está entre 1,00 y 5,00 o tiene más de 2 decimales.
+  Solo aplica a los cursos que se creen después (cada curso guarda la nota vigente al crearse). Auditoría
+  `PARAMETROS_ACTUALIZADOS` con `cambios.NOTA_MINIMA_APROBACION = { "anterior", "nuevo" }` (texto con 2 decimales).
+  Cambiar la nota no altera la `version` de la regla de habilitación ni al revés.
 
 Plantillas y Formatos:
 - `GET /api/parametros/plantillas?formato=XLSX|XLS|PDF|DOCX` (leer) → `[{ "id", "nombre_oficial", "nombre_archivo", "formato", "version",
@@ -434,3 +444,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.14 | 2026-11-18 | §3 documentos PDF del artillero (diploma, oficio remisorio, certificación) con ReportLab |
 | 0.15 | 2026-11-18 | §3b estadísticas del panel principal (cursos por año y semestre, grados y género por curso, egresados, seguimiento de cursos en curso) |
 | 0.16 | 2026-11-21 | S2-11: §5b usuario para instructores civiles (`tipo_persona`); permisos especiales MALLAS_CURRICULARES, NOTAS_CARGA, NOTAS_REVISION y CONSEJO_ACADEMICO en la malla (sin menú hasta sus pantallas). Migración p0018 |
+| 0.17 | 2026-11-21 | S2-10: §5c nota mínima de aprobación (leer y guardar con TOTP), solo para cursos nuevos. Migración p0019 |
