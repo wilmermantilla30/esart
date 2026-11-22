@@ -59,7 +59,10 @@ CONSULTA_INSTRUCTORES = """
     FROM esart.instructores i
     LEFT JOIN esart.personal_militar p ON p.id = i.personal_id
     LEFT JOIN esart_ref.unidades_militares um ON um.id = p.unidad_actual_id
-    LEFT JOIN esart_ref.usuarios u ON u.id = i.usuario_id
+    -- El usuario del instructor: el enlazado (usuario_id) o, desde S2-11, el que tiene su cédula.
+    LEFT JOIN esart_ref.usuarios u ON u.id = i.usuario_id OR (
+      i.usuario_id IS NULL AND u.documento_identidad = COALESCE(p.documento_identidad, i.documento_identidad)
+    )
 """
 
 
@@ -538,3 +541,26 @@ async def cursos_del_instructor(sesion: AsyncSession, instructor_id: int) -> dic
         "comandante": [dict(fila._mapping) for fila in comandante],
         "participa": [dict(fila._mapping) for fila in participa],
     }
+
+
+async def instructor_del_usuario(sesion: AsyncSession, documento_usuario: str | None) -> int | None:
+    """
+    S2-11: instructor ACTIVO que corresponde a un usuario, por su cédula (el militar a través de
+    Personal militar; el civil por su propia cédula). None si el usuario no es instructor.
+
+    Con el permiso NOTAS_CARGA, el usuario solo verá los cursos y materias asignados a este
+    instructor (S2-02 y S2-12): tener el permiso no basta para ver las notas de otros.
+    """
+    if not documento_usuario:
+        return None
+    return await sesion.scalar(
+        text("""
+            SELECT i.id
+            FROM esart.instructores i
+            LEFT JOIN esart.personal_militar p ON p.id = i.personal_id
+            WHERE i.activo AND COALESCE(p.documento_identidad, i.documento_identidad) = :cedula
+            ORDER BY i.id
+            LIMIT 1
+        """),
+        {"cedula": documento_usuario},
+    )

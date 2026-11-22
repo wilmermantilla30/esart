@@ -3,7 +3,7 @@
     <div>
       <h1 class="font-headline font-bold text-headline-md text-negro-institucional">Gestión de usuarios</h1>
       <p class="text-body-md text-azul-pizarra/70">
-        Cada usuario corresponde a un militar de Personal militar. La contraseña inicial es temporal: el usuario la cambia al entrar.
+        Cada usuario corresponde a un militar de Personal militar o a un instructor civil del panel de Instructores. La contraseña inicial es temporal: el usuario la cambia al entrar.
       </p>
     </div>
     @if (puedeCrear() && !creando()) {
@@ -68,7 +68,7 @@
 
       <form class="flex flex-wrap items-end gap-3" (ngSubmit)="buscarMilitar()">
         <div class="space-y-1">
-          <label for="alta-cedula" class="block font-headline text-label-md">1. Cédula del militar</label>
+          <label for="alta-cedula" class="block font-headline text-label-md">1. Cédula del militar o instructor civil</label>
           <input
             id="alta-cedula"
             name="cedula"
@@ -86,7 +86,7 @@
           class="inline-flex items-center gap-2 py-2 px-4 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline disabled:opacity-60"
         >
           <span class="material-symbols-outlined text-[18px]" aria-hidden="true">search</span>
-          {{ buscandoMilitar() ? 'Buscando…' : 'Buscar en Personal militar' }}
+          {{ buscandoMilitar() ? 'Buscando…' : 'Buscar persona' }}
         </button>
       </form>
 
@@ -100,30 +100,30 @@
       @if (militar(); as encontrado) {
         <div class="p-4 rounded-lg border border-gris-bordes bg-gris-claro/60 flex flex-wrap items-center gap-4">
           <div class="w-11 h-11 rounded-full bg-azul-pizarra text-white flex items-center justify-center" aria-hidden="true">
-            <span class="material-symbols-outlined">military_tech</span>
+            <span class="material-symbols-outlined">{{ encontrado.tipo_persona === 'CIVIL' ? 'co_present' : 'military_tech' }}</span>
           </div>
           <div class="flex-1 min-w-0">
             <div class="font-headline text-title-lg text-negro-institucional">
               {{ encontrado.grado }} {{ encontrado.nombres }} {{ encontrado.apellidos }}
             </div>
             <div class="text-body-md text-azul-pizarra/70">
-              C.C. {{ encontrado.documento_identidad }} · {{ encontrado.unidad || 'Sin unidad registrada' }}
+              C.C. {{ encontrado.documento_identidad }} · {{ encontrado.tipo_persona === 'CIVIL' ? 'Instructor civil' : (encontrado.unidad || 'Sin unidad registrada') }}
             </div>
           </div>
           @if (!encontrado.activo) {
             <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-label-md font-headline bg-error/10 text-error border-error/30">
-              <span class="material-symbols-outlined text-[14px]" aria-hidden="true">block</span> Militar inactivo
+              <span class="material-symbols-outlined text-[14px]" aria-hidden="true">block</span> Inactivo
             </span>
           }
         </div>
 
         @if (encontrado.usuario_existente) {
           <div class="p-3 bg-info/10 border border-info/30 rounded-lg text-body-md" role="status">
-            Este militar ya tiene el usuario <strong class="font-mono">{{ encontrado.usuario_existente }}</strong>. Use las acciones de la tabla para gestionarlo.
+            Esta persona ya tiene el usuario <strong class="font-mono">{{ encontrado.usuario_existente }}</strong>. Use las acciones de la tabla para gestionarlo.
           </div>
         } @else if (!encontrado.activo) {
           <div class="p-3 bg-error/10 border border-error/40 rounded-lg text-body-md" role="alert">
-            El militar está inactivo en Personal militar: no se le puede crear usuario.
+            {{ encontrado.tipo_persona === 'CIVIL' ? 'El instructor civil está inactivo en Instructores' : 'El militar está inactivo en Personal militar' }}: no se le puede crear usuario.
           </div>
         } @else {
           <form class="grid grid-cols-1 md:grid-cols-3 gap-4 items-start" (ngSubmit)="crear()" autocomplete="off">
@@ -271,7 +271,7 @@
         <thead class="bg-gris-claro">
           <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
             <th class="py-2.5 px-4">Usuario</th>
-            <th class="py-2.5 px-4">Militar</th>
+            <th class="py-2.5 px-4">Persona</th>
             <th class="py-2.5 px-4">Rol</th>
             <th class="py-2.5 px-4">Estado</th>
             <th class="py-2.5 px-4">Último acceso</th>
@@ -294,7 +294,7 @@
                   <div>{{ usuario.nombre_completo }}</div>
                   <div class="text-xs text-azul-pizarra/60">C.C. {{ usuario.documento_identidad }}</div>
                 } @else {
-                  <span class="text-azul-pizarra/60">Sin militar asociado</span>
+                  <span class="text-azul-pizarra/60">Sin persona asociada</span>
                 }
               </td>
               <td class="py-2 px-4">{{ usuario.rol === 'ADMINISTRADOR' ? 'Administrador' : usuario.rol === 'USUARIO' ? 'Usuario' : 'Sin rol' }}</td>

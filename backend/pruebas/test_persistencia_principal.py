@@ -105,7 +105,8 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0017_malla_curricular"]
+    assert script.get_heads() == ["p0018_permisos_notas"]
+    assert script.get_revision("p0018_permisos_notas").down_revision == "p0017_malla_curricular"
     assert (
         script.get_revision("p0017_malla_curricular").down_revision == "p0016_cursos_artilleros_importacion"
     )

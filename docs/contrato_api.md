@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.15 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.16 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -316,7 +316,9 @@ no la tiene) y la contraseña que pone el administrador es **temporal**:
   "intentos_fallidos", "documento_identidad", "nombre_completo", "requiere_cambio_contrasena", "ultimo_acceso_en" }]`.
   `texto` busca en el usuario o la cédula.
 - `GET /api/administracion/usuarios/militar/{cedula}` (crear) → `{ "documento_identidad", "grado", "nombres", "apellidos",
-  "unidad", "activo", "usuario_existente", "nombre_usuario_sugerido" }`. **404** si la cédula no está en Personal militar.
+  "unidad", "activo", "usuario_existente", "nombre_usuario_sugerido", "tipo_persona" }`. `tipo_persona`: `MILITAR` o
+  `CIVIL` (S2-11: instructor civil activo del panel de Instructores; llega `grado: "Civil"` y `unidad: null`; el civil no
+  entra a Personal militar). **404** si la cédula no está en Personal militar ni en los instructores civiles.
   Sugerencia: inicial del primer nombre + primer apellido, sin tildes, + `.esart` (con número si ya existe).
 - `POST /api/administracion/usuarios` (crear) `{ "documento_identidad", "nombre_usuario", "rol": "USUARIO|ADMINISTRADOR",
   "contrasena_temporal" }` → **201** con la fila. **409** `USUARIO_EXISTENTE` (nombre repetido o militar con usuario);
@@ -431,3 +433,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.13 | 2026-11-18 | §5e registro manual de personal militar y accesos a Instructores / Usuarios con `?cedula=`. Migración p0015 |
 | 0.14 | 2026-11-18 | §3 documentos PDF del artillero (diploma, oficio remisorio, certificación) con ReportLab |
 | 0.15 | 2026-11-18 | §3b estadísticas del panel principal (cursos por año y semestre, grados y género por curso, egresados, seguimiento de cursos en curso) |
+| 0.16 | 2026-11-21 | S2-11: §5b usuario para instructores civiles (`tipo_persona`); permisos especiales MALLAS_CURRICULARES, NOTAS_CARGA, NOTAS_REVISION y CONSEJO_ACADEMICO en la malla (sin menú hasta sus pantallas). Migración p0018 |
