@@ -47,6 +47,90 @@ export interface NotaMinima {
   cursos_en_curso: number;
 }
 
+// --- Mallas curriculares (S2-09) ---
+
+export type TipoDeCurso = 'EDUCACION_MILITAR' | 'ESPECIALIZACION' | 'EDUCACION_SUPERIOR';
+export type ModalidadCurso = 'PRESENCIAL' | 'VIRTUAL' | 'MIXTA';
+
+/** Tipo de curso en el listado, con su versión vigente (null si todavía no tiene malla). */
+export interface TipoCursoMalla {
+  codigo: string;
+  nombre: string;
+  tipo: string | null;
+  modalidad: string;
+  duracion_semanas: number;
+  activo: boolean;
+  version: number | null;
+  anio: number | null;
+  materias: number;
+  evaluables: number;
+}
+
+export interface VersionMallaResumen {
+  numero: number;
+  anio: number;
+  estado: 'VIGENTE' | 'HISTORICA';
+  observacion: string | null;
+  creado_en: string;
+  creado_por: string | null;
+  materias: number;
+  /** Cursos creados con esta versión: la conservan aunque haya versiones nuevas. */
+  cursos: number;
+}
+
+export interface FilaMalla {
+  orden: number;
+  codigo_materia: string;
+  materia: string;
+  area: string | null;
+  modulo: string | null;
+  evaluable: boolean;
+}
+
+export interface DetalleMalla {
+  tipo_curso: {
+    codigo: string;
+    nombre: string;
+    tipo: string | null;
+    modalidad: string;
+    duracion_semanas: number;
+    activo: boolean;
+  };
+  version: VersionMallaResumen | null;
+  filas: FilaMalla[];
+  versiones: VersionMallaResumen[];
+}
+
+export interface MateriaCatalogo {
+  codigo: string;
+  nombre: string;
+}
+
+/** Fila que se envía al guardar (el orden lo da la posición en la tabla). */
+export interface FilaMallaEditada {
+  orden: number;
+  materia: string;
+  evaluable: boolean;
+  area: string | null;
+  modulo: string | null;
+}
+
+export interface MallaEditada {
+  anio: number;
+  filas: FilaMallaEditada[];
+  observacion: string | null;
+  /** Número de la versión vigente que se editó (null si el tipo no tenía malla). */
+  version: number | null;
+}
+
+export interface NuevoTipoCurso {
+  codigo: string;
+  nombre: string;
+  tipo: TipoDeCurso;
+  modalidad: ModalidadCurso;
+  duracion_semanas: number;
+}
+
 export type FormatoPlantilla = 'XLSX' | 'XLS' | 'PDF' | 'DOCX';
 
 export interface Plantilla {

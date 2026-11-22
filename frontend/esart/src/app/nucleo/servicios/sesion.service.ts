@@ -36,6 +36,8 @@ export class SesionService {
   private readonly usuarioActual = signal<UsuarioEnSesion | null>(null);
   private readonly menuActual = signal<ElementoMenu[] | null>(null);
   private readonly permisosActuales = signal<ReadonlySet<string>>(new Set());
+  /** Operaciones por componente (también los permisos especiales, que no están en el menú). */
+  private readonly operacionesActuales = signal<Readonly<Record<string, string[]>>>({});
   private readonly cambioInicial = signal<DesafioSegundoFactor | null>(null);
   private readonly pasoMfa = signal<DesafioSegundoFactor | null>(null);
   readonly cambioInicialPendiente = this.cambioInicial.asReadonly();
@@ -64,10 +66,16 @@ export class SesionService {
 
   /**
    * Indica si en un componente el usuario puede hacer una operación ('crear', 'leer',
-   * 'actualizar', 'eliminar'), según el menú de /api/auth/yo. Solo para mostrar u ocultar
-   * botones: el backend vuelve a verificar la operación en cada petición.
+   * 'actualizar', 'eliminar'), según /api/auth/yo: primero sus operaciones por componente
+   * (incluyen los permisos especiales sin menú, como MALLAS_CURRICULARES) y, si el backend no
+   * las envió, el menú. Solo para mostrar u ocultar botones: el backend vuelve a verificar la
+   * operación en cada petición.
    */
   puede(codigoComponente: string, operacion: string): boolean {
+    const operaciones = this.operacionesActuales()[codigoComponente];
+    if (operaciones) {
+      return operaciones.includes(operacion);
+    }
     const buscar = (elementos: ElementoMenu[]): ElementoMenu | undefined => {
       for (const elemento of elementos) {
         const encontrado =
@@ -237,6 +245,7 @@ export class SesionService {
         });
         this.menuActual.set(respuesta.menu ?? []);
         this.permisosActuales.set(new Set(respuesta.permisos ?? []));
+        this.operacionesActuales.set(respuesta.operaciones ?? {});
       }),
       map(() => true),
       catchError(() => {
@@ -263,6 +272,7 @@ export class SesionService {
     this.usuarioActual.set(null);
     this.menuActual.set(null);
     this.permisosActuales.set(new Set());
+    this.operacionesActuales.set({});
     this.cambioInicial.set(null);
     this.pasoMfa.set(null);
   }

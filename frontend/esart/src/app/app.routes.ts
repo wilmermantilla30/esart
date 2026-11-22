@@ -155,7 +155,8 @@ export const routes: Routes = [
         path: 'administracion/parametros',
         title: 'Parámetros — ESART',
         canActivate: [exigirPermiso],
-        data: { componente: 'PARAMETROS_HABILITACION' },
+        // S2-09: quien solo tiene MALLAS_CURRICULARES entra y ve únicamente esa pestaña.
+        data: { componentes: ['PARAMETROS_HABILITACION', 'MALLAS_CURRICULARES'] },
         loadComponent: () =>
           import('./paginas/administracion/parametros/parametros').then((m) => m.Parametros),
       },

@@ -1,4 +1,10 @@
+import {
+  filasParaGuardar,
+  normalizarMateria,
+  problemasDeMalla,
+} from './mallas-curriculares/mallas-curriculares';
 import { notaValida } from './nota-minima/nota-minima';
+import { PESTANAS, pestanaAbierta } from './parametros';
 import { claveValores } from './regla-habilitacion/regla-habilitacion';
 import {
   ESTILOS_FORMATO,
@@ -53,5 +59,53 @@ describe('Panel de Parámetros', () => {
     expect(notaValida(5.01)).toBe(false);
     expect(notaValida(3.555)).toBe(false);
     expect(notaValida(Number.NaN)).toBe(false);
+  });
+
+  it('las materias se comparan sin importar espacios ni mayúsculas (S2-09)', () => {
+    expect(normalizarMateria('  Topografía   militar ')).toBe('TOPOGRAFÍA MILITAR');
+  });
+
+  it('avisa los problemas de la malla antes de pedir el código (S2-09)', () => {
+    const fila = (clave: number, materia: string, evaluable = true) => ({
+      clave,
+      materia,
+      evaluable,
+      area: '',
+      modulo: '',
+    });
+    expect(problemasDeMalla([])).toEqual(['Agregue al menos una materia.']);
+    expect(problemasDeMalla([fila(1, 'Topografía'), fila(2, 'Balística')])).toEqual([]);
+    expect(problemasDeMalla([fila(1, 'Topografía'), fila(2, ' topografía ')])).toEqual([
+      'Materias repetidas: TOPOGRAFÍA.',
+    ]);
+    expect(problemasDeMalla([fila(1, '')])).toContain('Hay materias sin nombre.');
+    expect(problemasDeMalla([fila(1, 'Tiempo del comandante', false)])).toEqual([
+      'Debe haber al menos una materia con nota.',
+    ]);
+  });
+
+  it('el orden que se guarda es la posición en la tabla (S2-09)', () => {
+    const filas = filasParaGuardar([
+      {
+        clave: 9,
+        materia: '  Balística   y municiones ',
+        evaluable: true,
+        area: ' ',
+        modulo: 'M1',
+      },
+      { clave: 3, materia: 'Tiempo del comandante', evaluable: false, area: 'Mando', modulo: '' },
+    ]);
+    expect(filas).toEqual([
+      { orden: 1, materia: 'Balística y municiones', evaluable: true, area: null, modulo: 'M1' },
+      { orden: 2, materia: 'Tiempo del comandante', evaluable: false, area: 'Mando', modulo: null },
+    ]);
+  });
+
+  it('abre la pestaña pedida solo si el usuario puede verla (S2-09)', () => {
+    const soloMallas = PESTANAS.filter((opcion) => opcion.componente === 'MALLAS_CURRICULARES');
+    expect(pestanaAbierta('cursos', soloMallas)).toBe('mallas');
+    expect(pestanaAbierta(null, soloMallas)).toBe('mallas');
+    expect(pestanaAbierta(null, PESTANAS)).toBe('plantillas');
+    expect(pestanaAbierta('mallas', PESTANAS)).toBe('mallas');
   });
 });

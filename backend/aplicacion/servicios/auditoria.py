@@ -49,6 +49,8 @@ INSTRUCTOR_DESACTIVADO = "INSTRUCTOR_DESACTIVADO"
 PERSONAL_REGISTRADO = "PERSONAL_REGISTRADO"
 # Malla curricular versionada (migración p0017, S2-01).
 MALLA_CURRICULAR_CARGADA = "MALLA_CURRICULAR_CARGADA"
+# Tipos de curso creados desde el panel de Parámetros (migración p0020, S2-09).
+TIPO_CURSO_CREADO = "TIPO_CURSO_CREADO"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")

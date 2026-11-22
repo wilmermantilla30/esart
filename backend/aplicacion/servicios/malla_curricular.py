@@ -10,8 +10,9 @@ S2-01: malla curricular versionada por tipo de curso.
   físico): las que no llevan nota no cuentan en el promedio del curso.
 
 Lo usan la herramienta de consola herramientas/cargar_malla_curricular.py (carga inicial desde el
-Excel aprobado por la Escuela) y, en S2-09, el panel de Parámetros. Ninguna función confirma la
-transacción: quien llama decide cuándo hacer commit, para cargar varias mallas de una sola vez.
+Excel aprobado por la Escuela) y el panel de Parámetros (servicios/mallas_parametros.py, S2-09).
+Ninguna función confirma la transacción: quien llama decide cuándo hacer commit, para cargar varias
+mallas de una sola vez.
 """
 
 import re
@@ -141,10 +142,14 @@ async def crear_version(
     filas: list[FilaMalla],
     actor: Actor,
     observacion: str | None = None,
+    detalle_extra: dict | None = None,
 ) -> VersionMalla:
     """
     Crea la versión nueva de la malla de un tipo de curso, deja HISTORICA la que estaba vigente y
     lo registra en la auditoría. No confirma la transacción.
+
+    detalle_extra se suma al detalle de la auditoría (el panel de Parámetros agrega el antes y el
+    después de la malla).
     """
     validar_filas(filas)
     if not 2000 <= anio <= 2100:
@@ -202,6 +207,7 @@ async def crear_version(
             "materias": len(filas),
             "evaluables": sum(1 for fila in filas if fila.evaluable),
             "operador": actor.operador,
+            **(detalle_extra or {}),
         },
         confirmar=False,
     )
