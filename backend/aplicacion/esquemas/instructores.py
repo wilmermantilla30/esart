@@ -70,8 +70,21 @@ class CursoConRol(CursoDelInstructor):
     rol_en_curso: str
 
 
+class MateriaDelInstructor(BaseModel):
+    """S2-02: materia que el instructor dicta como titular en un curso."""
+
+    curso_id: int
+    curso: str
+    nombre_curso: str
+    estado: str
+    tipo_curso: str
+    materia: str
+    fecha_inicio: date
+
+
 class CursosDelInstructor(BaseModel):
-    """Detalle del instructor: dónde es comandante y dónde participa con otro rol."""
+    """Detalle del instructor: dónde es comandante, dónde participa y qué materias dicta."""
 
     comandante: list[CursoDelInstructor]
     participa: list[CursoConRol]
+    materias: list[MateriaDelInstructor] = []

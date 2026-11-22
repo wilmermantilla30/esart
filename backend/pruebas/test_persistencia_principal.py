@@ -28,6 +28,7 @@ TABLAS_POSTERIORES_A_P0001 = {
     "esart.parametros_habilitacion",
     "esart.auditoria_eventos",
     "esart.versiones_malla",
+    "esart.cursos_materias_instructor",
 }
 COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
 # p0011: curso de la importación masiva e historial de grados.
@@ -105,8 +106,8 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0020_mallas_en_parametros"]
-    assert script.get_revision("p0020_mallas_en_parametros").down_revision == "p0019_nota_minima_aprobacion"
+    assert script.get_heads() == ["p0021_instructor_por_materia"]
+    assert script.get_revision("p0021_instructor_por_materia").down_revision == "p0020_mallas_en_parametros"
     assert (
         script.get_revision("p0017_malla_curricular").down_revision == "p0016_cursos_artilleros_importacion"
     )

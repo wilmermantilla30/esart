@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.18 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.19 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -412,10 +412,11 @@ Del MILITAR, nombre, grado y unidad salen de Personal militar; el CIVIL guarda l
   máximo 800 px y sin metadatos; **422** `FOTO_INVALIDA`. `DELETE /api/instructores/{id}/foto` (actualizar) la quita.
 - `GET /api/instructores/{id}/foto` (leer) → `image/jpeg` (`Cache-Control: private`); **404** `FOTO_NO_ENCONTRADA`. El front agrega `?v=<version>`.
 - `POST /api/instructores/{id}/activar` y `/desactivar` (actualizar) → Instructor. Los instructores no se borran.
-- `GET /api/instructores/{id}/cursos` (leer) → `{ "comandante": [Curso], "participa": [Curso + "rol_en_curso"] }` con
+- `GET /api/instructores/{id}/cursos` (leer) → `{ "comandante": [Curso], "participa": [Curso + "rol_en_curso"], "materias": [...] }` con
   Curso = `{ "id", "codigo", "nombre", "tipo_curso", "fecha_inicio", "fecha_fin", "estado", "alumnos" }` (más recientes primero).
-  `comandante` sale de `cursos.comandante_id` (cargue por Excel); `participa`, de `cursos_instructores`. Las materias que dicta quedan
-  para cuando exista la malla curricular (segunda entrega). Migración p0014 (solo permisos de lectura).
+  `comandante` sale de `cursos.comandante_id` (cargue por Excel); `participa`, de `cursos_instructores`. Migración p0014.
+  `materias` (S2-02): `[{ "curso_id", "curso", "nombre_curso", "estado", "tipo_curso", "materia", "fecha_inicio" }]`, las que dicta
+  como titular (se asignan en §5f).
 
 ## 5e. Registro manual de personal militar
 
@@ -425,6 +426,26 @@ Componente `PERSONAL_CARGUE_MANUAL`, operación **crear** (sesión + CSRF). Deta
 - `POST /api/personal` con `{ "documento_identidad", "nombres", "apellidos", "grado", "genero": "M"|"F", "categoria", "unidad_actual_id"?, "especialidad_actual"?, "activo" }`
   → **201** con el registro + `"nombre_completo"`, `"unidad_nombre"`. **409** `DOCUMENTO_EXISTENTE`, **422** `DATOS_INVALIDOS`
   (grado fuera de la categoría, unidad inexistente o inactiva), **503** `REGISTRO_NO_DISPONIBLE` (falta p0015). Auditoría `PERSONAL_REGISTRADO`.
+
+## 5f. Cursos (S2-02)
+
+Componente `CURSOS` (ruta `/cursos`, activado en p0021): **leer** para ver; **actualizar** para asignar. Al Inspector de Estudios
+se le da por excepción. Las rutas que cambian datos exigen CSRF; los cursos CULMINADO o CANCELADO no se modifican (**409**
+`CURSO_NO_EDITABLE`).
+
+- `GET /api/cursos?estado=EN_CURSO|APLAZADO|CULMINADO|CANCELADO&tipo=SACLI&texto=…` (leer) → `[{ "id", "codigo", "nombre", "tipo_curso",
+  "fecha_inicio", "fecha_fin", "estado", "alumnos", "comandante", "version_malla", "materias_con_nota", "asignadas" }]` (máximo 500,
+  más recientes primero). `version_malla` null = curso creado sin malla.
+- `GET /api/cursos/{id}` (leer) → el curso con `nombre_tipo_curso`, `nota_minima_aprobacion`, `version_malla`, `anio_malla`,
+  `estado_malla`, `editable`, `version_vigente_disponible` y `materias: [{ "malla_id", "orden", "codigo_materia", "materia", "area",
+  "modulo", "evaluable", "instructor_id", "instructor", "tipo_instructor", "asignado_en", "asignado_por" }]`. **404** `CURSO_NO_ENCONTRADO`.
+- `GET /api/cursos/instructores-disponibles` (actualizar) → `[{ "id", "tipo", "nombre" }]`: instructores activos para el selector.
+- `PUT /api/cursos/{id}/materias/{malla_id}/instructor` (actualizar) cuerpo `{ "instructor_id": 7 | null }`: pone, cambia o quita
+  (null) el instructor **titular** (uno por materia). **404** `MATERIA_NO_ENCONTRADA` (no es de la malla del curso), **422**
+  `MATERIA_SIN_NOTA`, `INSTRUCTOR_NO_DISPONIBLE` (inactivo o inexistente) o `SIN_CAMBIOS`. Éxito: el detalle; auditoría
+  `INSTRUCTOR_MATERIA_ASIGNADO` con `curso`, `materia`, `anterior` y `nuevo`.
+- `POST /api/cursos/{id}/malla` (actualizar): liga la versión VIGENTE de su tipo a un curso EN_CURSO o APLAZADO creado sin malla y
+  le copia la nota mínima vigente si no tenía. **409** `CURSO_CON_MALLA`, **422** `TIPO_SIN_MALLA`. Auditoría `CURSO_MALLA_ASIGNADA`.
 
 ---
 
@@ -468,3 +489,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.16 | 2026-11-21 | S2-11: §5b usuario para instructores civiles (`tipo_persona`); permisos especiales MALLAS_CURRICULARES, NOTAS_CARGA, NOTAS_REVISION y CONSEJO_ACADEMICO en la malla (sin menú hasta sus pantallas). Migración p0018 |
 | 0.17 | 2026-11-21 | S2-10: §5c nota mínima de aprobación (leer y guardar con TOTP), solo para cursos nuevos. Migración p0019 |
 | 0.18 | 2026-11-21 | S2-09: §5c mallas curriculares y tipos de curso en Parámetros (versiones con TOTP y auditoría); §2 `operaciones` por componente en `/auth/yo` y permiso especial hijo que abre su módulo. Migración p0020 |
+| 0.19 | 2026-11-21 | S2-02: §5f módulo Cursos (lista, detalle, instructor titular por materia con nota, malla vigente para cursos sin malla); §5d materias que dicta el instructor. Migración p0021 |

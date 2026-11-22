@@ -14,6 +14,7 @@ from .persistencia import (
     ComitesMoviles,
     Componente,
     ConsejosAcademicos,
+    CursoMateriaInstructor,
     Cursos,
     CursosInstructores,
     Diplomas,
@@ -98,6 +99,7 @@ __all__ = [
     "UnidadMilitar",
     "Usuario",
     "VersionMalla",
+    "CursoMateriaInstructor",
 ]
 
 MODELOS_PENDIENTES = {

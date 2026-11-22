@@ -51,6 +51,9 @@ PERSONAL_REGISTRADO = "PERSONAL_REGISTRADO"
 MALLA_CURRICULAR_CARGADA = "MALLA_CURRICULAR_CARGADA"
 # Tipos de curso creados desde el panel de Parámetros (migración p0020, S2-09).
 TIPO_CURSO_CREADO = "TIPO_CURSO_CREADO"
+# Módulo Cursos: instructor por materia y malla de un curso existente (migración p0021, S2-02).
+INSTRUCTOR_MATERIA_ASIGNADO = "INSTRUCTOR_MATERIA_ASIGNADO"
+CURSO_MALLA_ASIGNADA = "CURSO_MALLA_ASIGNADA"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")

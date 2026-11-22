@@ -5,6 +5,7 @@ import { FormsModule } from '@angular/forms';
 import { ActivatedRoute } from '@angular/router';
 import { Observable, of, switchMap } from 'rxjs';
 
+import { estiloEstadoCurso, textoEstadoCurso } from '../../nucleo/estados-curso';
 import { ErrorApi, leerErrorApi } from '../../nucleo/modelos/error-api';
 import {
   CursosDelInstructor,
@@ -24,16 +25,6 @@ import { SesionService } from '../../nucleo/servicios/sesion.service';
 
 const COMPONENTE = 'INSTRUCTORES';
 
-/** Estados del curso (los del cargue por Excel) en palabras y con su color. */
-const ESTADOS_CURSO: Record<string, { texto: string; estilo: string }> = {
-  EN_CURSO: {
-    texto: 'En curso',
-    estilo: 'bg-azul-hielo text-azul-institucional border-azul-claro',
-  },
-  CULMINADO: { texto: 'Culminado', estilo: 'bg-success/10 text-success border-success/30' },
-  CANCELADO: { texto: 'Cancelado', estilo: 'bg-error/10 text-error border-error/30' },
-  APLAZADO: { texto: 'Aplazado', estilo: 'bg-warning/10 text-warning border-warning/40' },
-};
 export const TAMANO_MAXIMO_FOTO = 5 * 1024 * 1024;
 const TIPOS_FOTO = ['image/jpeg', 'image/png', 'image/webp'];
 
@@ -182,13 +173,8 @@ export class Instructores {
     return instructor.especialidades.map((especialidad) => especialidad.nombre).join(', ');
   }
 
-  protected textoEstado(estado: string): string {
-    return ESTADOS_CURSO[estado]?.texto ?? estado;
-  }
-
-  protected estiloEstado(estado: string): string {
-    return ESTADOS_CURSO[estado]?.estilo ?? 'bg-gris-claro text-azul-pizarra border-gris-bordes';
-  }
+  protected readonly textoEstado = textoEstadoCurso;
+  protected readonly estiloEstado = estiloEstadoCurso;
 
   protected limpiarFiltros(): void {
     this.texto = '';

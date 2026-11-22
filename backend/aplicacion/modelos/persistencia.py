@@ -804,6 +804,49 @@ class VersionMalla(BaseModelo):
     )
 
 
+class CursoMateriaInstructor(BaseModelo):
+    """p0021 (S2-02): instructor titular de una materia con nota en un curso (uno por materia)."""
+
+    __table__ = sa.Table(
+        "cursos_materias_instructor",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("instructor_id", sa.BigInteger(), nullable=False),
+        sa.Column("asignado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("asignado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["curso_id"], ["esart.cursos.id"], name=conv("fk_cursos_materias_instructor_curso_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_cursos_materias_instructor_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["instructor_id"],
+            ["esart.instructores.id"],
+            name=conv("fk_cursos_materias_instructor_instructor_id"),
+        ),
+        sa.ForeignKeyConstraint(
+            ["asignado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_cursos_materias_instructor_asignado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.UniqueConstraint("curso_id", "malla_id", name=conv("uq_cursos_materias_instructor")),
+        sa.PrimaryKeyConstraint("id", name=conv("cursos_materias_instructor_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_cursos_materias_instructor_instructor_id",
+    sa.text("instructor_id"),
+    _table=BaseModelo.metadata.tables["esart.cursos_materias_instructor"],
+    unique=False,
+)
+
+
 class Materias(BaseModelo):
     __table__ = sa.Table(
         "materias",
