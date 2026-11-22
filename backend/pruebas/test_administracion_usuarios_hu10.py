@@ -126,7 +126,12 @@ async def test_crear_usuario_de_un_militar_con_contrasena_temporal(cliente_api, 
     assert verificar_contrasena(CONTRASENA_VALIDA, usuario.contrasena_hash)
     assert await obtener_codigo_rol(sesion_bd, usuario_id) == "USUARIO"
     evento = await ultimo_evento(sesion_bd, "USUARIO_CREADO")
-    assert evento.detalle == {"usuario_creado": "hu10.creado", "rol": "USUARIO", "operador": "pruebas"}
+    assert evento.detalle == {
+        "usuario_creado": "hu10.creado",
+        "rol": "USUARIO",
+        "operador": "pruebas",
+        "tipo_persona": "MILITAR",
+    }
     assert evento.nombre_usuario == "consola" and evento.numero_documento_consultado == cedula
     assert CONTRASENA_VALIDA not in str(evento.detalle)
 

@@ -144,6 +144,8 @@ class MilitarParaUsuario(BaseModel):
     activo: bool
     usuario_existente: str | None
     nombre_usuario_sugerido: str
+    # S2-11: MILITAR (Personal militar) o CIVIL (instructor civil del panel de Instructores).
+    tipo_persona: str = "MILITAR"
 
 
 class SolicitudCrearUsuario(BaseModel):

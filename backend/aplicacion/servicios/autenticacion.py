@@ -21,7 +21,7 @@ from sqlalchemy.exc import IntegrityError
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.configuracion import obtener_configuracion
-from aplicacion.modelos import PersonalMilitar, Rol, SesionUsuario, Usuario, UsuarioRoles
+from aplicacion.modelos import Instructores, PersonalMilitar, Rol, SesionUsuario, Usuario, UsuarioRoles
 from aplicacion.nucleo.errores import ErrorAplicacion
 from aplicacion.seguridad.captcha import VerificadorCaptcha
 from aplicacion.seguridad.contrasenas import gastar_tiempo_de_verificacion, verificar_contrasena
@@ -105,23 +105,75 @@ async def obtener_codigo_rol(sesion: AsyncSession, usuario_id: int) -> str | Non
     return None
 
 
+TIPO_PERSONA_MILITAR = "MILITAR"
+TIPO_PERSONA_CIVIL = "CIVIL"
+
+
+@dataclass(frozen=True)
+class PersonaDelUsuario:
+    """
+    La persona dueña de una cédula de usuario (S2-11): un militar de Personal militar o, si no
+    lo es, un instructor CIVIL del panel de Instructores. El civil nunca entra a Personal
+    militar: así no aparece en habilitación, listados ni estadísticas de artilleros.
+    """
+
+    tipo: str
+    grado: str | None
+    nombres: str
+    apellidos: str
+    unidad_actual_id: int | None
+    activo: bool
+
+    @property
+    def nombre_visible(self) -> str:
+        partes = (self.grado, self.nombres, self.apellidos)
+        return " ".join(parte.strip() for parte in partes if parte and parte.strip())
+
+
+async def buscar_persona_por_cedula(
+    sesion: AsyncSession, documento_identidad: str
+) -> PersonaDelUsuario | None:
+    """Militar con esa cédula; si no hay, instructor civil con esa cédula; si tampoco, None."""
+    militar = await sesion.scalar(
+        select(PersonalMilitar).where(PersonalMilitar.documento_identidad == documento_identidad)
+    )
+    if militar is not None:
+        return PersonaDelUsuario(
+            tipo=TIPO_PERSONA_MILITAR,
+            grado=militar.grado,
+            nombres=militar.nombres,
+            apellidos=militar.apellidos,
+            unidad_actual_id=militar.unidad_actual_id,
+            activo=militar.activo,
+        )
+    civil = await sesion.scalar(
+        select(Instructores).where(
+            Instructores.tipo == TIPO_PERSONA_CIVIL, Instructores.documento_identidad == documento_identidad
+        )
+    )
+    if civil is not None:
+        return PersonaDelUsuario(
+            tipo=TIPO_PERSONA_CIVIL,
+            grado=None,
+            nombres=civil.nombres or "",
+            apellidos=civil.apellidos or "",
+            unidad_actual_id=None,
+            activo=civil.activo,
+        )
+    return None
+
+
 async def obtener_nombre_completo(
     sesion: AsyncSession, documento_identidad: str | None, nombre_usuario: str
 ) -> str:
     """
-    Nombre visible: 'grado nombres apellidos' del militar con esa cédula.
-    Si el usuario no tiene cédula o no hay militar con ella, se usa el nombre de usuario.
+    Nombre visible: 'grado nombres apellidos' del militar con esa cédula, o 'nombres apellidos'
+    del instructor civil. Si el usuario no tiene cédula o no hay nadie con ella, el nombre de usuario.
     """
     if documento_identidad:
-        militar = (
-            await sesion.execute(
-                select(PersonalMilitar.grado, PersonalMilitar.nombres, PersonalMilitar.apellidos).where(
-                    PersonalMilitar.documento_identidad == documento_identidad
-                )
-            )
-        ).first()
-        if militar is not None:
-            return " ".join(parte.strip() for parte in militar if parte and parte.strip())
+        persona = await buscar_persona_por_cedula(sesion, documento_identidad)
+        if persona is not None and persona.nombre_visible:
+            return persona.nombre_visible
     return nombre_usuario
 
 

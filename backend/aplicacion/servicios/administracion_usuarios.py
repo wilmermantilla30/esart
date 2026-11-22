@@ -5,8 +5,9 @@ desbloquear cuenta e IP, y listar.
 Lo usan el panel web "Gestión de usuarios" y el comando de consola herramientas/administrar_usuarios.py.
 
 Reglas:
-- Todo usuario corresponde a un militar de esart.personal_militar (la cédula es obligatoria).
-  La única excepción es el administrador inicial que se crea desde el .env.
+- Todo usuario corresponde a un militar de esart.personal_militar o, desde S2-11, a un
+  instructor CIVIL del panel de Instructores (la cédula es obligatoria). El civil no entra a
+  Personal militar. La única excepción es el administrador inicial que se crea desde el .env.
 - La contraseña que pone el administrador es TEMPORAL: el usuario debe cambiarla al entrar
   (requiere_cambio_contrasena). Nunca se guarda ni se audita en claro; solo su hash bcrypt.
 - Cada acción queda en la auditoría (HU-11), con quién la hizo: el usuario web o "consola".
@@ -23,13 +24,14 @@ from sqlalchemy import func, select, text, update
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.configuracion import obtener_configuracion
-from aplicacion.modelos import PersonalMilitar, Rol, SesionUsuario, UnidadMilitar, Usuario, UsuarioRoles
+from aplicacion.modelos import Rol, SesionUsuario, UnidadMilitar, Usuario, UsuarioRoles
 from aplicacion.modelos.seguridad import LimiteInicioIP
 from aplicacion.nucleo.errores import ErrorAplicacion
 from aplicacion.seguridad.contrasenas import generar_hash_contrasena, verificar_contrasena
 from aplicacion.servicios import auditoria
 from aplicacion.servicios.autenticacion import (
     UsuarioAutenticado,
+    buscar_persona_por_cedula,
     buscar_usuario_por_nombre,
     obtener_codigo_rol,
     obtener_nombre_completo,
@@ -43,6 +45,10 @@ NOMBRE_ACTOR_CONSOLA = "consola"
 PATRON_CEDULA = re.compile(r"^\d{5,15}$")
 LONGITUD_MINIMA_CONTRASENA = 10
 LONGITUD_MAXIMA_NOMBRE_USUARIO = 80
+
+MENSAJE_SIN_PERSONA = (
+    "No hay ningún militar en Personal militar ni instructor civil en Instructores con esa cédula."
+)
 
 # Los nombres de usuario sugeridos terminan así (por ejemplo jperez.esart).
 SUFIJO_NOMBRE_USUARIO = ".esart"
@@ -76,6 +82,8 @@ class MilitarParaUsuario:
     # Si ese militar ya tiene usuario, su nombre (no se le puede crear otro).
     usuario_existente: str | None
     nombre_usuario_sugerido: str
+    # MILITAR (Personal militar) o CIVIL (instructor civil del panel de Instructores).
+    tipo_persona: str = "MILITAR"
 
 
 @dataclass(frozen=True)
@@ -170,34 +178,32 @@ async def sugerir_nombre_usuario(sesion: AsyncSession, nombres: str, apellidos: 
 
 
 async def buscar_militar_para_usuario(sesion: AsyncSession, documento_identidad: str) -> MilitarParaUsuario:
-    """Datos del militar con esa cédula, si ya tiene usuario y el nombre sugerido. 404 si no existe."""
+    """
+    Datos de la persona con esa cédula (militar o instructor civil), si ya tiene usuario y el
+    nombre sugerido. 404 si no existe.
+    """
     cedula = validar_cedula(documento_identidad)
-    fila = (
-        await sesion.execute(
-            select(PersonalMilitar, UnidadMilitar.nombre)
-            .outerjoin(UnidadMilitar, UnidadMilitar.id == PersonalMilitar.unidad_actual_id)
-            .where(PersonalMilitar.documento_identidad == cedula)
+    persona = await buscar_persona_por_cedula(sesion, cedula)
+    if persona is None:
+        raise ErrorAplicacion(404, "RECURSO_NO_ENCONTRADO", MENSAJE_SIN_PERSONA)
+    nombre_unidad = None
+    if persona.unidad_actual_id is not None:
+        nombre_unidad = await sesion.scalar(
+            select(UnidadMilitar.nombre).where(UnidadMilitar.id == persona.unidad_actual_id)
         )
-    ).first()
-    if fila is None:
-        raise ErrorAplicacion(
-            404,
-            "RECURSO_NO_ENCONTRADO",
-            "No hay ningún militar registrado con esa cédula en Personal militar.",
-        )
-    militar, nombre_unidad = fila
     usuario_existente = await sesion.scalar(
         select(Usuario.usuario).where(Usuario.documento_identidad == cedula)
     )
     return MilitarParaUsuario(
         documento_identidad=cedula,
-        grado=militar.grado,
-        nombres=militar.nombres,
-        apellidos=militar.apellidos,
+        grado=persona.grado or "Civil",
+        nombres=persona.nombres,
+        apellidos=persona.apellidos,
         unidad=nombre_unidad,
-        activo=militar.activo,
+        activo=persona.activo,
         usuario_existente=usuario_existente,
-        nombre_usuario_sugerido=await sugerir_nombre_usuario(sesion, militar.nombres, militar.apellidos),
+        nombre_usuario_sugerido=await sugerir_nombre_usuario(sesion, persona.nombres, persona.apellidos),
+        tipo_persona=persona.tipo,
     )
 
 
@@ -293,21 +299,17 @@ async def crear_usuario(
     rol = await sesion.scalar(select(Rol).where(Rol.codigo == codigo_rol, Rol.activo.is_(True)))
     if rol is None:
         raise ErrorAplicacion(422, "DATOS_INVALIDOS", f"El rol {codigo_rol} no existe o está inactivo.")
-    militar = await sesion.scalar(
-        select(PersonalMilitar).where(PersonalMilitar.documento_identidad == cedula)
-    )
-    if militar is None:
+    persona = await buscar_persona_por_cedula(sesion, cedula)
+    if persona is None:
+        raise ErrorAplicacion(422, "DATOS_INVALIDOS", MENSAJE_SIN_PERSONA)
+    if not persona.activo:
         raise ErrorAplicacion(
-            422, "DATOS_INVALIDOS", "No hay ningún militar registrado con esa cédula en Personal militar."
-        )
-    if not militar.activo:
-        raise ErrorAplicacion(
-            422, "DATOS_INVALIDOS", "El militar está inactivo: no se le puede crear usuario."
+            422, "DATOS_INVALIDOS", "La persona está inactiva: no se le puede crear usuario."
         )
     if await buscar_usuario_por_nombre(sesion, nombre_usuario) is not None:
         raise ErrorAplicacion(409, "USUARIO_EXISTENTE", f"Ya existe el usuario {nombre_usuario}.")
     if await sesion.scalar(select(Usuario.id).where(Usuario.documento_identidad == cedula)):
-        raise ErrorAplicacion(409, "USUARIO_EXISTENTE", "Ese militar ya tiene un usuario.")
+        raise ErrorAplicacion(409, "USUARIO_EXISTENTE", "Esa persona ya tiene un usuario.")
 
     usuario = Usuario(
         usuario=nombre_usuario,
@@ -323,7 +325,7 @@ async def crear_usuario(
         sesion,
         auditoria.USUARIO_CREADO,
         actor,
-        {"usuario_creado": nombre_usuario, "rol": codigo_rol},
+        {"usuario_creado": nombre_usuario, "rol": codigo_rol, "tipo_persona": persona.tipo},
         documento=cedula,
     )
     return usuario.id
