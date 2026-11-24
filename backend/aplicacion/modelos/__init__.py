@@ -20,6 +20,7 @@ from .persistencia import (
     Diplomas,
     DoctrinaDocumentos,
     EgresadosCurso,
+    EntregaNotas,
     EspecialidadesInstructor,
     Habilitaciones,
     HojaVidaArtillero,
@@ -28,6 +29,7 @@ from .persistencia import (
     InstructoresEspecialidades,
     MallaCurricular,
     Materias,
+    NotaEntrega,
     NotasFinalesEgresado,
     NotasMateria,
     OperadoresSistema,
@@ -100,6 +102,8 @@ __all__ = [
     "Usuario",
     "VersionMalla",
     "CursoMateriaInstructor",
+    "EntregaNotas",
+    "NotaEntrega",
 ]
 
 MODELOS_PENDIENTES = {

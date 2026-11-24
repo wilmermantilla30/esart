@@ -115,6 +115,7 @@ async def test_menu_de_administrador_incluye_cargue_y_administracion(cliente_api
         "DASHBOARD",
         "PERSONAL_MILITAR",
         "CURSOS",  # S2-02 (p0021)
+        "NOTAS_CARGA",  # S2-12 (p0022)
         "INSTRUCTORES",
         "USUARIOS",
         "PARAMETROS_HABILITACION",
