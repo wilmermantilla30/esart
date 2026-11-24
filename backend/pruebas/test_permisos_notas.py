@@ -53,8 +53,12 @@ async def test_componentes_nuevos_son_permisos_especiales_activos(sesion_bd):  #
         )
     ).all()
     assert {fila.codigo for fila in filas} == COMPONENTES_NUEVOS
+    assert all(fila.activo for fila in filas)
     # Sin ruta: se asignan en la malla pero no aparecen en el menú hasta que existan sus pantallas.
-    assert all(fila.ruta_angular is None and fila.activo for fila in filas)
+    # S2-12 (p0022) le dio pantalla a NOTAS_CARGA.
+    rutas = {fila.codigo: fila.ruta_angular for fila in filas}
+    assert rutas.pop("NOTAS_CARGA") == "/notas/mis-materias"
+    assert set(rutas.values()) == {None}
 
 
 @requiere_postgresql
@@ -74,14 +78,15 @@ async def test_administrador_los_tiene_y_usuario_no_por_defecto(sesion_bd):  # n
 
 
 @requiere_postgresql
-async def test_un_usuario_recibe_carga_de_notas_por_excepcion_sin_menu(cliente_api, sesion_bd):  # noqa: F811
+async def test_un_usuario_recibe_carga_de_notas_por_excepcion(cliente_api, sesion_bd):  # noqa: F811
     usuario = await entrar(cliente_api, sesion_bd, roles=("USUARIO",))
     await conceder_por_excepcion(
         sesion_bd, usuario, "NOTAS_CARGA", puede_acceder=True, puede_crear=True, puede_leer=True
     )
     yo = (await cliente_api.get("/api/auth/yo")).json()
     assert "NOTAS_CARGA" in yo["permisos"]
-    assert "NOTAS_CARGA" not in {elemento["codigo"] for elemento in yo["menu"]}
+    # Desde S2-12 la carga de notas tiene pantalla y sale en el menú; la revisión todavía no.
+    assert "NOTAS_CARGA" in {elemento["codigo"] for elemento in yo["menu"]}
     assert "NOTAS_REVISION" not in yo["permisos"]
 
 

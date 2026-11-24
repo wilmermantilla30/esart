@@ -847,6 +847,106 @@ sa.Index(
 )
 
 
+class EntregaNotas(BaseModelo):
+    """p0022 (S2-12): planilla de notas de una materia en un curso, subida por su instructor.
+    EN_REVISION no cuenta para nada hasta que el Inspector la apruebe (S2-13)."""
+
+    __table__ = sa.Table(
+        "entregas_notas",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("instructor_id", sa.BigInteger(), nullable=False),
+        sa.Column(
+            "estado",
+            sa.String(20),
+            server_default=sa.text("'EN_REVISION'::character varying"),
+            nullable=False,
+        ),
+        sa.Column("nombre_archivo", sa.String(200), nullable=False),
+        sa.Column("sha256", sa.CHAR(64), nullable=False),
+        sa.Column("subido_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("subido_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("revisado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("revisado_en", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("observacion_revision", sa.Text(), nullable=True),
+        sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_entregas_notas_curso_id")),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_entregas_notas_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["instructor_id"], ["esart.instructores.id"], name=conv("fk_entregas_notas_instructor_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["subido_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_entregas_notas_subido_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.ForeignKeyConstraint(
+            ["revisado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_entregas_notas_revisado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint(
+            "estado IN ('EN_REVISION', 'APROBADA', 'DEVUELTA')", name=conv("ck_entregas_notas_estado")
+        ),
+        sa.UniqueConstraint("curso_id", "malla_id", name=conv("uq_entregas_notas_curso_malla")),
+        sa.PrimaryKeyConstraint("id", name=conv("entregas_notas_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_entregas_notas_estado",
+    sa.text("estado"),
+    _table=BaseModelo.metadata.tables["esart.entregas_notas"],
+    unique=False,
+)
+sa.Index(
+    "ix_entregas_notas_instructor_id",
+    sa.text("instructor_id"),
+    _table=BaseModelo.metadata.tables["esart.entregas_notas"],
+    unique=False,
+)
+
+
+class NotaEntrega(BaseModelo):
+    """p0022 (S2-12): nota (0 a 5) de un alumno del curso dentro de una entrega."""
+
+    __table__ = sa.Table(
+        "notas_entrega",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("entrega_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota", sa.Numeric(3, 2), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["entrega_id"],
+            ["esart.entregas_notas.id"],
+            name=conv("fk_notas_entrega_entrega_id"),
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_notas_entrega_personal_id")
+        ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("ck_notas_entrega_nota")),
+        sa.UniqueConstraint("entrega_id", "personal_id", name=conv("uq_notas_entrega_alumno")),
+        sa.PrimaryKeyConstraint("id", name=conv("notas_entrega_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_notas_entrega_personal_id",
+    sa.text("personal_id"),
+    _table=BaseModelo.metadata.tables["esart.notas_entrega"],
+    unique=False,
+)
+
+
 class Materias(BaseModelo):
     __table__ = sa.Table(
         "materias",

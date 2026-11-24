@@ -149,6 +149,14 @@ export const routes: Routes = [
           import('./paginas/cursos/detalle-curso/detalle-curso').then((m) => m.DetalleCursoPagina),
       },
       {
+        path: 'notas/mis-materias',
+        title: 'Carga de notas — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'NOTAS_CARGA' },
+        loadComponent: () =>
+          import('./paginas/notas/mis-materias/mis-materias').then((m) => m.MisMateriasPagina),
+      },
+      {
         path: 'instructores',
         title: 'Instructores — ESART',
         canActivate: [exigirPermiso],

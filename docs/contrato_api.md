@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.19 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.20 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -447,6 +447,31 @@ se le da por excepción. Las rutas que cambian datos exigen CSRF; los cursos CUL
 - `POST /api/cursos/{id}/malla` (actualizar): liga la versión VIGENTE de su tipo a un curso EN_CURSO o APLAZADO creado sin malla y
   le copia la nota mínima vigente si no tenía. **409** `CURSO_CON_MALLA`, **422** `TIPO_SIN_MALLA`. Auditoría `CURSO_MALLA_ASIGNADA`.
 
+## 5g. Carga de notas del instructor (S2-12)
+
+Componente `NOTAS_CARGA` (ruta `/notas/mis-materias` desde p0022; se da por excepción al instructor): **leer** para ver sus
+materias, descargar la plantilla y ver su entrega; **crear** para subir. Además del permiso, el usuario debe ser el instructor
+**titular** de la materia en ese curso (§5f), reconocido por su cédula: si no, **403** `NO_ES_INSTRUCTOR` o `MATERIA_NO_ASIGNADA`.
+Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
+
+- `GET /api/notas/mis-materias` → `{ "es_instructor", "materias": [{ "curso_id", "codigo_curso", "nombre_curso", "tipo_curso",
+  "estado_curso", "fecha_inicio", "fecha_fin", "malla_id", "orden", "codigo_materia", "materia", "nota_minima", "alumnos",
+  "estado_entrega" (null | EN_REVISION | APROBADA | DEVUELTA), "subido_en", "revisado_en", "observacion_revision",
+  "notas_entregadas", "puede_subir" }] }`.
+- `GET /api/notas/plantilla/{curso_id}/{malla_id}` → XLSX como adjunto: hoja "Notas" (alumnos del curso, columna Nota editable con
+  validación 0–5) y hoja oculta "control" con la **firma** HMAC del curso, la materia y los alumnos. **409** `CURSO_SIN_ALUMNOS`.
+- `POST /api/notas/entregas/{curso_id}/{malla_id}` (CSRF, multipart `archivo`) → la entrega (`EntregaDeMateria`, abajo), estado
+  **EN_REVISION**. No guarda nada si algo falla:
+  **422** `ARCHIVO_INVALIDO` (no es XLSX seguro), `PLANTILLA_ALTERADA` (sin firma o firma que no coincide), `PLANTILLA_DE_OTRA_MATERIA`,
+  `NOTAS_INVALIDAS` con `detalle.errores: [{ "fila", "mensaje" }]` (falta la nota, no es número, fuera de 0–5, más de 2 decimales,
+  cédula ajena al curso, alumno repetido o faltante: se exige la nota de **todos** los alumnos); **409** `PLANTILLA_DESACTUALIZADA`
+  (cambió la lista de alumnos) y `ENTREGA_APROBADA` (ya aprobada por el Inspector: solo cambia si la devuelve, S2-13).
+  En revisión o devuelta, una nueva carga **reemplaza** la anterior. Auditoría `NOTAS_ENTREGADAS` (curso, materia, alumnos,
+  promedio, cuántas por debajo de la mínima, a qué estado reemplazó y sha256 del archivo).
+- `GET /api/notas/entregas/{curso_id}/{malla_id}` → `{ "curso_id", "codigo_curso", "materia", "nota_minima", "entrega": null |
+  { "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "observacion_revision", "notas": [{ "cedula", "grado",
+  "apellidos", "nombres", "nota" }] } }`.
+
 ---
 
 ## 6. Salud
@@ -490,3 +515,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.17 | 2026-11-21 | S2-10: §5c nota mínima de aprobación (leer y guardar con TOTP), solo para cursos nuevos. Migración p0019 |
 | 0.18 | 2026-11-21 | S2-09: §5c mallas curriculares y tipos de curso en Parámetros (versiones con TOTP y auditoría); §2 `operaciones` por componente en `/auth/yo` y permiso especial hijo que abre su módulo. Migración p0020 |
 | 0.19 | 2026-11-21 | S2-02: §5f módulo Cursos (lista, detalle, instructor titular por materia con nota, malla vigente para cursos sin malla); §5d materias que dicta el instructor. Migración p0021 |
+| 0.20 | 2026-11-24 | S2-12: §5g carga de notas del instructor (mis materias, plantilla firmada, entrega EN_REVISION con validación completa y reemplazo). Migración p0022 |

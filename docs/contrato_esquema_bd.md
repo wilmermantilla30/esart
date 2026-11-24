@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.8 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.9 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -267,6 +267,12 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   que el instructor esté activo. Se activa el componente `CURSOS`; acciones de auditoría `INSTRUCTOR_MATERIA_ASIGNADO` y
   `CURSO_MALLA_ASIGNADA`; la API puede actualizar `cursos.malla_version_id` y `nota_minima_aprobacion` (asignar la malla
   vigente a un curso que no tenía).
+- Entregas de notas *(S2-12, migración `p0022_entregas_notas`)*: `entregas_notas` (una por `curso_id` + `malla_id`;
+  `instructor_id`, `estado` EN_REVISION | APROBADA | DEVUELTA, `nombre_archivo`, `sha256`, `subido_por_id`, `subido_en`
+  y los campos de revisión `revisado_por_id`, `revisado_en`, `observacion_revision` para S2-13) y `notas_entrega`
+  (`entrega_id` con borrado en cascada, `personal_id` del alumno, `nota` NUMERIC(3,2) de 0 a 5; única por entrega y
+  alumno). Los alumnos de un curso son los de `hoja_vida_artillero.curso_id`; `notas_materia` y `alumnos_activos`
+  (fase 1) no se usan. `NOTAS_CARGA` tiene ruta `/notas/mis-materias`; acción de auditoría `NOTAS_ENTREGADAS`.
 
 ---
 
@@ -390,3 +396,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.6 | 2026-11-21 | §6.4: nota mínima de aprobación como parámetro general y copiada en cada curso al crearse (S2-10, `p0019`) |
 | 1.7 | 2026-11-21 | §6.4: mallas y tipos de curso editables desde Parámetros (S2-09, `p0020`) |
 | 1.8 | 2026-11-21 | §6.4: instructor titular por materia en cada curso y módulo Cursos (S2-02, `p0021`) |
+| 1.9 | 2026-11-24 | §6.4: entregas de notas por curso y materia con la nota de cada alumno (S2-12, `p0022`) |

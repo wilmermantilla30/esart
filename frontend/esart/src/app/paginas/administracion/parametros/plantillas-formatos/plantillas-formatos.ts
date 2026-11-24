@@ -12,6 +12,7 @@ import {
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 import { FormsModule } from '@angular/forms';
 
+import { guardarArchivo } from '../../../../nucleo/descargas';
 import { ErrorApi, leerErrorApi } from '../../../../nucleo/modelos/error-api';
 import { FormatoPlantilla, Plantilla } from '../../../../nucleo/modelos/parametros';
 import { ParametrosService } from '../../../../nucleo/servicios/parametros.service';
@@ -211,12 +212,7 @@ export class PlantillasFormatosPestana {
       .pipe(takeUntilDestroyed(this.destruir))
       .subscribe({
         next: ({ nombre, contenido }) => {
-          // Enlace temporal en memoria: el archivo nunca se abre dentro de la página.
-          const enlace = document.createElement('a');
-          enlace.href = URL.createObjectURL(contenido);
-          enlace.download = nombre;
-          enlace.click();
-          URL.revokeObjectURL(enlace.href);
+          guardarArchivo(nombre, contenido);
           this.ocupado.set(null);
         },
         error: (error: unknown) => {

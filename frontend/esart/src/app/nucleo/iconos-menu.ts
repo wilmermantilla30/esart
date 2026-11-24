@@ -13,6 +13,7 @@ export const ICONOS_MENU: Readonly<Record<string, string>> = {
   HOJAS_VIDA: 'contact_page',
   CURSOS: 'school',
   NOTAS: 'grading',
+  NOTAS_CARGA: 'edit_note',
   REENTRENAMIENTOS: 'target',
   CERTIFICACIONES: 'workspace_premium',
   DOCTRINA: 'menu_book',

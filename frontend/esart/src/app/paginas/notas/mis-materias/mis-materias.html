@@ -1,0 +1,198 @@
+<div class="space-y-5">
+  <div class="space-y-1">
+    <h1 class="font-headline font-bold text-headline-md text-negro-institucional">
+      Carga de notas
+    </h1>
+    <p class="text-body-md text-azul-pizarra/70">
+      Descargue la plantilla de cada materia, escriba la nota de cada alumno (0 a 5, con máximo 2
+      decimales) y súbala. Las notas quedan <strong>en revisión</strong> y no cuentan hasta que el
+      Inspector de Estudios las apruebe.
+    </p>
+  </div>
+
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Cargando sus materias…</p>
+  } @else if (!esInstructor()) {
+    <div class="bg-white rounded-2xl border border-gris-bordes p-5 text-body-md text-azul-pizarra">
+      Su usuario no corresponde a un instructor activo de la Escuela. Si usted dicta materias, pida
+      que lo registren en Instructores con la misma cédula de su usuario.
+    </div>
+  } @else if (!materias().length) {
+    <div class="bg-white rounded-2xl border border-gris-bordes p-5 text-body-md text-azul-pizarra">
+      Todavía no tiene materias asignadas. El Inspector de Estudios las asigna en Cursos, en el
+      detalle de cada curso.
+    </div>
+  } @else {
+    <ul class="space-y-3">
+      @for (materia of materias(); track clave(materia)) {
+        <li class="bg-white rounded-2xl border border-gris-bordes p-4 space-y-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0 space-y-0.5">
+              <p class="font-headline font-bold text-negro-institucional">{{ materia.materia }}</p>
+              <p class="text-xs text-azul-pizarra/70">
+                {{ materia.tipo_curso }} · Curso {{ materia.codigo_curso }} ·
+                {{ materia.fecha_inicio | date: 'd MMM y' }} –
+                {{ materia.fecha_fin | date: 'd MMM y' }} · {{ materia.alumnos }}
+                {{ materia.alumnos === 1 ? 'alumno' : 'alumnos' }}
+                @if (materia.nota_minima !== null) {
+                  · Nota mínima {{ materia.nota_minima | number: '1.2-2' }}
+                }
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              <span
+                [class]="
+                  'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                  estiloEstadoCurso(materia.estado_curso)
+                "
+                >{{ textoEstadoCurso(materia.estado_curso) }}</span
+              >
+              <span
+                [class]="
+                  'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                  estadoEntrega(materia).estilo
+                "
+                >{{ estadoEntrega(materia).texto }}</span
+              >
+            </div>
+          </div>
+
+          @if (materia.subido_en) {
+            <p class="text-xs text-azul-pizarra/60">
+              Enviada {{ materia.subido_en | date: 'd MMM y, h:mm a' }} ·
+              {{ materia.notas_entregadas }} notas
+            </p>
+          }
+          @if (materia.estado_entrega === 'DEVUELTA' && materia.observacion_revision) {
+            <p class="p-2 bg-error/5 border border-error/30 rounded-lg text-body-md">
+              <strong>Devuelta por el Inspector:</strong> {{ materia.observacion_revision }}
+            </p>
+          }
+
+          <div class="flex flex-wrap items-center gap-2">
+            <button
+              type="button"
+              (click)="descargar(materia)"
+              [disabled]="ocupada() === clave(materia) || !materia.alumnos"
+              class="py-2 px-3 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline flex items-center gap-1 disabled:opacity-50"
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">download</span>
+              Descargar plantilla
+            </button>
+            @if (puedeSubir() && materia.puede_subir) {
+              <label
+                [class]="
+                  'py-2 px-3 rounded-sm text-label-lg font-headline flex items-center gap-1 cursor-pointer text-white ' +
+                  (ocupada() === clave(materia)
+                    ? 'bg-azul-institucional/50 pointer-events-none'
+                    : 'bg-azul-institucional')
+                "
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">upload</span>
+                {{
+                  ocupada() === clave(materia)
+                    ? 'Subiendo…'
+                    : materia.estado_entrega
+                      ? 'Subir de nuevo'
+                      : 'Subir planilla'
+                }}
+                <input
+                  #entrada
+                  type="file"
+                  accept=".xlsx"
+                  class="sr-only"
+                  [attr.aria-label]="'Subir planilla de ' + materia.materia"
+                  (change)="subir(materia, entrada)"
+                />
+              </label>
+            }
+            @if (materia.estado_entrega) {
+              <button
+                type="button"
+                (click)="verNotas(materia)"
+                class="py-2 px-3 border border-gris-bordes rounded-sm text-label-lg font-headline"
+              >
+                {{ clave(materia) === claveAbierta() ? 'Ocultar notas' : 'Ver notas enviadas' }}
+              </button>
+            }
+          </div>
+
+          @if (erroresPlanilla(); as rechazo) {
+            @if (rechazo.clave === clave(materia)) {
+              <div class="p-3 bg-error/5 border border-error/30 rounded-lg space-y-1" role="alert">
+                <p class="font-headline font-semibold text-sm text-error">
+                  Corrija estas filas y suba la planilla de nuevo:
+                </p>
+                <ul class="text-body-md list-disc pl-5">
+                  @for (fila of rechazo.errores; track $index) {
+                    <li>
+                      @if (fila.fila) {
+                        <strong>Fila {{ fila.fila }}:</strong>
+                      }
+                      {{ fila.mensaje }}
+                    </li>
+                  }
+                </ul>
+              </div>
+            }
+          }
+
+          @if (clave(materia) === claveAbierta()) {
+            @if (abierta()?.entrega; as enviada) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-body-md">
+                  <thead class="bg-gris-claro">
+                    <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                      <th class="py-2 px-3">Cédula</th>
+                      <th class="py-2 px-3">Alumno</th>
+                      <th class="py-2 px-3 text-right">Nota</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (nota of enviada.notas; track nota.cedula) {
+                      <tr class="border-t border-gris-bordes">
+                        <td class="py-1.5 px-3 font-mono text-xs">{{ nota.cedula }}</td>
+                        <td class="py-1.5 px-3">
+                          {{ nota.grado }} {{ nota.apellidos }} {{ nota.nombres }}
+                        </td>
+                        <td
+                          class="py-1.5 px-3 text-right font-semibold"
+                          [class.text-error]="
+                            materia.nota_minima !== null && nota.nota < materia.nota_minima
+                          "
+                        >
+                          {{ nota.nota | number: '1.2-2' }}
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+            } @else {
+              <p class="text-body-md text-azul-pizarra/70" role="status">Cargando notas…</p>
+            }
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>

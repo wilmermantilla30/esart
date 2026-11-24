@@ -54,6 +54,8 @@ TIPO_CURSO_CREADO = "TIPO_CURSO_CREADO"
 # Módulo Cursos: instructor por materia y malla de un curso existente (migración p0021, S2-02).
 INSTRUCTOR_MATERIA_ASIGNADO = "INSTRUCTOR_MATERIA_ASIGNADO"
 CURSO_MALLA_ASIGNADA = "CURSO_MALLA_ASIGNADA"
+# Planilla de notas subida por el instructor (migración p0022, S2-12).
+NOTAS_ENTREGADAS = "NOTAS_ENTREGADAS"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")
