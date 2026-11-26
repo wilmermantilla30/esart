@@ -117,6 +117,7 @@ async def test_menu_de_administrador_incluye_cargue_y_administracion(cliente_api
         "CURSOS",  # S2-02 (p0021)
         "NOTAS_CARGA",  # S2-12 (p0022)
         "NOTAS_REVISION",  # S2-13 (p0023)
+        "CONSEJO_ACADEMICO",  # S2-14 (p0024)
         "INSTRUCTORES",
         "USUARIOS",
         "PARAMETROS_HABILITACION",

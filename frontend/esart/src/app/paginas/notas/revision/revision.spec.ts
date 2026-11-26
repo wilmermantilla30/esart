@@ -9,6 +9,7 @@ describe('Revisión de notas del Inspector (S2-13)', () => {
     nombres: 'Juan',
     nota: valor,
     nota_oficial: oficial,
+    nota_ordinaria: null,
   });
 
   it('empieza por las entregas pendientes', () => {

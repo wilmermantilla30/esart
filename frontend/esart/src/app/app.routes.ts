@@ -165,6 +165,14 @@ export const routes: Routes = [
           import('./paginas/notas/revision/revision').then((m) => m.RevisionNotasPagina),
       },
       {
+        path: 'notas/consejo',
+        title: 'Consejo Académico — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'CONSEJO_ACADEMICO' },
+        loadComponent: () =>
+          import('./paginas/notas/consejo/consejo').then((m) => m.ConsejoAcademicoPagina),
+      },
+      {
         path: 'instructores',
         title: 'Instructores — ESART',
         canActivate: [exigirPermiso],

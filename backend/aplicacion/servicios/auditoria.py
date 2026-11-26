@@ -60,6 +60,8 @@ NOTAS_ENTREGADAS = "NOTAS_ENTREGADAS"
 NOTAS_APROBADAS = "NOTAS_APROBADAS"
 NOTAS_DEVUELTAS = "NOTAS_DEVUELTAS"
 NOTAS_REABIERTAS = "NOTAS_REABIERTAS"
+# Decisión del Consejo Académico sobre una habilitación perdida (migración p0024, S2-14).
+CONSEJO_DECISION_REGISTRADA = "CONSEJO_DECISION_REGISTRADA"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")

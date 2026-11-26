@@ -1,6 +1,6 @@
 import { ErrorApi } from '../../../nucleo/modelos/error-api';
 import { MateriaDelInstructor } from '../../../nucleo/modelos/notas';
-import { claveMateria, erroresDePlanilla, estadoEntrega } from './mis-materias';
+import { claveMateria, erroresDePlanilla, estadoEntrega, puedeHabilitar } from './mis-materias';
 
 describe('Carga de notas del instructor (S2-12)', () => {
   const materia = (cambios: Partial<MateriaDelInstructor>): MateriaDelInstructor => ({
@@ -23,6 +23,9 @@ describe('Carga de notas del instructor (S2-12)', () => {
     observacion_revision: null,
     notas_entregadas: 0,
     tiene_notas_oficiales: false,
+    alumnos_a_habilitar: 0,
+    estado_habilitacion: null,
+    observacion_habilitacion: null,
     puede_subir: true,
     ...cambios,
   });
@@ -51,5 +54,15 @@ describe('Carga de notas del instructor (S2-12)', () => {
     };
     expect(erroresDePlanilla(error).map((e) => e.fila)).toEqual([9, null]);
     expect(erroresDePlanilla({ ...error, detalle: null })).toEqual([]);
+  });
+
+  it('permite registrar la habilitación solo con las notas aprobadas y sin habilitación aprobada', () => {
+    const aprobada = { estado_entrega: 'APROBADA' as const, alumnos_a_habilitar: 2 };
+    expect(puedeHabilitar(materia(aprobada))).toBe(true);
+    expect(puedeHabilitar(materia({ ...aprobada, estado_habilitacion: 'DEVUELTA' }))).toBe(true);
+    expect(puedeHabilitar(materia({ ...aprobada, estado_habilitacion: 'APROBADA' }))).toBe(false);
+    expect(puedeHabilitar(materia({ ...aprobada, alumnos_a_habilitar: 0 }))).toBe(false);
+    expect(puedeHabilitar(materia({ ...aprobada, estado_entrega: 'EN_REVISION' }))).toBe(false);
+    expect(puedeHabilitar(materia({ ...aprobada, estado_curso: 'CANCELADO' }))).toBe(false);
   });
 });

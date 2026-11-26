@@ -6,10 +6,22 @@ import { EstadisticasService } from '../../nucleo/servicios/estadisticas.service
 import {
   RAMPA_AZUL,
   alturaBarra,
+  aniosDelSelector,
   colorDeCelda,
   gruposDeGrados,
   porcentaje,
 } from './panel-principal';
+
+describe('Panel principal: lista de años', () => {
+  it('va del año presente al del curso más antiguo, sin saltarse años', () => {
+    expect(aniosDelSelector([2024, 2021], 2026)).toEqual([2026, 2025, 2024, 2023, 2022, 2021]);
+  });
+
+  it('sin cursos muestra solo el año presente, y respeta cursos ya programados', () => {
+    expect(aniosDelSelector([], 2026)).toEqual([2026]);
+    expect(aniosDelSelector([2027, 2026], 2026)).toEqual([2027, 2026]);
+  });
+});
 
 describe('Panel principal: cálculos de las gráficas', () => {
   it('la celda vacía no lleva color y la más alta toma el tono más oscuro con texto blanco', () => {

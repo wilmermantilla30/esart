@@ -45,6 +45,9 @@ from aplicacion.servicios.plantillas import limpiar_nombre_archivo, validar_arch
 ESTADO_EN_REVISION = "EN_REVISION"
 ESTADO_APROBADA = "APROBADA"
 ESTADO_DEVUELTA = "DEVUELTA"
+# Tipos de entrega (p0024): la planilla de S2-12 y la habilitación de S2-14.
+TIPO_ORDINARIA = "ORDINARIA"
+TIPO_HABILITACION = "HABILITACION"
 TIPO_MIME_XLSX = "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
 
 # Disposición de la plantilla (la lectura usa las mismas posiciones).
@@ -104,7 +107,11 @@ CONSULTA_MATERIAS = f"""
            e.observacion_revision,
            (SELECT count(*) FROM esart.notas_entrega n WHERE n.entrega_id = e.id) AS notas_entregadas,
            EXISTS (SELECT 1 FROM esart.notas_oficiales o
-                   WHERE o.curso_id = c.id AND o.malla_id = m.id) AS tiene_notas_oficiales
+                   WHERE o.curso_id = c.id AND o.malla_id = m.id) AS tiene_notas_oficiales,
+           (SELECT count(*) FROM esart.notas_oficiales o
+            WHERE o.curso_id = c.id AND o.malla_id = m.id
+              AND o.nota_ordinaria < c.nota_minima_aprobacion) AS alumnos_a_habilitar,
+           h.estado AS estado_habilitacion, h.observacion_revision AS observacion_habilitacion
     FROM esart.cursos_materias_instructor a
     JOIN esart.cursos c ON c.id = a.curso_id
     JOIN esart.tipos_curso tc ON tc.id = c.tipo_curso_id
@@ -112,7 +119,8 @@ CONSULTA_MATERIAS = f"""
     JOIN esart.materias mt ON mt.id = m.materia_id
     JOIN esart.instructores i ON i.id = a.instructor_id
     LEFT JOIN esart.personal_militar p ON p.id = i.personal_id
-    LEFT JOIN esart.entregas_notas e ON e.curso_id = c.id AND e.malla_id = m.id
+    LEFT JOIN esart.entregas_notas e ON e.curso_id = c.id AND e.malla_id = m.id AND e.tipo = 'ORDINARIA'
+    LEFT JOIN esart.entregas_notas h ON h.curso_id = c.id AND h.malla_id = m.id AND h.tipo = 'HABILITACION'
     WHERE a.instructor_id = :instructor
 """  # noqa: S608 (NOMBRE_VISIBLE_INSTRUCTOR es una constante; los valores van como parámetros)
 
@@ -436,12 +444,30 @@ async def subir_planilla(
 ) -> dict:
     """Valida la planilla y la guarda como entrega EN_REVISION (reemplaza la anterior si se puede)."""
     materia = await materia_asignada(sesion, usuario, curso_id, malla_id)
+    anterior = await entrega_reemplazable(sesion, materia, TIPO_ORDINARIA)
+    archivo = validar_archivo(nombre_archivo, contenido)
+    if archivo.formato != "XLSX":
+        raise ErrorAplicacion(
+            422, "ARCHIVO_INVALIDO", "Suba la plantilla descargada de la plataforma (.xlsx)."
+        )
+    alumnos = await alumnos_del_curso(sesion, curso_id)
+    notas = leer_planilla(archivo.contenido, curso_id, malla_id, alumnos)
+    await guardar_entrega(
+        sesion, materia, TIPO_ORDINARIA, anterior, archivo.nombre_archivo, archivo.sha256, notas, actor=actor
+    )
+    return await entrega(sesion, usuario, curso_id, malla_id)
+
+
+async def entrega_reemplazable(sesion: AsyncSession, materia: MateriaAsignada, tipo: str):
+    """La entrega anterior de ese tipo, reservada hasta el commit (None si no hay); 409 si está aprobada."""
     anterior = (
         await sesion.execute(
-            text(
-                "SELECT id, estado FROM esart.entregas_notas WHERE curso_id = :c AND malla_id = :m FOR UPDATE"
-            ),
-            {"c": curso_id, "m": malla_id},
+            text("""
+                SELECT id, estado FROM esart.entregas_notas
+                WHERE curso_id = :c AND malla_id = :m AND tipo = :tipo
+                FOR UPDATE
+            """),
+            {"c": materia.curso_id, "m": materia.malla_id, "tipo": tipo},
         )
     ).one_or_none()
     if anterior is not None and anterior.estado == ESTADO_APROBADA:
@@ -450,28 +476,37 @@ async def subir_planilla(
             "ENTREGA_APROBADA",
             "El Inspector ya aprobó estas notas. Para corregirlas, pídale que reabra la entrega.",
         )
-    archivo = validar_archivo(nombre_archivo, contenido)
-    if archivo.formato != "XLSX":
-        raise ErrorAplicacion(
-            422, "ARCHIVO_INVALIDO", "Suba la plantilla descargada de la plataforma (.xlsx)."
-        )
-    alumnos = await alumnos_del_curso(sesion, curso_id)
-    notas = leer_planilla(archivo.contenido, curso_id, malla_id, alumnos)
+    return anterior
 
+
+async def guardar_entrega(
+    sesion: AsyncSession,
+    materia: MateriaAsignada,
+    tipo: str,
+    anterior,
+    nombre_archivo: str,
+    sha256: str,
+    notas: dict[int, Decimal],
+    *,
+    actor: Actor,
+) -> None:
+    """Guarda la entrega (nueva o reemplazo) EN_REVISION con sus notas y la audita. Común a la planilla
+    ordinaria (S2-12) y a la habilitación (S2-14)."""
     parametros = {
-        "c": curso_id,
-        "m": malla_id,
+        "c": materia.curso_id,
+        "m": materia.malla_id,
+        "tipo": tipo,
         "instructor": materia.instructor_id,
-        "nombre": archivo.nombre_archivo,
-        "sha": archivo.sha256,
+        "nombre": nombre_archivo,
+        "sha": sha256,
         "usuario": actor.usuario_id,
     }
     if anterior is None:
         entrega_id = await sesion.scalar(
             text("""
                 INSERT INTO esart.entregas_notas
-                  (curso_id, malla_id, instructor_id, nombre_archivo, sha256, subido_por_id)
-                VALUES (:c, :m, :instructor, :nombre, :sha, :usuario)
+                  (curso_id, malla_id, tipo, instructor_id, nombre_archivo, sha256, subido_por_id)
+                VALUES (:c, :m, :tipo, :instructor, :nombre, :sha, :usuario)
                 RETURNING id
             """),
             parametros,
@@ -507,6 +542,7 @@ async def subir_planilla(
         nombre_usuario=actor.nombre_usuario,
         resultado="EXITOSO",
         detalle={
+            "tipo": tipo,
             "curso": materia.codigo_curso,
             "materia": materia.materia,
             "alumnos": len(notas),
@@ -515,10 +551,9 @@ async def subir_planilla(
                 1 for nota in notas.values() if minima is not None and nota < minima
             ),
             "reemplaza": anterior.estado if anterior else None,
-            "sha256": archivo.sha256,
+            "sha256": sha256,
         },
     )
-    return await entrega(sesion, usuario, curso_id, malla_id)
 
 
 async def entrega(sesion: AsyncSession, usuario: UsuarioAutenticado, curso_id: int, malla_id: int) -> dict:
@@ -531,7 +566,7 @@ async def entrega(sesion: AsyncSession, usuario: UsuarioAutenticado, curso_id: i
                        e.revisado_en, e.observacion_revision
                 FROM esart.entregas_notas e
                 LEFT JOIN esart_ref.usuarios u ON u.id = e.subido_por_id
-                WHERE e.curso_id = :c AND e.malla_id = :m
+                WHERE e.curso_id = :c AND e.malla_id = :m AND e.tipo = 'ORDINARIA'
             """),
             {"c": curso_id, "m": malla_id},
         )

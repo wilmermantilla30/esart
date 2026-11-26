@@ -3,18 +3,23 @@ import { Injectable, inject } from '@angular/core';
 import { Observable, map } from 'rxjs';
 
 import {
+  CasoConsejo,
   DetalleEntrega,
   EntregaDeMateria,
   EntregaEnBandeja,
   FiltroBandeja,
+  FiltroConsejo,
+  FormularioHabilitacion,
   MisMaterias,
+  SolicitudDecisionConsejo,
 } from '../modelos/notas';
 import { ClienteApiService } from './cliente-api.service';
 import { ArchivoDescargado, nombreDesdeCabecera } from './parametros.service';
 
 /**
  * Notas: carga del instructor (S2-12: sus materias, la plantilla y la entrega) y revisión del
- * Inspector de Estudios (S2-13: bandeja, aprobar, devolver y reabrir).
+ * Inspector de Estudios (S2-13: bandeja, aprobar, devolver y reabrir), habilitación y Consejo
+ * Académico (S2-14).
  */
 @Injectable({ providedIn: 'root' })
 export class NotasService {
@@ -74,6 +79,39 @@ export class NotasService {
   reabrir(entregaId: number, observacion: string, codigoTotp = ''): Observable<DetalleEntrega> {
     return this.api.enviar<DetalleEntrega>(`/notas/revision/entregas/${entregaId}/reabrir`, {
       observacion,
+      codigo_totp: codigoTotp,
+    });
+  }
+
+  // --- Habilitación y Consejo (S2-14) ---------------------------------------------------------
+
+  habilitacion(cursoId: number, mallaId: number): Observable<FormularioHabilitacion> {
+    return this.api.obtener<FormularioHabilitacion>(`/notas/habilitaciones/${cursoId}/${mallaId}`);
+  }
+
+  /** Registra las notas de habilitación: quedan EN_REVISION para el Inspector. */
+  registrarHabilitacion(
+    cursoId: number,
+    mallaId: number,
+    notas: { cedula: string; nota: string }[],
+  ): Observable<FormularioHabilitacion> {
+    return this.api.enviar<FormularioHabilitacion>(`/notas/habilitaciones/${cursoId}/${mallaId}`, {
+      notas,
+    });
+  }
+
+  casosConsejo(filtro: FiltroConsejo): Observable<CasoConsejo[]> {
+    return this.api.obtener<CasoConsejo[]>('/notas/consejo/casos', {}, { filtro });
+  }
+
+  /** Registra la decisión del Consejo. Sin código responde TOTP_REQUERIDO. */
+  registrarDecision(
+    habilitacionId: number,
+    datos: SolicitudDecisionConsejo,
+    codigoTotp = '',
+  ): Observable<CasoConsejo> {
+    return this.api.enviar<CasoConsejo>(`/notas/consejo/casos/${habilitacionId}/decision`, {
+      ...datos,
       codigo_totp: codigoTotp,
     });
   }
