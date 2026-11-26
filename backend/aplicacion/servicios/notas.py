@@ -14,7 +14,8 @@ Flujo:
    - cada fila: alumno del curso, sin repetir, nota de 0 a 5 con máximo 2 decimales;
    - no falta la nota de ningún alumno (decisión de la Escuela: si falta una, se rechaza todo).
 4. La entrega queda EN_REVISION y no cuenta para nada hasta que el Inspector la apruebe (S2-13).
-   Mientras esté en revisión o devuelta, volver a subir la reemplaza; aprobada, ya no.
+   Mientras esté en revisión o devuelta, volver a subir la reemplaza; aprobada, solo si el
+   Inspector la reabre (las notas oficiales siguen vigentes hasta la nueva aprobación).
 """
 
 import base64
@@ -101,7 +102,9 @@ CONSULTA_MATERIAS = f"""
             WHERE hv.curso_id = c.id) AS alumnos,
            e.id AS entrega_id, e.estado AS estado_entrega, e.subido_en, e.revisado_en,
            e.observacion_revision,
-           (SELECT count(*) FROM esart.notas_entrega n WHERE n.entrega_id = e.id) AS notas_entregadas
+           (SELECT count(*) FROM esart.notas_entrega n WHERE n.entrega_id = e.id) AS notas_entregadas,
+           EXISTS (SELECT 1 FROM esart.notas_oficiales o
+                   WHERE o.curso_id = c.id AND o.malla_id = m.id) AS tiene_notas_oficiales
     FROM esart.cursos_materias_instructor a
     JOIN esart.cursos c ON c.id = a.curso_id
     JOIN esart.tipos_curso tc ON tc.id = c.tipo_curso_id
@@ -445,7 +448,7 @@ async def subir_planilla(
         raise ErrorAplicacion(
             409,
             "ENTREGA_APROBADA",
-            "El Inspector ya aprobó estas notas. Para corregirlas, pídale que devuelva la entrega.",
+            "El Inspector ya aprobó estas notas. Para corregirlas, pídale que reabra la entrega.",
         )
     archivo = validar_archivo(nombre_archivo, contenido)
     if archivo.formato != "XLSX":

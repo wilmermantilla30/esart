@@ -157,6 +157,14 @@ export const routes: Routes = [
           import('./paginas/notas/mis-materias/mis-materias').then((m) => m.MisMateriasPagina),
       },
       {
+        path: 'notas/revision',
+        title: 'Revisión de notas — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'NOTAS_REVISION' },
+        loadComponent: () =>
+          import('./paginas/notas/revision/revision').then((m) => m.RevisionNotasPagina),
+      },
+      {
         path: 'instructores',
         title: 'Instructores — ESART',
         canActivate: [exigirPermiso],

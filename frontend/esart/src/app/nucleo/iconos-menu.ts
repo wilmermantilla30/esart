@@ -14,6 +14,7 @@ export const ICONOS_MENU: Readonly<Record<string, string>> = {
   CURSOS: 'school',
   NOTAS: 'grading',
   NOTAS_CARGA: 'edit_note',
+  NOTAS_REVISION: 'rule',
   REENTRENAMIENTOS: 'target',
   CERTIFICACIONES: 'workspace_premium',
   DOCTRINA: 'menu_book',

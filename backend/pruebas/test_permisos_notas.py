@@ -55,9 +55,10 @@ async def test_componentes_nuevos_son_permisos_especiales_activos(sesion_bd):  #
     assert {fila.codigo for fila in filas} == COMPONENTES_NUEVOS
     assert all(fila.activo for fila in filas)
     # Sin ruta: se asignan en la malla pero no aparecen en el menú hasta que existan sus pantallas.
-    # S2-12 (p0022) le dio pantalla a NOTAS_CARGA.
+    # S2-12 (p0022) le dio pantalla a NOTAS_CARGA y S2-13 (p0023) a NOTAS_REVISION.
     rutas = {fila.codigo: fila.ruta_angular for fila in filas}
     assert rutas.pop("NOTAS_CARGA") == "/notas/mis-materias"
+    assert rutas.pop("NOTAS_REVISION") == "/notas/revision"
     assert set(rutas.values()) == {None}
 
 

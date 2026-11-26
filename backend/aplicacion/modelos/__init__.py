@@ -30,6 +30,7 @@ from .persistencia import (
     MallaCurricular,
     Materias,
     NotaEntrega,
+    NotaOficial,
     NotasFinalesEgresado,
     NotasMateria,
     OperadoresSistema,
@@ -104,6 +105,7 @@ __all__ = [
     "CursoMateriaInstructor",
     "EntregaNotas",
     "NotaEntrega",
+    "NotaOficial",
 ]
 
 MODELOS_PENDIENTES = {
