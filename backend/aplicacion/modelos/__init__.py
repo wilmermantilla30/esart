@@ -17,12 +17,14 @@ from .persistencia import (
     CursoMateriaInstructor,
     Cursos,
     CursosInstructores,
+    DecisionConsejo,
     Diplomas,
     DoctrinaDocumentos,
     EgresadosCurso,
     EntregaNotas,
     EspecialidadesInstructor,
     Habilitaciones,
+    HabilitacionMateria,
     HojaVidaArtillero,
     InscripcionesCurso,
     Instructores,
@@ -106,6 +108,8 @@ __all__ = [
     "EntregaNotas",
     "NotaEntrega",
     "NotaOficial",
+    "HabilitacionMateria",
+    "DecisionConsejo",
 ]
 
 MODELOS_PENDIENTES = {

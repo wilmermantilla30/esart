@@ -99,6 +99,135 @@
               entrega.
             </p>
           }
+          @if (materia.alumnos_a_habilitar > 0 && materia.estado_entrega === 'APROBADA') {
+            <div
+              class="p-3 rounded-lg border border-warning/40 bg-warning/5 flex flex-wrap items-center gap-2 text-body-md"
+            >
+              <span class="material-symbols-outlined text-warning" aria-hidden="true">school</span>
+              <span class="flex-1">
+                <strong>{{ materia.alumnos_a_habilitar }}</strong>
+                {{
+                  materia.alumnos_a_habilitar === 1
+                    ? 'alumno perdió la materia y debe habilitar.'
+                    : 'alumnos perdieron la materia y deben habilitar.'
+                }}
+                @if (materia.estado_habilitacion; as estado) {
+                  Habilitación:
+                  <span
+                    [class]="
+                      'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                      estados[estado].estilo
+                    "
+                    >{{ estados[estado].texto }}</span
+                  >
+                }
+              </span>
+              <button
+                type="button"
+                (click)="abrirHabilitacion(materia)"
+                [attr.aria-expanded]="claveHabilitacion() === clave(materia)"
+                class="py-1.5 px-3 border border-warning/60 rounded-sm text-label-lg font-headline bg-white"
+              >
+                {{
+                  claveHabilitacion() === clave(materia)
+                    ? 'Cerrar'
+                    : puedeSubir() && puedeHabilitar(materia)
+                      ? 'Registrar habilitación'
+                      : 'Ver habilitación'
+                }}
+              </button>
+            </div>
+            @if (materia.estado_habilitacion === 'DEVUELTA' && materia.observacion_habilitacion) {
+              <p class="p-2 bg-error/5 border border-error/30 rounded-lg text-body-md">
+                <strong>Habilitación devuelta por el Inspector:</strong>
+                {{ materia.observacion_habilitacion }}
+              </p>
+            }
+          }
+
+          @if (claveHabilitacion() === clave(materia)) {
+            @if (habilitacion(); as formulario) {
+              <div class="space-y-2">
+                <div class="overflow-x-auto">
+                  <table class="w-full text-body-md">
+                    <thead class="bg-gris-claro">
+                      <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                        <th class="py-2 px-3">Cédula</th>
+                        <th class="py-2 px-3">Alumno</th>
+                        <th class="py-2 px-3 text-right">Nota perdida</th>
+                        <th class="py-2 px-3 text-right">Nota de habilitación</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      @for (alumno of formulario.alumnos; track alumno.cedula) {
+                        <tr class="border-t border-gris-bordes">
+                          <td class="py-1.5 px-3 font-mono text-xs">{{ alumno.cedula }}</td>
+                          <td class="py-1.5 px-3">
+                            {{ alumno.grado }} {{ alumno.apellidos }} {{ alumno.nombres }}
+                          </td>
+                          <td class="py-1.5 px-3 text-right text-error/80">
+                            {{ alumno.nota_ordinaria | number: '1.2-2' }}
+                          </td>
+                          <td class="py-1.5 px-3 text-right">
+                            @if (puedeSubir() && puedeHabilitar(materia)) {
+                              <input
+                                type="text"
+                                inputmode="decimal"
+                                maxlength="5"
+                                placeholder="0 a 5"
+                                [value]="notasHabilitacion()[alumno.cedula] ?? ''"
+                                (input)="
+                                  ponerNotaHabilitacion(alumno.cedula, $any($event.target).value)
+                                "
+                                [attr.aria-label]="
+                                  'Nota de habilitación de ' +
+                                  alumno.apellidos +
+                                  ' ' +
+                                  alumno.nombres
+                                "
+                                class="w-20 py-1 px-2 border border-gris-bordes rounded-sm text-right"
+                              />
+                            } @else {
+                              <span class="font-semibold">{{
+                                alumno.nota_habilitacion === null
+                                  ? '—'
+                                  : (alumno.nota_habilitacion | number: '1.2-2')
+                              }}</span>
+                            }
+                          </td>
+                        </tr>
+                      }
+                    </tbody>
+                  </table>
+                </div>
+                @if (puedeSubir() && puedeHabilitar(materia)) {
+                  <div class="flex flex-wrap items-center justify-between gap-2">
+                    <p class="text-xs text-azul-pizarra/70">
+                      Nota de 0 a 5 con máximo 2 decimales para cada alumno. Si alcanza
+                      {{ formulario.nota_minima | number: '1.2-2' }}, la materia queda "Habilitada";
+                      si no, pasa al Consejo Académico.
+                    </p>
+                    <button
+                      type="button"
+                      (click)="registrarHabilitacion(materia)"
+                      [disabled]="enviandoHabilitacion()"
+                      class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+                    >
+                      {{
+                        enviandoHabilitacion()
+                          ? 'Enviando…'
+                          : formulario.estado
+                            ? 'Enviar de nuevo'
+                            : 'Enviar al Inspector'
+                      }}
+                    </button>
+                  </div>
+                }
+              </div>
+            } @else {
+              <p class="text-body-md text-azul-pizarra/70" role="status">Cargando habilitación…</p>
+            }
+          }
 
           <div class="flex flex-wrap items-center gap-2">
             <button
@@ -152,7 +281,7 @@
             @if (rechazo.clave === clave(materia)) {
               <div class="p-3 bg-error/5 border border-error/30 rounded-lg space-y-1" role="alert">
                 <p class="font-headline font-semibold text-sm text-error">
-                  Corrija estas filas y suba la planilla de nuevo:
+                  Corrija lo siguiente y vuelva a enviar:
                 </p>
                 <ul class="text-body-md list-disc pl-5">
                   @for (fila of rechazo.errores; track $index) {

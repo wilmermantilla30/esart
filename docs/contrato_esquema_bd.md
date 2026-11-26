@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.10 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.11 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -278,6 +278,14 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   completas en cada aprobación del Inspector; mientras una entrega reabierta se corrige, siguen vigentes. Son las que
   usarán la habilitación (S2-14) y la nota final (S2-15). `NOTAS_REVISION` tiene ruta `/notas/revision`; política TOTP
   `NOTAS_APROBAR`; acciones de auditoría `NOTAS_APROBADAS`, `NOTAS_DEVUELTAS` y `NOTAS_REABIERTAS`.
+- Habilitación y Consejo Académico *(S2-14, migración `p0024_habilitacion_consejo`)*: `entregas_notas.tipo`
+  (ORDINARIA | HABILITACION; única por `curso_id` + `malla_id` + `tipo`); `notas_oficiales.nota_ordinaria` (la nota
+  ordinaria aprobada) y `.origen` (ORDINARIA | HABILITACION | CONSEJO: de dónde sale `nota`, la que cuenta);
+  `habilitaciones_materia` (resultado de cada habilitación aprobada: `nota`, `resultado` APROBADA | REPROBADA,
+  `entrega_id`; única por curso, materia y alumno) y `decisiones_consejo` (una por habilitación perdida:
+  `decision` APRUEBA_MATERIA | REPITE_CURSO | PIERDE_CURSO | OTRA, `numero_acta`, `fecha_acta`, `observacion`
+  obligatoria en OTRA). La tabla `habilitaciones` de la fase 1 no se usa. `CONSEJO_ACADEMICO` tiene ruta
+  `/notas/consejo`; política TOTP `CONSEJO_REGISTRAR`; acción de auditoría `CONSEJO_DECISION_REGISTRADA`.
 
 ---
 
@@ -403,3 +411,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.8 | 2026-11-21 | §6.4: instructor titular por materia en cada curso y módulo Cursos (S2-02, `p0021`) |
 | 1.9 | 2026-11-24 | §6.4: entregas de notas por curso y materia con la nota de cada alumno (S2-12, `p0022`) |
 | 1.10 | 2026-11-26 | §6.4: notas oficiales aprobadas por el Inspector de Estudios (S2-13, `p0023`) |
+| 1.11 | 2026-11-26 | §6.4: habilitación de materias y decisiones del Consejo Académico (S2-14, `p0024`) |

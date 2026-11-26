@@ -1,0 +1,224 @@
+<div class="space-y-5">
+  <div class="space-y-1">
+    <h1 class="font-headline font-bold text-headline-md text-negro-institucional">
+      Consejo Académico
+    </h1>
+    <p class="text-body-md text-azul-pizarra/70">
+      Alumnos que perdieron la habilitación de una materia. Registre la decisión del Consejo con el
+      número y la fecha del acta; se confirma con su autenticador y no se puede cambiar después.
+    </p>
+  </div>
+
+  <div class="flex flex-wrap gap-2" role="tablist" aria-label="Estado de los casos">
+    @for (opcion of filtros; track opcion.valor) {
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="filtro() === opcion.valor"
+        (click)="elegirFiltro(opcion.valor)"
+        [class]="
+          'py-1.5 px-3 rounded-full text-label-lg font-headline border ' +
+          (filtro() === opcion.valor
+            ? 'bg-azul-institucional text-white border-azul-institucional'
+            : 'bg-white text-azul-pizarra border-gris-bordes')
+        "
+      >
+        {{ opcion.texto }}
+      </button>
+    }
+  </div>
+
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span>{{ fallo.mensaje }}</span>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Cargando casos…</p>
+  } @else if (!casos().length) {
+    <div class="bg-white rounded-2xl border border-gris-bordes p-5 text-body-md text-azul-pizarra">
+      {{
+        filtro() === 'PENDIENTES'
+          ? 'No hay alumnos esperando la decisión del Consejo.'
+          : 'No hay casos en esta lista.'
+      }}
+    </div>
+  } @else {
+    <ul class="space-y-3">
+      @for (caso of casos(); track caso.id) {
+        <li class="bg-white rounded-2xl border border-gris-bordes p-4 space-y-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0 space-y-0.5">
+              <p class="font-headline font-bold text-negro-institucional">
+                {{ caso.grado }} {{ caso.apellidos }} {{ caso.nombres }}
+                <span class="font-mono text-xs text-azul-pizarra/60">· {{ caso.cedula }}</span>
+              </p>
+              <p class="text-xs text-azul-pizarra/70">
+                {{ caso.materia }} · {{ caso.tipo_curso }} · Curso {{ caso.codigo_curso }}
+              </p>
+              <p class="text-xs text-azul-pizarra/70">
+                Nota ordinaria
+                <strong class="text-error">{{ caso.nota_ordinaria | number: '1.2-2' }}</strong> ·
+                Habilitación
+                <strong class="text-error">{{ caso.nota_habilitacion | number: '1.2-2' }}</strong>
+                @if (caso.nota_minima !== null) {
+                  · Nota mínima {{ caso.nota_minima | number: '1.2-2' }}
+                }
+              </p>
+            </div>
+            <span
+              [class]="
+                'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                (caso.decision
+                  ? 'bg-success/10 text-success border-success/30'
+                  : 'bg-warning/10 text-warning border-warning/40')
+              "
+              >{{ caso.decision ? 'Decidido' : 'En Consejo Académico' }}</span
+            >
+          </div>
+
+          @if (caso.decision) {
+            <p class="p-2 bg-gris-claro border border-gris-bordes rounded-lg text-body-md">
+              <strong>{{ textoDecision(caso.decision) }}</strong> · Acta n.º
+              {{ caso.numero_acta }} del
+              {{ caso.fecha_acta | date: 'd MMM y' }}
+              @if (caso.observacion) {
+                <br />{{ caso.observacion }}
+              }
+              <span class="block text-xs text-azul-pizarra/60">
+                Registrada {{ caso.registrado_en | date: 'd MMM y, h:mm a' }}
+                @if (caso.registrado_por) {
+                  por <span class="font-mono">{{ caso.registrado_por }}</span>
+                }
+              </span>
+            </p>
+          } @else if (puedeDecidir() && caso.estado_curso !== 'CANCELADO') {
+            @if (idAbierto() !== caso.id) {
+              <button
+                type="button"
+                (click)="abrir(caso)"
+                class="py-2 px-3 bg-azul-institucional text-white rounded-sm text-label-lg font-headline flex items-center gap-1"
+              >
+                <span class="material-symbols-outlined text-[18px]" aria-hidden="true">gavel</span>
+                Registrar decisión
+              </button>
+            } @else {
+              <div class="p-4 rounded-xl border border-gris-bordes bg-gris-claro/50 space-y-3">
+                <div class="grid gap-3 sm:grid-cols-3">
+                  <div class="space-y-1 sm:col-span-3">
+                    <label for="decision-consejo" class="block font-headline text-label-md"
+                      >Decisión</label
+                    >
+                    <select
+                      id="decision-consejo"
+                      [ngModel]="decision()"
+                      (ngModelChange)="decision.set($event)"
+                      class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+                    >
+                      @for (opcion of decisiones; track opcion.valor) {
+                        <option [value]="opcion.valor">{{ opcion.texto }}</option>
+                      }
+                    </select>
+                  </div>
+                  <div class="space-y-1">
+                    <label for="numero-acta" class="block font-headline text-label-md"
+                      >Número del acta</label
+                    >
+                    <input
+                      id="numero-acta"
+                      type="text"
+                      placeholder="Ej.: 014-2026"
+                      [maxlength]="maximoActa"
+                      [ngModel]="numeroActa()"
+                      (ngModelChange)="numeroActa.set($event)"
+                      class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+                    />
+                  </div>
+                  <div class="space-y-1">
+                    <label for="fecha-acta" class="block font-headline text-label-md"
+                      >Fecha del acta</label
+                    >
+                    <input
+                      id="fecha-acta"
+                      type="date"
+                      [max]="hoy"
+                      [ngModel]="fechaActa()"
+                      (ngModelChange)="fechaActa.set($event)"
+                      class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+                    />
+                  </div>
+                  <div class="space-y-1 sm:col-span-3">
+                    <label for="observacion-consejo" class="block font-headline text-label-md">
+                      Observación {{ decision() === 'OTRA' ? '(obligatoria)' : '(opcional)' }}
+                    </label>
+                    <textarea
+                      id="observacion-consejo"
+                      rows="3"
+                      [maxlength]="maximoObservacion"
+                      [ngModel]="observacion()"
+                      (ngModelChange)="observacion.set($event)"
+                      class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+                    ></textarea>
+                  </div>
+                </div>
+                @if (decision() === 'APRUEBA_MATERIA' && caso.nota_minima !== null) {
+                  <p class="text-xs text-azul-pizarra/70">
+                    La materia quedará aprobada con la nota mínima del curso ({{
+                      caso.nota_minima | number: '1.2-2'
+                    }}).
+                  </p>
+                }
+                <div class="flex justify-end gap-2">
+                  <button
+                    type="button"
+                    (click)="cerrar()"
+                    [disabled]="enviando()"
+                    class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline bg-white disabled:opacity-50"
+                  >
+                    Cancelar
+                  </button>
+                  <button
+                    type="button"
+                    (click)="registrar()"
+                    [disabled]="!completa() || enviando()"
+                    class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+                  >
+                    {{ enviando() ? 'Registrando…' : 'Registrar decisión' }}
+                  </button>
+                </div>
+              </div>
+            }
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+<dialog #ventanaTotp class="ventana-totp" (cancel)="$event.preventDefault()">
+  @if (requiereTotp()) {
+    <app-totp
+      modo="CODIGO_OPERACION"
+      operacionEtiqueta="Registrar decisión del Consejo Académico"
+      moduloEtiqueta="Consejo Académico"
+      [verificarCodigo]="verificarCodigoTotp"
+      [errorInicial]="errorTotp()"
+      (cancelar)="cancelarTotp()"
+      (completado)="cerrarTotp()"
+    />
+  }
+</dialog>

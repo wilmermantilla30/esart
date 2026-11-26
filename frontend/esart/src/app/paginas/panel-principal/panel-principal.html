@@ -30,24 +30,24 @@
       <!-- Filtros: año y semestre (por fecha de inicio del curso) -->
       <div class="flex flex-col gap-2.5" role="group" aria-label="Filtros del panel">
         <div class="flex flex-wrap items-center gap-1.5">
-          <span class="text-[11px] uppercase tracking-wider text-white/60 font-headline mr-1"
-            >Año</span
+          <label
+            for="filtro-anio"
+            class="text-[11px] uppercase tracking-wider text-white/60 font-headline mr-1"
+            >Año</label
           >
-          @for (opcion of opcionesAnio(); track opcion) {
-            <button
-              type="button"
-              (click)="elegirAnio(opcion)"
-              [attr.aria-pressed]="anio() === opcion"
-              [class]="
-                'px-3 py-1.5 rounded-lg text-xs font-headline font-semibold transition-colors ' +
-                (anio() === opcion
-                  ? 'bg-white text-azul-pizarra shadow-sm'
-                  : 'bg-white/10 text-white hover:bg-white/20')
-              "
-            >
-              {{ opcion ?? 'Todos' }}
-            </button>
-          }
+          <!-- Lista desplegable con desplazamiento: todos los años, del presente hacia atrás -->
+          <select
+            id="filtro-anio"
+            (change)="elegirAnioDeLista($any($event.target).value)"
+            class="min-w-32 px-3 py-1.5 rounded-lg text-xs font-headline font-semibold bg-white text-azul-pizarra shadow-sm cursor-pointer"
+          >
+            <option value="" [selected]="anio() === null">Todos los años</option>
+            @for (opcion of opcionesAnio(); track opcion) {
+              <option [value]="opcion" [selected]="anio() === opcion">
+                {{ opcion }}{{ aniosConCursos().has(opcion) ? '' : ' · sin cursos' }}
+              </option>
+            }
+          </select>
         </div>
         <div class="flex flex-wrap items-center gap-1.5">
           <span class="text-[11px] uppercase tracking-wider text-white/60 font-headline mr-1"

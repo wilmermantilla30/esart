@@ -9,6 +9,7 @@ import { ErrorApi, leerErrorApi } from '../../../nucleo/modelos/error-api';
 import {
   EntregaDeMateria,
   ErrorPlanilla,
+  FormularioHabilitacion,
   MateriaDelInstructor,
 } from '../../../nucleo/modelos/notas';
 import { NotasService } from '../../../nucleo/servicios/notas.service';
@@ -28,6 +29,16 @@ export function claveMateria(materia: { curso_id: number; malla_id: number }): s
   return `${materia.curso_id}-${materia.malla_id}`;
 }
 
+/** S2-14: la materia tiene alumnos que deben habilitar y todavía se puede registrar su nota. */
+export function puedeHabilitar(materia: MateriaDelInstructor): boolean {
+  return (
+    materia.alumnos_a_habilitar > 0 &&
+    materia.estado_entrega === 'APROBADA' &&
+    materia.estado_habilitacion !== 'APROBADA' &&
+    materia.estado_curso !== 'CANCELADO'
+  );
+}
+
 /** Errores por fila que el backend devuelve cuando la planilla no se puede aceptar. */
 export function erroresDePlanilla(error: ErrorApi): ErrorPlanilla[] {
   const lista = (error.detalle as { errores?: ErrorPlanilla[] } | null)?.errores;
@@ -40,6 +51,10 @@ export function erroresDePlanilla(error: ErrorApi): ErrorPlanilla[] {
  * Muestra las materias que el usuario dicta como titular. Por cada una: descargar la plantilla
  * con los alumnos del curso, subirla con las notas y ver lo enviado. Las notas quedan "En
  * revisión" y no cuentan hasta que el Inspector de Estudios las apruebe.
+ *
+ * S2-14: con las notas aprobadas, los alumnos que quedaron por debajo de la mínima deben
+ * habilitar. El instructor escribe su nota de habilitación en un formulario y también la revisa
+ * el Inspector.
  */
 @Component({
   selector: 'esart-mis-materias',
@@ -56,6 +71,8 @@ export class MisMateriasPagina {
   protected readonly estiloEstadoCurso = estiloEstadoCurso;
   protected readonly estadoEntrega = estadoEntrega;
   protected readonly clave = claveMateria;
+  protected readonly puedeHabilitar = puedeHabilitar;
+  protected readonly estados = ESTADOS_ENTREGA;
 
   protected readonly esInstructor = signal(true);
   protected readonly materias = signal<MateriaDelInstructor[]>([]);
@@ -71,6 +88,12 @@ export class MisMateriasPagina {
   /** Entrega abierta para ver sus notas. */
   protected readonly abierta = signal<EntregaDeMateria | null>(null);
   protected readonly claveAbierta = signal<string | null>(null);
+
+  /** Formulario de habilitación abierto, las notas escritas (por cédula) y si se está enviando. */
+  protected readonly claveHabilitacion = signal<string | null>(null);
+  protected readonly habilitacion = signal<FormularioHabilitacion | null>(null);
+  protected readonly notasHabilitacion = signal<Record<string, string>>({});
+  protected readonly enviandoHabilitacion = signal(false);
 
   constructor() {
     this.cargar();
@@ -175,5 +198,82 @@ export class MisMateriasPagina {
         next: (entrega) => this.abierta.set(entrega),
         error: (error: unknown) => this.error.set(leerErrorApi(error)),
       });
+  }
+
+  // --- Habilitación (S2-14) ------------------------------------------------------------------
+
+  protected abrirHabilitacion(materia: MateriaDelInstructor): void {
+    const clave = claveMateria(materia);
+    if (this.claveHabilitacion() === clave) {
+      this.claveHabilitacion.set(null);
+      this.habilitacion.set(null);
+      return;
+    }
+    this.claveHabilitacion.set(clave);
+    this.habilitacion.set(null);
+    this.error.set(null);
+    this.notas
+      .habilitacion(materia.curso_id, materia.malla_id)
+      .pipe(takeUntilDestroyed(this.destruir))
+      .subscribe({
+        next: (formulario) => this.mostrarHabilitacion(formulario),
+        error: (error: unknown) => this.error.set(leerErrorApi(error)),
+      });
+  }
+
+  protected ponerNotaHabilitacion(cedula: string, valor: string): void {
+    this.notasHabilitacion.update((notas) => ({ ...notas, [cedula]: valor }));
+  }
+
+  /** Envía la nota de todos los alumnos: el backend valida igual que la planilla. */
+  protected registrarHabilitacion(materia: MateriaDelInstructor): void {
+    const formulario = this.habilitacion();
+    if (!formulario || this.enviandoHabilitacion()) return;
+    const clave = claveMateria(materia);
+    const escritas = this.notasHabilitacion();
+    this.error.set(null);
+    this.aviso.set(null);
+    this.erroresPlanilla.set(null);
+    this.enviandoHabilitacion.set(true);
+    this.notas
+      .registrarHabilitacion(
+        materia.curso_id,
+        materia.malla_id,
+        formulario.alumnos.map((alumno) => ({
+          cedula: alumno.cedula,
+          nota: (escritas[alumno.cedula] ?? '').trim(),
+        })),
+      )
+      .pipe(takeUntilDestroyed(this.destruir))
+      .subscribe({
+        next: (respuesta) => {
+          this.enviandoHabilitacion.set(false);
+          this.mostrarHabilitacion(respuesta);
+          this.aviso.set(
+            `Notas de habilitación de ${respuesta.materia} enviadas: quedan en revisión del Inspector de Estudios.`,
+          );
+          this.cargar();
+        },
+        error: (error: unknown) => {
+          this.enviandoHabilitacion.set(false);
+          const fallo = leerErrorApi(error);
+          this.error.set(fallo);
+          const errores = erroresDePlanilla(fallo);
+          if (errores.length) this.erroresPlanilla.set({ clave, errores });
+        },
+      });
+  }
+
+  private mostrarHabilitacion(formulario: FormularioHabilitacion): void {
+    this.habilitacion.set(formulario);
+    // Las notas ya registradas aparecen en el formulario para corregirlas si fue devuelto.
+    this.notasHabilitacion.set(
+      Object.fromEntries(
+        formulario.alumnos.map((alumno) => [
+          alumno.cedula,
+          alumno.nota_habilitacion === null ? '' : String(alumno.nota_habilitacion),
+        ]),
+      ),
+    );
   }
 }

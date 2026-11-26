@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.21 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.22 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -457,7 +457,8 @@ Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
 - `GET /api/notas/mis-materias` → `{ "es_instructor", "materias": [{ "curso_id", "codigo_curso", "nombre_curso", "tipo_curso",
   "estado_curso", "fecha_inicio", "fecha_fin", "malla_id", "orden", "codigo_materia", "materia", "nota_minima", "alumnos",
   "estado_entrega" (null | EN_REVISION | APROBADA | DEVUELTA), "subido_en", "revisado_en", "observacion_revision",
-  "notas_entregadas", "tiene_notas_oficiales", "puede_subir" }] }`.
+  "notas_entregadas", "tiene_notas_oficiales", "alumnos_a_habilitar", "estado_habilitacion",
+  "observacion_habilitacion", "puede_subir" }] }` (los tres últimos campos de habilitación desde S2-14, §5i).
 - `GET /api/notas/plantilla/{curso_id}/{malla_id}` → XLSX como adjunto: hoja "Notas" (alumnos del curso, columna Nota editable con
   validación 0–5) y hoja oculta "control" con la **firma** HMAC del curso, la materia y los alumnos. **409** `CURSO_SIN_ALUMNOS`.
 - `POST /api/notas/entregas/{curso_id}/{malla_id}` (CSRF, multipart `archivo`) → la entrega (`EntregaDeMateria`, abajo), estado
@@ -480,7 +481,7 @@ el detalle; **actualizar** para aprobar, devolver o reabrir. Aprobar y reabrir e
 para la habilitación y la nota final) son las de la última entrega aprobada de cada curso y materia.
 
 - `GET /api/notas/revision/entregas?estado=EN_REVISION|DEVUELTA|APROBADA|TODAS` (por defecto EN_REVISION; otro valor **422**) →
-  `[EntregaEnBandeja]`: `{ "id", "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "revisado_por",
+  `[EntregaEnBandeja]`: `{ "id", "tipo" (ORDINARIA | HABILITACION, §5i), "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "revisado_por",
   "observacion_revision", "curso_id", "codigo_curso", "nombre_curso", "estado_curso", "tipo_curso", "malla_id", "orden",
   "codigo_materia", "materia", "nota_minima", "instructor", "alumnos", "promedio", "por_debajo_de_la_minima",
   "tiene_notas_oficiales" }`, de la más antigua a la más reciente.
@@ -496,6 +497,41 @@ para la habilitación y la nota final) son las de la última entrega aprobada de
 - `POST /api/notas/revision/entregas/{id}/reabrir` (CSRF) `{ "observacion", "codigo_totp" }` → una entrega **APROBADA** queda
   DEVUELTA para que el instructor suba la corrección; las notas oficiales **siguen vigentes** hasta la nueva aprobación.
   Auditoría `NOTAS_REABIERTAS`.
+
+## 5i. Habilitación y Consejo Académico (S2-14)
+
+Debe **habilitar** el alumno cuya nota oficial **ordinaria** de una materia quedó por debajo de la nota mínima del curso; una
+sola habilitación por materia. La nota que cuenta para el promedio queda en `notas_oficiales.nota` con su `origen`: ORDINARIA,
+HABILITACION (alcanzó la mínima en la habilitación: materia "Habilitada") o CONSEJO ("Aprueba la materia": la nota mínima).
+
+**Instructor** (componente `NOTAS_CARGA`, titular de la materia, §5g):
+- `GET /api/notas/habilitaciones/{curso_id}/{malla_id}` → `{ "curso_id", "codigo_curso", "materia", "nota_minima", "alumnos": [{
+  "cedula", "grado", "apellidos", "nombres", "nota_ordinaria", "nota_habilitacion" }], "estado", "subido_en", "revisado_en",
+  "observacion_revision" }` (`estado` null si aún no se registró).
+- `POST /api/notas/habilitaciones/{curso_id}/{malla_id}` (CSRF, **crear**) `{ "notas": [{ "cedula", "nota" }] }` → lo mismo, con la
+  entrega de tipo **HABILITACION** EN_REVISION (pasa por la revisión del Inspector, §5h). Exige la nota de **todos** los alumnos a
+  habilitar (0–5, 2 decimales, número o texto con coma): si no, **422** `NOTAS_INVALIDAS` con `detalle.errores`. Sin alumnos a
+  habilitar (o sin notas ordinarias aprobadas) **409** `SIN_HABILITACIONES`; ya aprobada **409** `ENTREGA_APROBADA`. Auditoría
+  `NOTAS_ENTREGADAS` con `"tipo": "HABILITACION"`.
+
+**Inspector** (§5h): al **aprobar** una entrega HABILITACION, quien alcanza la mínima queda con la nota de habilitación y quien no,
+pasa al Consejo; la auditoría `NOTAS_APROBADAS` agrega `habilitaron` y `al_consejo_academico`. El detalle trae además
+`"nota_ordinaria"` por alumno y, en una habilitación, `nota_oficial` es la de la habilitación anterior. **Reabrir**: la ordinaria
+de una materia con habilitación **409** `MATERIA_CON_HABILITACION`; una habilitación con decisiones del Consejo **409**
+`HABILITACION_CON_DECISION`. Aprobar de nuevo una habilitación reabierta deshace la anterior y aplica la nueva.
+
+**Consejo Académico** (componente `CONSEJO_ACADEMICO`, ruta `/notas/consejo`: **leer** para los casos, **crear** para decidir):
+- `GET /api/notas/consejo/casos?filtro=PENDIENTES|DECIDIDOS|TODOS` (por defecto PENDIENTES; otro valor **422**) → `[{ "id",
+  "curso_id", "codigo_curso", "nombre_curso", "estado_curso", "tipo_curso", "malla_id", "codigo_materia", "materia",
+  "nota_minima", "cedula", "grado", "apellidos", "nombres", "nota_ordinaria", "nota_habilitacion", "habilitacion_aprobada_en",
+  "decision", "numero_acta", "fecha_acta", "observacion", "registrado_en", "registrado_por" }]` (alumnos que perdieron la
+  habilitación; `id` es el de la habilitación).
+- `POST /api/notas/consejo/casos/{id}/decision` (CSRF) `{ "decision": APRUEBA_MATERIA | REPITE_CURSO | PIERDE_CURSO | OTRA,
+  "numero_acta", "fecha_acta", "observacion", "codigo_totp" }` → el caso con su decisión. Política TOTP `CONSEJO_REGISTRAR`.
+  Acta obligatoria (máx. 50) y fecha no futura; `OTRA` exige observación (**422** `DATOS_INVALIDOS`). Una sola decisión por caso
+  (**409** `CASO_DECIDIDO`; no se edita); **404** `CASO_NO_ENCONTRADO`; curso cancelado **409** `CURSO_NO_EDITABLE`.
+  `APRUEBA_MATERIA` deja la materia con la nota mínima del curso (origen CONSEJO); las demás no cambian la nota (las aplica el
+  cierre del curso, S2-15). Auditoría `CONSEJO_DECISION_REGISTRADA`.
 
 ---
 
@@ -542,3 +578,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.19 | 2026-11-21 | S2-02: §5f módulo Cursos (lista, detalle, instructor titular por materia con nota, malla vigente para cursos sin malla); §5d materias que dicta el instructor. Migración p0021 |
 | 0.20 | 2026-11-24 | S2-12: §5g carga de notas del instructor (mis materias, plantilla firmada, entrega EN_REVISION con validación completa y reemplazo). Migración p0022 |
 | 0.21 | 2026-11-26 | S2-13: §5h revisión de notas (bandeja, aprobar con TOTP, devolver con observación, reabrir una aprobada; notas oficiales con antes y después en la auditoría). Migración p0023 |
+| 0.22 | 2026-11-26 | S2-14: §5i habilitación (formulario del instructor, revisión del Inspector) y decisiones del Consejo Académico; tipo de entrega en §5h. Migración p0024 |

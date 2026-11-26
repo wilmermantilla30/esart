@@ -15,6 +15,7 @@ export const ICONOS_MENU: Readonly<Record<string, string>> = {
   NOTAS: 'grading',
   NOTAS_CARGA: 'edit_note',
   NOTAS_REVISION: 'rule',
+  CONSEJO_ACADEMICO: 'gavel',
   REENTRENAMIENTOS: 'target',
   CERTIFICACIONES: 'workspace_premium',
   DOCTRINA: 'menu_book',

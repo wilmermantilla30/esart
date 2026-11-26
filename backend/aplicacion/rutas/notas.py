@@ -1,5 +1,5 @@
 """
-Rutas de la carga de notas del instructor: /api/notas (S2-12, contrato de API §5g).
+Rutas de la carga de notas del instructor: /api/notas (S2-12, §5g) y su habilitación (S2-14, §5i).
 
 Componente NOTAS_CARGA (se da por excepción al instructor): leer para ver sus materias, descargar
 la plantilla y ver su entrega; crear para subir la planilla. Además del permiso, el usuario debe
@@ -13,10 +13,15 @@ from fastapi import APIRouter, Depends, Request, Response, UploadFile
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
-from aplicacion.esquemas.notas import EntregaDeMateria, MisMaterias
+from aplicacion.esquemas.notas import (
+    EntregaDeMateria,
+    FormularioHabilitacion,
+    MisMaterias,
+    SolicitudHabilitacion,
+)
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual, verificar_csrf
-from aplicacion.servicios import notas
+from aplicacion.servicios import habilitaciones, notas
 from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 from aplicacion.servicios.plantillas import TAMANO_MAXIMO_BYTES
@@ -89,3 +94,43 @@ async def subir_planilla(
         sesion, usuario, curso_id, malla_id, archivo.filename, contenido, actor=Actor.web(usuario, request)
     )
     return EntregaDeMateria(**resultado)
+
+
+# --- Habilitación (S2-14) -----------------------------------------------------------------------
+
+
+@enrutador_notas.get(
+    "/habilitaciones/{curso_id}/{malla_id}",
+    response_model=FormularioHabilitacion,
+    dependencies=[Depends(puede_leer)],
+)
+async def ver_habilitacion(
+    curso_id: int, malla_id: int, sesion: Sesion, usuario: UsuarioActual
+) -> FormularioHabilitacion:
+    """Alumnos que deben habilitar la materia y la nota de habilitación registrada, si la hay."""
+    return FormularioHabilitacion(**await habilitaciones.formulario(sesion, usuario, curso_id, malla_id))
+
+
+@enrutador_notas.post(
+    "/habilitaciones/{curso_id}/{malla_id}",
+    response_model=FormularioHabilitacion,
+    dependencies=[Depends(verificar_csrf), Depends(puede_crear)],
+)
+async def registrar_habilitacion(
+    curso_id: int,
+    malla_id: int,
+    datos: SolicitudHabilitacion,
+    request: Request,
+    sesion: Sesion,
+    usuario: UsuarioActual,
+) -> FormularioHabilitacion:
+    """Registra las notas de habilitación: quedan EN_REVISION hasta que el Inspector las apruebe."""
+    resultado = await habilitaciones.registrar(
+        sesion,
+        usuario,
+        curso_id,
+        malla_id,
+        [nota.model_dump() for nota in datos.notas],
+        actor=Actor.web(usuario, request),
+    )
+    return FormularioHabilitacion(**resultado)

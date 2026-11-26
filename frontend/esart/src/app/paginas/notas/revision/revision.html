@@ -94,6 +94,12 @@
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">
+              @if (entrega.tipo === 'HABILITACION') {
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-warning/10 text-warning border-warning/40"
+                  >Habilitación</span
+                >
+              }
               @if (entrega.tiene_notas_oficiales && entrega.estado !== 'APROBADA') {
                 <span
                   class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-azul-institucional/10 text-azul-institucional border-azul-institucional/30"
@@ -153,6 +159,9 @@
                     <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
                       <th class="py-2 px-3">Cédula</th>
                       <th class="py-2 px-3">Alumno</th>
+                      @if (detalle.tipo === 'HABILITACION') {
+                        <th class="py-2 px-3 text-right">Nota perdida</th>
+                      }
                       @if (detalle.tiene_notas_oficiales) {
                         <th class="py-2 px-3 text-right">Oficial vigente</th>
                       }
@@ -171,6 +180,11 @@
                         <td class="py-1.5 px-3">
                           {{ nota.grado }} {{ nota.apellidos }} {{ nota.nombres }}
                         </td>
+                        @if (detalle.tipo === 'HABILITACION') {
+                          <td class="py-1.5 px-3 text-right text-error/80">
+                            {{ nota.nota_ordinaria | number: '1.2-2' }}
+                          </td>
+                        }
                         @if (detalle.tiene_notas_oficiales) {
                           <td class="py-1.5 px-3 text-right text-azul-pizarra/70">
                             {{
@@ -196,6 +210,12 @@
                   </tbody>
                 </table>
               </div>
+              @if (detalle.tipo === 'HABILITACION' && detalle.estado === 'EN_REVISION') {
+                <p class="text-xs text-azul-pizarra/70">
+                  Notas de habilitación. Al aprobarlas, quien alcanza la nota mínima queda con su
+                  nota de habilitación (materia "Habilitada"); quien no, pasa al Consejo Académico.
+                </p>
+              }
               @if (detalle.tiene_notas_oficiales && detalle.estado !== 'APROBADA') {
                 <p class="text-xs text-azul-pizarra/70">
                   Corrección de notas ya aprobadas: las filas resaltadas cambian. Al aprobar, la
