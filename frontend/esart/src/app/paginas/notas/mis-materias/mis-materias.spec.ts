@@ -22,6 +22,7 @@ describe('Carga de notas del instructor (S2-12)', () => {
     revisado_en: null,
     observacion_revision: null,
     notas_entregadas: 0,
+    tiene_notas_oficiales: false,
     puede_subir: true,
     ...cambios,
   });

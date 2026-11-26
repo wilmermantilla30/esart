@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.20 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.21 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -457,7 +457,7 @@ Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
 - `GET /api/notas/mis-materias` → `{ "es_instructor", "materias": [{ "curso_id", "codigo_curso", "nombre_curso", "tipo_curso",
   "estado_curso", "fecha_inicio", "fecha_fin", "malla_id", "orden", "codigo_materia", "materia", "nota_minima", "alumnos",
   "estado_entrega" (null | EN_REVISION | APROBADA | DEVUELTA), "subido_en", "revisado_en", "observacion_revision",
-  "notas_entregadas", "puede_subir" }] }`.
+  "notas_entregadas", "tiene_notas_oficiales", "puede_subir" }] }`.
 - `GET /api/notas/plantilla/{curso_id}/{malla_id}` → XLSX como adjunto: hoja "Notas" (alumnos del curso, columna Nota editable con
   validación 0–5) y hoja oculta "control" con la **firma** HMAC del curso, la materia y los alumnos. **409** `CURSO_SIN_ALUMNOS`.
 - `POST /api/notas/entregas/{curso_id}/{malla_id}` (CSRF, multipart `archivo`) → la entrega (`EntregaDeMateria`, abajo), estado
@@ -465,12 +465,37 @@ Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
   **422** `ARCHIVO_INVALIDO` (no es XLSX seguro), `PLANTILLA_ALTERADA` (sin firma o firma que no coincide), `PLANTILLA_DE_OTRA_MATERIA`,
   `NOTAS_INVALIDAS` con `detalle.errores: [{ "fila", "mensaje" }]` (falta la nota, no es número, fuera de 0–5, más de 2 decimales,
   cédula ajena al curso, alumno repetido o faltante: se exige la nota de **todos** los alumnos); **409** `PLANTILLA_DESACTUALIZADA`
-  (cambió la lista de alumnos) y `ENTREGA_APROBADA` (ya aprobada por el Inspector: solo cambia si la devuelve, S2-13).
+  (cambió la lista de alumnos) y `ENTREGA_APROBADA` (ya aprobada por el Inspector: solo cambia si la reabre, §5h).
   En revisión o devuelta, una nueva carga **reemplaza** la anterior. Auditoría `NOTAS_ENTREGADAS` (curso, materia, alumnos,
   promedio, cuántas por debajo de la mínima, a qué estado reemplazó y sha256 del archivo).
 - `GET /api/notas/entregas/{curso_id}/{malla_id}` → `{ "curso_id", "codigo_curso", "materia", "nota_minima", "entrega": null |
   { "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "observacion_revision", "notas": [{ "cedula", "grado",
   "apellidos", "nombres", "nota" }] } }`.
+
+## 5h. Revisión de notas por el Inspector de Estudios (S2-13)
+
+Componente `NOTAS_REVISION` (ruta `/notas/revision` desde p0023; se da por excepción al Inspector): **leer** para la bandeja y
+el detalle; **actualizar** para aprobar, devolver o reabrir. Aprobar y reabrir exigen el código del autenticador (política
+`NOTAS_APROBAR`: sin código **409** `TOTP_REQUERIDO`, inválido **422** `TOTP_INVALIDO`). Las notas **oficiales** (las que cuentan
+para la habilitación y la nota final) son las de la última entrega aprobada de cada curso y materia.
+
+- `GET /api/notas/revision/entregas?estado=EN_REVISION|DEVUELTA|APROBADA|TODAS` (por defecto EN_REVISION; otro valor **422**) →
+  `[EntregaEnBandeja]`: `{ "id", "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "revisado_por",
+  "observacion_revision", "curso_id", "codigo_curso", "nombre_curso", "estado_curso", "tipo_curso", "malla_id", "orden",
+  "codigo_materia", "materia", "nota_minima", "instructor", "alumnos", "promedio", "por_debajo_de_la_minima",
+  "tiene_notas_oficiales" }`, de la más antigua a la más reciente.
+- `GET /api/notas/revision/entregas/{id}` → `EntregaEnBandeja` + `"notas": [{ "cedula", "grado", "apellidos", "nombres", "nota",
+  "nota_oficial" }]` (`nota_oficial` = la vigente, null si no había). **404** `ENTREGA_NO_ENCONTRADA`.
+- `POST /api/notas/revision/entregas/{id}/aprobar` (CSRF) `{ "version", "codigo_totp" }` → el detalle, estado **APROBADA**; sus notas
+  reemplazan a las oficiales. `version` es el `subido_en` revisado: si el instructor subió otra planilla, **409** `ENTREGA_CAMBIO`.
+  Solo EN_REVISION (si no, **409** `ESTADO_NO_PERMITE`); curso CANCELADO **409** `CURSO_NO_EDITABLE`; si cambió la lista de alumnos
+  del curso **409** `ENTREGA_DESACTUALIZADA`. Auditoría `NOTAS_APROBADAS` (curso, materia, instructor, alumnos, promedio, cuántas
+  por debajo de la mínima, `es_correccion` y, en una corrección, `cambios: [{ "cedula", "antes", "despues" }]`).
+- `POST /api/notas/revision/entregas/{id}/devolver` (CSRF) `{ "version", "observacion" }` → estado **DEVUELTA** con la observación
+  (5 a 1000 caracteres; si no, **422** `DATOS_INVALIDOS`). Solo EN_REVISION. Auditoría `NOTAS_DEVUELTAS`.
+- `POST /api/notas/revision/entregas/{id}/reabrir` (CSRF) `{ "observacion", "codigo_totp" }` → una entrega **APROBADA** queda
+  DEVUELTA para que el instructor suba la corrección; las notas oficiales **siguen vigentes** hasta la nueva aprobación.
+  Auditoría `NOTAS_REABIERTAS`.
 
 ---
 
@@ -516,3 +541,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.18 | 2026-11-21 | S2-09: §5c mallas curriculares y tipos de curso en Parámetros (versiones con TOTP y auditoría); §2 `operaciones` por componente en `/auth/yo` y permiso especial hijo que abre su módulo. Migración p0020 |
 | 0.19 | 2026-11-21 | S2-02: §5f módulo Cursos (lista, detalle, instructor titular por materia con nota, malla vigente para cursos sin malla); §5d materias que dicta el instructor. Migración p0021 |
 | 0.20 | 2026-11-24 | S2-12: §5g carga de notas del instructor (mis materias, plantilla firmada, entrega EN_REVISION con validación completa y reemplazo). Migración p0022 |
+| 0.21 | 2026-11-26 | S2-13: §5h revisión de notas (bandeja, aprobar con TOTP, devolver con observación, reabrir una aprobada; notas oficiales con antes y después en la auditoría). Migración p0023 |

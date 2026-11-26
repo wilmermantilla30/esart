@@ -1,4 +1,4 @@
-/** Modelos de la carga de notas del instructor (S2-12, contrato de API §5g). */
+/** Modelos de la carga de notas (S2-12, §5g) y de su revisión por el Inspector (S2-13, §5h). */
 
 export type EstadoEntrega = 'EN_REVISION' | 'APROBADA' | 'DEVUELTA';
 
@@ -22,6 +22,8 @@ export interface MateriaDelInstructor {
   revisado_en: string | null;
   observacion_revision: string | null;
   notas_entregadas: number;
+  /** La materia ya tiene notas aprobadas (siguen vigentes mientras se corrige). */
+  tiene_notas_oficiales: boolean;
   /** Falso si el curso está cancelado o el Inspector ya aprobó la entrega. */
   puede_subir: boolean;
 }
@@ -60,4 +62,46 @@ export interface EntregaDeMateria {
 export interface ErrorPlanilla {
   fila: number | null;
   mensaje: string;
+}
+
+// --- Revisión por el Inspector de Estudios (S2-13) ---------------------------------------
+
+/** Filtro de la bandeja: un estado o todas. */
+export type FiltroBandeja = EstadoEntrega | 'TODAS';
+
+/** Una entrega en la bandeja del Inspector, con el resumen de sus notas. */
+export interface EntregaEnBandeja {
+  id: number;
+  estado: EstadoEntrega;
+  nombre_archivo: string;
+  /** Versión de la entrega: aprobar y devolver la envían (el instructor pudo subir otra). */
+  subido_en: string;
+  subido_por: string | null;
+  revisado_en: string | null;
+  revisado_por: string | null;
+  observacion_revision: string | null;
+  curso_id: number;
+  codigo_curso: string;
+  nombre_curso: string;
+  estado_curso: string;
+  tipo_curso: string;
+  malla_id: number;
+  orden: number;
+  codigo_materia: string;
+  materia: string;
+  nota_minima: number | null;
+  instructor: string;
+  alumnos: number;
+  promedio: number | null;
+  por_debajo_de_la_minima: number;
+  tiene_notas_oficiales: boolean;
+}
+
+export interface NotaEnRevision extends NotaAlumno {
+  /** Nota oficial vigente (null si la materia aún no tiene notas aprobadas). */
+  nota_oficial: number | null;
+}
+
+export interface DetalleEntrega extends EntregaEnBandeja {
+  notas: NotaEnRevision[];
 }

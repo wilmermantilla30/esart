@@ -3,12 +3,12 @@ import { Component, DestroyRef, computed, inject, signal } from '@angular/core';
 import { takeUntilDestroyed } from '@angular/core/rxjs-interop';
 
 import { guardarArchivo } from '../../../nucleo/descargas';
+import { ESTADOS_ENTREGA } from '../../../nucleo/estados-entrega';
 import { estiloEstadoCurso, textoEstadoCurso } from '../../../nucleo/estados-curso';
 import { ErrorApi, leerErrorApi } from '../../../nucleo/modelos/error-api';
 import {
   EntregaDeMateria,
   ErrorPlanilla,
-  EstadoEntrega,
   MateriaDelInstructor,
 } from '../../../nucleo/modelos/notas';
 import { NotasService } from '../../../nucleo/servicios/notas.service';
@@ -19,16 +19,6 @@ const COMPONENTE = 'NOTAS_CARGA';
 const TAMANO_MAXIMO_PLANILLA = 25 * 1024 * 1024;
 
 /** Estado de la entrega en palabras y con su color. */
-export const ESTADOS_ENTREGA: Record<
-  EstadoEntrega | 'SIN_ENTREGA',
-  { texto: string; estilo: string }
-> = {
-  SIN_ENTREGA: { texto: 'Sin notas', estilo: 'bg-gris-claro text-azul-pizarra border-gris-bordes' },
-  EN_REVISION: { texto: 'En revisión', estilo: 'bg-warning/10 text-warning border-warning/40' },
-  APROBADA: { texto: 'Aprobada', estilo: 'bg-success/10 text-success border-success/30' },
-  DEVUELTA: { texto: 'Devuelta', estilo: 'bg-error/10 text-error border-error/30' },
-};
-
 export function estadoEntrega(materia: MateriaDelInstructor): { texto: string; estilo: string } {
   return ESTADOS_ENTREGA[materia.estado_entrega ?? 'SIN_ENTREGA'];
 }
@@ -141,7 +131,7 @@ export class MisMateriasPagina {
       return;
     }
     if (
-      materia.estado_entrega === 'EN_REVISION' &&
+      materia.estado_entrega !== null &&
       !confirm(`Ya envió notas de ${materia.materia}. ¿Reemplazarlas con este archivo?`)
     ) {
       return;

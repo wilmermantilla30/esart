@@ -1,0 +1,340 @@
+<div class="space-y-5">
+  <div class="space-y-1">
+    <h1 class="font-headline font-bold text-headline-md text-negro-institucional">
+      Revisión de notas
+    </h1>
+    <p class="text-body-md text-azul-pizarra/70">
+      Revise las notas que envían los instructores. Al <strong>aprobarlas</strong> (con su
+      autenticador) pasan a ser las oficiales; si hay un error, <strong>devuélvalas</strong> con una
+      observación para que el instructor las corrija.
+    </p>
+  </div>
+
+  <div class="flex flex-wrap gap-2" role="tablist" aria-label="Estado de las entregas">
+    @for (opcion of filtros; track opcion.valor) {
+      <button
+        type="button"
+        role="tab"
+        [attr.aria-selected]="filtro() === opcion.valor"
+        (click)="elegirFiltro(opcion.valor)"
+        [class]="
+          'py-1.5 px-3 rounded-full text-label-lg font-headline border ' +
+          (filtro() === opcion.valor
+            ? 'bg-azul-institucional text-white border-azul-institucional'
+            : 'bg-white text-azul-pizarra border-gris-bordes')
+        "
+      >
+        {{ opcion.texto }}
+      </button>
+    }
+  </div>
+
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex flex-wrap items-center gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span class="flex-1">{{ fallo.mensaje }}</span>
+      @if (fallo.codigo === 'ENTREGA_CAMBIO' && idAbierta(); as id) {
+        <button
+          type="button"
+          (click)="recargarDetalle(id)"
+          class="px-3 py-1.5 rounded-lg border border-error/40 text-label-lg font-headline text-error bg-white"
+        >
+          Ver la nueva planilla
+        </button>
+      }
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Cargando entregas…</p>
+  } @else if (!entregas().length) {
+    <div class="bg-white rounded-2xl border border-gris-bordes p-5 text-body-md text-azul-pizarra">
+      {{
+        filtro() === 'EN_REVISION'
+          ? 'No hay entregas pendientes de revisión.'
+          : 'No hay entregas en este estado.'
+      }}
+    </div>
+  } @else {
+    <ul class="space-y-3">
+      @for (entrega of entregas(); track entrega.id) {
+        <li class="bg-white rounded-2xl border border-gris-bordes p-4 space-y-3">
+          <div class="flex flex-wrap items-start justify-between gap-3">
+            <div class="min-w-0 space-y-0.5">
+              <p class="font-headline font-bold text-negro-institucional">{{ entrega.materia }}</p>
+              <p class="text-xs text-azul-pizarra/70">
+                {{ entrega.tipo_curso }} · Curso {{ entrega.codigo_curso }} · Instructor:
+                {{ entrega.instructor }}
+              </p>
+              <p class="text-xs text-azul-pizarra/70">
+                Enviada {{ entrega.subido_en | date: 'd MMM y, h:mm a' }} · {{ entrega.alumnos }}
+                {{ entrega.alumnos === 1 ? 'alumno' : 'alumnos' }}
+                @if (entrega.promedio !== null) {
+                  · Promedio {{ entrega.promedio | number: '1.2-2' }}
+                }
+                @if (entrega.nota_minima !== null) {
+                  ·
+                  <span [class.text-error]="entrega.por_debajo_de_la_minima > 0">
+                    {{ entrega.por_debajo_de_la_minima }} por debajo de
+                    {{ entrega.nota_minima | number: '1.2-2' }}
+                  </span>
+                }
+              </p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+              @if (entrega.tiene_notas_oficiales && entrega.estado !== 'APROBADA') {
+                <span
+                  class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-azul-institucional/10 text-azul-institucional border-azul-institucional/30"
+                  >Corrección</span
+                >
+              }
+              <span
+                [class]="
+                  'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                  estiloEstadoCurso(entrega.estado_curso)
+                "
+                >{{ textoEstadoCurso(entrega.estado_curso) }}</span
+              >
+              <span
+                [class]="
+                  'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+                  estados[entrega.estado].estilo
+                "
+                >{{ estados[entrega.estado].texto }}</span
+              >
+            </div>
+          </div>
+
+          @if (entrega.observacion_revision) {
+            <p class="p-2 bg-gris-claro border border-gris-bordes rounded-lg text-body-md">
+              <strong>Observación:</strong> {{ entrega.observacion_revision }}
+            </p>
+          }
+          @if (entrega.revisado_en) {
+            <p class="text-xs text-azul-pizarra/60">
+              Revisada {{ entrega.revisado_en | date: 'd MMM y, h:mm a' }}
+              @if (entrega.revisado_por) {
+                por <span class="font-mono">{{ entrega.revisado_por }}</span>
+              }
+            </p>
+          }
+
+          <div>
+            <button
+              type="button"
+              (click)="abrir(entrega)"
+              [attr.aria-expanded]="idAbierta() === entrega.id"
+              class="py-2 px-3 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline flex items-center gap-1"
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">{{
+                idAbierta() === entrega.id ? 'expand_less' : 'visibility'
+              }}</span>
+              {{ idAbierta() === entrega.id ? 'Cerrar' : 'Revisar notas' }}
+            </button>
+          </div>
+
+          @if (idAbierta() === entrega.id) {
+            @if (abierta(); as detalle) {
+              <div class="overflow-x-auto">
+                <table class="w-full text-body-md">
+                  <thead class="bg-gris-claro">
+                    <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                      <th class="py-2 px-3">Cédula</th>
+                      <th class="py-2 px-3">Alumno</th>
+                      @if (detalle.tiene_notas_oficiales) {
+                        <th class="py-2 px-3 text-right">Oficial vigente</th>
+                      }
+                      <th class="py-2 px-3 text-right">
+                        {{ detalle.tiene_notas_oficiales ? 'Nota enviada' : 'Nota' }}
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    @for (nota of detalle.notas; track nota.cedula) {
+                      <tr
+                        class="border-t border-gris-bordes"
+                        [class.bg-warning/5]="notaCambiada(nota, detalle.tiene_notas_oficiales)"
+                      >
+                        <td class="py-1.5 px-3 font-mono text-xs">{{ nota.cedula }}</td>
+                        <td class="py-1.5 px-3">
+                          {{ nota.grado }} {{ nota.apellidos }} {{ nota.nombres }}
+                        </td>
+                        @if (detalle.tiene_notas_oficiales) {
+                          <td class="py-1.5 px-3 text-right text-azul-pizarra/70">
+                            {{
+                              nota.nota_oficial === null
+                                ? '—'
+                                : (nota.nota_oficial | number: '1.2-2')
+                            }}
+                          </td>
+                        }
+                        <td
+                          class="py-1.5 px-3 text-right font-semibold"
+                          [class.text-error]="
+                            detalle.nota_minima !== null && nota.nota < detalle.nota_minima
+                          "
+                        >
+                          {{ nota.nota | number: '1.2-2' }}
+                          @if (notaCambiada(nota, detalle.tiene_notas_oficiales)) {
+                            <span class="sr-only">(cambió)</span>
+                          }
+                        </td>
+                      </tr>
+                    }
+                  </tbody>
+                </table>
+              </div>
+              @if (detalle.tiene_notas_oficiales && detalle.estado !== 'APROBADA') {
+                <p class="text-xs text-azul-pizarra/70">
+                  Corrección de notas ya aprobadas: las filas resaltadas cambian. Al aprobar, la
+                  auditoría guarda la nota anterior y la nueva.
+                </p>
+              }
+
+              @if (puedeRevisar() && detalle.estado_curso !== 'CANCELADO') {
+                @if (!accion()) {
+                  <div class="flex flex-wrap gap-2">
+                    @if (detalle.estado === 'EN_REVISION') {
+                      <button
+                        type="button"
+                        (click)="iniciarAccion('aprobar')"
+                        class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline flex items-center gap-1"
+                      >
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                          >verified</span
+                        >
+                        Aprobar
+                      </button>
+                      <button
+                        type="button"
+                        (click)="iniciarAccion('devolver')"
+                        class="py-2 px-4 border border-error/50 text-error rounded-sm text-label-lg font-headline flex items-center gap-1"
+                      >
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                          >undo</span
+                        >
+                        Devolver
+                      </button>
+                    }
+                    @if (detalle.estado === 'APROBADA') {
+                      <button
+                        type="button"
+                        (click)="iniciarAccion('reabrir')"
+                        class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline flex items-center gap-1"
+                      >
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                          >lock_open</span
+                        >
+                        Reabrir para corrección
+                      </button>
+                    }
+                  </div>
+                } @else {
+                  <div class="p-4 rounded-xl border border-gris-bordes bg-gris-claro/50 space-y-3">
+                    @switch (accion()) {
+                      @case ('aprobar') {
+                        <p class="text-body-md text-azul-pizarra">
+                          Va a aprobar las <strong>{{ detalle.alumnos }} notas</strong> de
+                          {{ detalle.materia }}.
+                          {{
+                            detalle.tiene_notas_oficiales
+                              ? 'Reemplazan a las oficiales vigentes.'
+                              : 'Pasan a ser las notas oficiales.'
+                          }}
+                          Se le pedirá el código de su autenticador.
+                        </p>
+                      }
+                      @case ('devolver') {
+                        <p class="text-body-md text-azul-pizarra">
+                          La entrega vuelve al instructor con su observación para que la corrija y
+                          la suba de nuevo.
+                        </p>
+                      }
+                      @case ('reabrir') {
+                        <p class="text-body-md text-azul-pizarra">
+                          El instructor podrá subir una corrección. Las notas oficiales siguen
+                          vigentes hasta que usted apruebe la nueva entrega. Se le pedirá el código
+                          de su autenticador.
+                        </p>
+                      }
+                    }
+                    @if (accion() !== 'aprobar') {
+                      <div class="space-y-1">
+                        <label for="observacion-revision" class="block font-headline text-label-md"
+                          >Observación para el instructor</label
+                        >
+                        <textarea
+                          id="observacion-revision"
+                          rows="3"
+                          [maxlength]="maximoObservacion"
+                          [ngModel]="observacion()"
+                          (ngModelChange)="observacion.set($event)"
+                          class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+                          placeholder="Qué debe corregir y en qué alumnos"
+                        ></textarea>
+                      </div>
+                    }
+                    <div class="flex justify-end gap-2">
+                      <button
+                        type="button"
+                        (click)="cancelarAccion()"
+                        [disabled]="enviando()"
+                        class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline bg-white disabled:opacity-50"
+                      >
+                        Cancelar
+                      </button>
+                      <button
+                        type="button"
+                        (click)="confirmar()"
+                        [disabled]="enviando() || (accion() !== 'aprobar' && !observacionValida())"
+                        class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+                      >
+                        {{
+                          enviando()
+                            ? 'Enviando…'
+                            : accion() === 'aprobar'
+                              ? 'Aprobar notas'
+                              : accion() === 'devolver'
+                                ? 'Devolver al instructor'
+                                : 'Reabrir entrega'
+                        }}
+                      </button>
+                    </div>
+                  </div>
+                }
+              }
+            } @else {
+              <p class="text-body-md text-azul-pizarra/70" role="status">Cargando notas…</p>
+            }
+          }
+        </li>
+      }
+    </ul>
+  }
+</div>
+
+<dialog #ventanaTotp class="ventana-totp" (cancel)="$event.preventDefault()">
+  @if (requiereTotp()) {
+    <app-totp
+      modo="CODIGO_OPERACION"
+      [operacionEtiqueta]="etiquetaTotp()"
+      moduloEtiqueta="Revisión de notas"
+      [verificarCodigo]="verificarCodigoTotp"
+      [errorInicial]="errorTotp()"
+      (cancelar)="cancelarTotp()"
+      (completado)="cerrarTotp()"
+    />
+  }
+</dialog>

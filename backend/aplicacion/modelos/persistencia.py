@@ -947,6 +947,52 @@ sa.Index(
 )
 
 
+class NotaOficial(BaseModelo):
+    """p0023 (S2-13): nota aprobada por el Inspector; la que cuenta para habilitación y nota final.
+    Se reemplaza completa (por curso y materia) en cada nueva aprobación."""
+
+    __table__ = sa.Table(
+        "notas_oficiales",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota", sa.Numeric(3, 2), nullable=False),
+        sa.Column("entrega_id", sa.BigInteger(), nullable=False),
+        sa.Column("aprobado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("aprobado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_notas_oficiales_curso_id")),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_notas_oficiales_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_notas_oficiales_personal_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["entrega_id"], ["esart.entregas_notas.id"], name=conv("fk_notas_oficiales_entrega_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["aprobado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_notas_oficiales_aprobado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("ck_notas_oficiales_nota")),
+        sa.UniqueConstraint("curso_id", "malla_id", "personal_id", name=conv("uq_notas_oficiales_alumno")),
+        sa.PrimaryKeyConstraint("id", name=conv("notas_oficiales_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_notas_oficiales_personal_id",
+    sa.text("personal_id"),
+    _table=BaseModelo.metadata.tables["esart.notas_oficiales"],
+    unique=False,
+)
+
+
 class Materias(BaseModelo):
     __table__ = sa.Table(
         "materias",

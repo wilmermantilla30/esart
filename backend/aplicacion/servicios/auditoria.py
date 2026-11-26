@@ -56,6 +56,10 @@ INSTRUCTOR_MATERIA_ASIGNADO = "INSTRUCTOR_MATERIA_ASIGNADO"
 CURSO_MALLA_ASIGNADA = "CURSO_MALLA_ASIGNADA"
 # Planilla de notas subida por el instructor (migración p0022, S2-12).
 NOTAS_ENTREGADAS = "NOTAS_ENTREGADAS"
+# Revisión de las entregas por el Inspector de Estudios (migración p0023, S2-13).
+NOTAS_APROBADAS = "NOTAS_APROBADAS"
+NOTAS_DEVUELTAS = "NOTAS_DEVUELTAS"
+NOTAS_REABIERTAS = "NOTAS_REABIERTAS"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")

@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.9 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.10 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -273,6 +273,11 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   (`entrega_id` con borrado en cascada, `personal_id` del alumno, `nota` NUMERIC(3,2) de 0 a 5; única por entrega y
   alumno). Los alumnos de un curso son los de `hoja_vida_artillero.curso_id`; `notas_materia` y `alumnos_activos`
   (fase 1) no se usan. `NOTAS_CARGA` tiene ruta `/notas/mis-materias`; acción de auditoría `NOTAS_ENTREGADAS`.
+- Notas oficiales *(S2-13, migración `p0023_revision_notas`)*: `notas_oficiales` (una por `curso_id` + `malla_id` +
+  `personal_id`; `nota` NUMERIC(3,2) de 0 a 5, `entrega_id` aprobada, `aprobado_por_id`, `aprobado_en`). Se reemplazan
+  completas en cada aprobación del Inspector; mientras una entrega reabierta se corrige, siguen vigentes. Son las que
+  usarán la habilitación (S2-14) y la nota final (S2-15). `NOTAS_REVISION` tiene ruta `/notas/revision`; política TOTP
+  `NOTAS_APROBAR`; acciones de auditoría `NOTAS_APROBADAS`, `NOTAS_DEVUELTAS` y `NOTAS_REABIERTAS`.
 
 ---
 
@@ -397,3 +402,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.7 | 2026-11-21 | §6.4: mallas y tipos de curso editables desde Parámetros (S2-09, `p0020`) |
 | 1.8 | 2026-11-21 | §6.4: instructor titular por materia en cada curso y módulo Cursos (S2-02, `p0021`) |
 | 1.9 | 2026-11-24 | §6.4: entregas de notas por curso y materia con la nota de cada alumno (S2-12, `p0022`) |
+| 1.10 | 2026-11-26 | §6.4: notas oficiales aprobadas por el Inspector de Estudios (S2-13, `p0023`) |

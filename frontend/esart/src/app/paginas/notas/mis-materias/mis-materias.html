@@ -87,6 +87,18 @@
               <strong>Devuelta por el Inspector:</strong> {{ materia.observacion_revision }}
             </p>
           }
+          @if (materia.estado_entrega !== 'APROBADA' && materia.tiene_notas_oficiales) {
+            <p class="text-xs text-azul-pizarra/70">
+              Las notas aprobadas antes siguen vigentes hasta que el Inspector apruebe la
+              corrección.
+            </p>
+          }
+          @if (materia.estado_entrega === 'APROBADA') {
+            <p class="text-xs text-azul-pizarra/70">
+              Notas aprobadas. Para corregir una, pida al Inspector de Estudios que reabra la
+              entrega.
+            </p>
+          }
 
           <div class="flex flex-wrap items-center gap-2">
             <button
