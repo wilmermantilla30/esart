@@ -12,6 +12,7 @@ import {
   TipoDocumentoArtillero,
 } from '../../../nucleo/modelos/verificacion';
 import { VerificacionService } from '../../../nucleo/servicios/verificacion.service';
+import { HistorialAcademico } from './historial-academico/historial-academico';
 
 /** Parámetro de la URL con la cédula a verificar (lo usa el listado de habilitados). */
 export const PARAMETRO_CEDULA = 'cedula';
@@ -28,7 +29,7 @@ const PATRON_CEDULA = /^[\d.\s-]{5,20}$/;
  */
 @Component({
   selector: 'esart-verificar-artillero',
-  imports: [ReactiveFormsModule, NgTemplateOutlet, InsigniaEstado],
+  imports: [ReactiveFormsModule, NgTemplateOutlet, InsigniaEstado, HistorialAcademico],
   templateUrl: './verificar-artillero.html',
 })
 export class VerificarArtillero {

@@ -84,6 +84,32 @@ class CriterioDocumento:
 
 
 @dataclass(frozen=True)
+class MateriaDocumento:
+    """S2-17: materia del historial académico con la nota que cuenta."""
+
+    materia: str
+    nota: float | None
+    estado: str | None  # HABILITADA | APROBADA_POR_CONSEJO | HABILITACION_PERDIDA | None
+    instructor: str | None
+
+
+@dataclass(frozen=True)
+class HistorialCursoDocumento:
+    """S2-17: curso con notas en la plataforma (cerrado o, si no, parcial)."""
+
+    nombre: str
+    codigo: str
+    fecha_inicio: date | None
+    fecha_fin: date | None
+    cerrado: bool
+    nota_final: float | None
+    resultado: str | None
+    puesto: int | None
+    aprobados_del_curso: int | None
+    materias: list[MateriaDocumento] = field(default_factory=list)
+
+
+@dataclass(frozen=True)
 class DatosDocumento:
     """Todo lo que un documento necesita del artillero; lo arma el servicio a partir de la verificación."""
 
@@ -102,6 +128,7 @@ class DatosDocumento:
     criterios: list[CriterioDocumento] = field(default_factory=list)
     cursos: list[CursoDocumento] = field(default_factory=list)
     reentrenamientos: list[ReentrenamientoDocumento] = field(default_factory=list)
+    historial: list[HistorialCursoDocumento] = field(default_factory=list)
 
     @property
     def nombre_completo(self) -> str:

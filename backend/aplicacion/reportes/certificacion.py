@@ -7,6 +7,8 @@ NO APTO" con el soporte de la verificación:
 - Resultado destacado (verde APTO / rojo NO APTO) y, si es NO APTO, sus motivos.
 - Tabla de criterios evaluados (obligatorios y alternativos) con Cumple / No cumple.
 - Tabla de cursos registrados y tabla de reentrenamientos con su estado.
+- S2-17: historial académico de los cursos con notas en la plataforma (materias, nota, si fue
+  habilitada, instructor, nota final y puesto); el curso en curso aparece como parcial.
 - Leyenda de validez: el resultado corresponde a la fecha de expedición.
 
 Siempre se puede generar.
@@ -138,6 +140,8 @@ def generar(datos: DatosDocumento) -> bytes:
         )
     else:
         contenido.append(Paragraph("No registra cursos.", e["normal"]))
+    if datos.historial:
+        contenido += historial_academico(datos, e)
     contenido.append(Paragraph("Reentrenamientos", e["subtitulo"]))
     if datos.reentrenamientos:
         contenido.append(
@@ -170,3 +174,56 @@ def generar(datos: DatosDocumento) -> bytes:
         *bloque_firma(e),
     ]
     return construir_pdf(datos, TITULO, contenido)
+
+
+ESTADOS_MATERIA = {
+    "HABILITADA": "Habilitada",
+    "APROBADA_POR_CONSEJO": "Aprobada por el Consejo",
+    "HABILITACION_PERDIDA": "Habilitación perdida",
+}
+
+
+def _nota(valor: float | None) -> str:
+    return f"{valor:.2f}".replace(".", ",") if valor is not None else "—"
+
+
+def historial_academico(datos: DatosDocumento, e: dict) -> list:
+    """S2-17: un bloque por curso con sus materias, la nota final y el puesto."""
+    contenido = [Paragraph("Historial académico", e["subtitulo"])]
+    for curso in datos.historial:
+        if curso.cerrado:
+            puesto = (
+                f"puesto {curso.puesto} de {curso.aprobados_del_curso}"
+                if curso.puesto is not None
+                else "sin puesto"
+            )
+            resumen = (
+                f"Nota final <b>{_nota(curso.nota_final)}</b> · "
+                f"{'Aprobado' if curso.resultado == 'APROBADO' else 'Reprobado'} · {puesto}"
+            )
+        else:
+            resumen = "<b>En curso:</b> notas parciales aprobadas hasta la fecha de expedición"
+        contenido += [
+            Paragraph(
+                f"<b>{escapar(curso.nombre)} ({escapar(curso.codigo)})</b> · "
+                f"{fecha_corta(curso.fecha_inicio)} – {fecha_corta(curso.fecha_fin)} · {resumen}",
+                e["normal"],
+            ),
+            Spacer(1, 0.15 * cm),
+            tabla(
+                [["Materia", "Nota", "Observación", "Instructor"]]
+                + [
+                    [
+                        m.materia,
+                        _nota(m.nota),
+                        ESTADOS_MATERIA.get(m.estado or "", "—"),
+                        m.instructor or "—",
+                    ]
+                    for m in curso.materias
+                ],
+                [7 * cm, 1.6 * cm, 3.6 * cm, 4.4 * cm],
+                e,
+            ),
+            Spacer(1, 0.3 * cm),
+        ]
+    return contenido
