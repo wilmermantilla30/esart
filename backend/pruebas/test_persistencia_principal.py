@@ -35,6 +35,8 @@ TABLAS_POSTERIORES_A_P0001 = {
     "esart.habilitaciones_materia",
     "esart.decisiones_consejo",
     "esart.resultados_curso",
+    "esart.items_campana",
+    "esart.items_entrega",
 }
 COLUMNAS_P0002 = {("esart_ref", "usuarios"): {"intentos_fallidos_consecutivos", "bloqueado_hasta"}}
 # p0011: curso de la importación masiva e historial de grados.
@@ -112,7 +114,8 @@ def test_relaciones_bigint_y_usuarios_sin_rol_id_inventado():
 
 def test_historial_operativo_unico_y_sin_stamp():
     script = ScriptDirectory.from_config(Config(str(RAIZ / "alembic.ini")))
-    assert script.get_heads() == ["p0025_resultados_curso"]
+    assert script.get_heads() == ["p0026_campana_capinte"]
+    assert script.get_revision("p0026_campana_capinte").down_revision == "p0025_resultados_curso"
     assert script.get_revision("p0025_resultados_curso").down_revision == "p0024_habilitacion_consejo"
     assert script.get_revision("p0024_habilitacion_consejo").down_revision == "p0023_revision_notas"
     assert script.get_revision("p0023_revision_notas").down_revision == "p0022_entregas_notas"

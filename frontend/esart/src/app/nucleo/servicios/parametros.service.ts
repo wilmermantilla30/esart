@@ -8,6 +8,8 @@ import {
   MallaEditada,
   MateriaCatalogo,
   NotaMinima,
+  ConfiguracionCampana,
+  ItemCampanaPropuesto,
   NuevaPlantilla,
   NuevoTipoCurso,
   ParametrosSeguridad,
@@ -78,6 +80,29 @@ export class ParametrosService {
   guardarNotaMinima(valor: number, version: string, codigoTotp = ''): Observable<NotaMinima> {
     return this.api.reemplazar<NotaMinima>('/parametros/nota-minima', {
       valor,
+      version,
+      codigo_totp: codigoTotp,
+    });
+  }
+
+  // --- Fase de campaña del CAPINTE (S2-16) ---
+
+  obtenerCampana(): Observable<ConfiguracionCampana> {
+    return this.api.obtener<ConfiguracionCampana>('/parametros/campana');
+  }
+
+  /** Reemplaza los ítems y puntajes. Sin código responde TOTP_REQUERIDO. */
+  guardarCampana(
+    items: ItemCampanaPropuesto[],
+    version: string | null,
+    codigoTotp = '',
+  ): Observable<ConfiguracionCampana> {
+    return this.api.reemplazar<ConfiguracionCampana>('/parametros/campana', {
+      items: items.map((item) => ({
+        id: item.id,
+        nombre: item.nombre.trim(),
+        puntaje: item.puntaje.trim().replace(',', '.'),
+      })),
       version,
       codigo_totp: codigoTotp,
     });

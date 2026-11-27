@@ -21,6 +21,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.esquemas.parametros import (
+    ConfiguracionCampana,
     DetalleMalla,
     MateriaCatalogo,
     NotaMinima,
@@ -30,6 +31,7 @@ from aplicacion.esquemas.parametros import (
     ReglaHabilitacion,
     SimulacionRegla,
     SolicitudCrearTipoCurso,
+    SolicitudGuardarCampana,
     SolicitudGuardarMalla,
     SolicitudGuardarNotaMinima,
     SolicitudGuardarRegla,
@@ -38,7 +40,7 @@ from aplicacion.esquemas.parametros import (
 )
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual, verificar_csrf
-from aplicacion.servicios import mallas_parametros, nota_minima, parametros_habilitacion, plantillas
+from aplicacion.servicios import campana, mallas_parametros, nota_minima, parametros_habilitacion, plantillas
 from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 from aplicacion.servicios.malla_curricular import FilaMalla
@@ -168,6 +170,36 @@ async def guardar_nota_minima(
         request=request,
     )
     return _nota_minima(estado)
+
+
+# --- Cursos y Capacitaciones: ítems de la fase de campaña del CAPINTE (S2-16) ----------------------
+
+
+@enrutador_parametros.get("/campana", response_model=ConfiguracionCampana, dependencies=[Depends(puede_leer)])
+async def obtener_campana(sesion: Sesion) -> ConfiguracionCampana:
+    """Ítems de la fase de campaña del CAPINTE con su puntaje (suman 5,00)."""
+    return ConfiguracionCampana(**await campana.obtener(sesion))
+
+
+@enrutador_parametros.put(
+    "/campana",
+    response_model=ConfiguracionCampana,
+    dependencies=[Depends(verificar_csrf), Depends(puede_actualizar)],
+)
+async def guardar_campana(
+    datos: SolicitudGuardarCampana, request: Request, sesion: Sesion, usuario: UsuarioActual
+) -> ConfiguracionCampana:
+    """Reemplaza los ítems y puntajes (con TOTP). Solo afecta a las plantillas que se descarguen después."""
+    resultado = await campana.guardar(
+        sesion,
+        [item.model_dump() for item in datos.items],
+        datos.version,
+        usuario_id=usuario.id,
+        nombre_usuario=usuario.nombre_usuario,
+        codigo_totp=datos.codigo_totp,
+        request=request,
+    )
+    return ConfiguracionCampana(**resultado)
 
 
 # --- Mallas curriculares (S2-09) -------------------------------------------------------------

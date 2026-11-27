@@ -26,7 +26,11 @@ describe('Módulo Cursos (S2-02)', () => {
   });
 
   it('cuenta solo las materias con nota al resumir la asignación', () => {
-    const materia = (evaluable: boolean, instructorId: number | null): MateriaDelCurso => ({
+    const materia = (
+      evaluable: boolean,
+      instructorId: number | null,
+      porItems = false,
+    ): MateriaDelCurso => ({
       malla_id: Math.random(),
       orden: 1,
       codigo_materia: 'MAT-001',
@@ -34,6 +38,7 @@ describe('Módulo Cursos (S2-02)', () => {
       area: null,
       modulo: null,
       evaluable,
+      por_items: porItems,
       instructor_id: instructorId,
       instructor: null,
       tipo_instructor: null,
@@ -43,6 +48,11 @@ describe('Módulo Cursos (S2-02)', () => {
     expect(
       resumenAsignacion([materia(true, 7), materia(true, null), materia(false, null)]),
     ).toEqual({ asignadas: 1, conNota: 2 });
+    // S2-16: la fase de campaña la registra el comandante: cuenta como asignada.
+    expect(resumenAsignacion([materia(true, null, true), materia(true, null)])).toEqual({
+      asignadas: 1,
+      conNota: 2,
+    });
   });
 
   it('traduce y colorea los estados del curso en un solo lugar', () => {

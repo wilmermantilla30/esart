@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.23 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.24 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -458,7 +458,8 @@ Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
   "estado_curso", "fecha_inicio", "fecha_fin", "malla_id", "orden", "codigo_materia", "materia", "nota_minima", "alumnos",
   "estado_entrega" (null | EN_REVISION | APROBADA | DEVUELTA), "subido_en", "revisado_en", "observacion_revision",
   "notas_entregadas", "tiene_notas_oficiales", "alumnos_a_habilitar", "estado_habilitacion",
-  "observacion_habilitacion", "puede_subir" }] }` (los tres últimos campos de habilitación desde S2-14, §5i).
+  "observacion_habilitacion", "por_items", "puede_subir" }] }` (campos de habilitación desde S2-14, §5i; `por_items`
+  desde S2-16, §5k).
 - `GET /api/notas/plantilla/{curso_id}/{malla_id}` → XLSX como adjunto: hoja "Notas" (alumnos del curso, columna Nota editable con
   validación 0–5) y hoja oculta "control" con la **firma** HMAC del curso, la materia y los alumnos. **409** `CURSO_SIN_ALUMNOS`.
 - `POST /api/notas/entregas/{curso_id}/{malla_id}` (CSRF, multipart `archivo`) → la entrega (`EntregaDeMateria`, abajo), estado
@@ -556,6 +557,29 @@ Componente `CURSOS` (§5f): **leer** para ver los resultados, **actualizar** par
   `aprobado` en su historial (`artillero_cursos`), que alimenta APTO / NO APTO. Auditoría `CURSO_CERRADO` (alumnos, aprobados,
   reprobados, primer puesto e historial actualizado).
 
+## 5k. Fase de campaña del CAPINTE por ítems (S2-16)
+
+Una materia se califica **por ítems** cuando tiene ítems activos (hoy MAT-074 "FASE DE CAMPAÑA CAPINTE"). Es una materia más de la
+malla: su nota entra a la nota final (§5j).
+
+- **Quién la registra:** el **comandante del curso** (`cursos.comandante_id`), con `NOTAS_CARGA` y usuario con su misma cédula. En
+  `GET /api/notas/mis-materias` le aparece con `"por_items": true`. No lleva instructor titular: en Cursos (§5f) la materia trae
+  `"por_items": true` y asignarle instructor da **422** `MATERIA_POR_ITEMS`.
+- **Plantilla** (`GET /api/notas/plantilla/{curso}/{malla}`, §5g): un alumno por fila, una columna por ítem (título con su puntaje)
+  donde se marca **X** en los aprobados, y una columna "Nota (calculada)" solo de ayuda. La firma incluye los ítems y puntajes.
+- **Carga** (`POST /api/notas/entregas/{curso}/{malla}`, §5g): nota = suma de los puntajes aprobados, 2 decimales, tope 5,00.
+  Otra marca que no sea X o vacío: **422** `NOTAS_INVALIDAS` ("Ítem N: …"). Si cambiaron los ítems o puntajes desde la descarga:
+  **409** `PLANTILLA_DESACTUALIZADA`. Se guarda qué ítem aprobó cada alumno y con qué puntaje; la auditoría `NOTAS_ENTREGADAS`
+  lleva `"por_items": true`. Después sigue la revisión del Inspector (§5h) y, si aplica, la habilitación (§5i).
+- **Parámetros** (componente `PARAMETROS_HABILITACION`):
+  - `GET /api/parametros/campana` → `{ "codigo_materia", "materia", "items": [{ "id", "orden", "nombre", "puntaje" }], "total",
+    "actualizado_en", "actualizado_por" }`. Sin la materia MAT-074 **409** `SIN_MATERIA_CAMPANA`.
+  - `PUT /api/parametros/campana` (CSRF, **actualizar**) `{ "items": [{ "id" | null, "nombre", "puntaje" }], "version",
+    "codigo_totp" }` en el orden final → la configuración nueva. Política TOTP `PARAMETROS_MODIFICAR`. Nombres de 3 a 200 sin
+    repetir; puntajes > 0 con hasta 4 decimales que suman 5,00 al redondear (**422** `DATOS_INVALIDOS`); iguales **422**
+    `SIN_CAMBIOS`; versión vieja **409** `PARAMETROS_DESACTUALIZADOS`. Los ítems que no vienen quedan inactivos (las entregas
+    anteriores los conservan). Auditoría `PARAMETROS_ACTUALIZADOS` con `cambios.FASE_CAMPANA_CAPINTE` (anterior y nuevo).
+
 ---
 
 ## 6. Salud
@@ -603,3 +627,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.21 | 2026-11-26 | S2-13: §5h revisión de notas (bandeja, aprobar con TOTP, devolver con observación, reabrir una aprobada; notas oficiales con antes y después en la auditoría). Migración p0023 |
 | 0.22 | 2026-11-26 | S2-14: §5i habilitación (formulario del instructor, revisión del Inspector) y decisiones del Consejo Académico; tipo de entrega en §5h. Migración p0024 |
 | 0.23 | 2026-11-26 | S2-15: §5j nota final, puesto (reglas de desempate) y cierre del curso con TOTP; aprobar notas (§5h) ya no pide TOTP. Migración p0025 |
+| 0.24 | 2026-11-27 | S2-16: §5k fase de campaña del CAPINTE por ítems (plantilla del comandante, nota = suma de puntajes aprobados) e ítems editables en Parámetros con TOTP. Migración p0026 |

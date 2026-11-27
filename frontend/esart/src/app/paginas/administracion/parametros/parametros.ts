@@ -4,6 +4,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { SesionService } from '../../../nucleo/servicios/sesion.service';
 import { MallasCurricularesPestana } from './mallas-curriculares/mallas-curriculares';
 import { NotaMinimaTarjeta } from './nota-minima/nota-minima';
+import { ItemsCampanaTarjeta } from './items-campana/items-campana';
 import { ParametrosSeguridadPestana } from './parametros-seguridad/parametros-seguridad';
 import { PlantillasFormatosPestana } from './plantillas-formatos/plantillas-formatos';
 import { ReglaHabilitacionPestana } from './regla-habilitacion/regla-habilitacion';
@@ -80,6 +81,7 @@ export function pestanaAbierta(
   imports: [
     MallasCurricularesPestana,
     NotaMinimaTarjeta,
+    ItemsCampanaTarjeta,
     ParametrosSeguridadPestana,
     PlantillasFormatosPestana,
     ReglaHabilitacionPestana,

@@ -1157,6 +1157,80 @@ sa.Index(
 )
 
 
+class ItemCampana(BaseModelo):
+    """p0026 (S2-16): ítem de la fase de campaña de una materia, con su puntaje (los puntajes suman 5)."""
+
+    __table__ = sa.Table(
+        "items_campana",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("materia_id", sa.BigInteger(), nullable=False),
+        sa.Column("orden", sa.Integer(), nullable=False),
+        sa.Column("nombre", sa.String(200), nullable=False),
+        sa.Column("puntaje", sa.Numeric(6, 4), nullable=False),
+        sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
+        sa.Column("actualizado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column(
+            "actualizado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["materia_id"], ["esart.materias.id"], name=conv("fk_items_campana_materia_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["actualizado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_items_campana_actualizado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint("puntaje > 0 AND puntaje <= 5", name=conv("ck_items_campana_puntaje")),
+        sa.CheckConstraint("orden >= 1", name=conv("ck_items_campana_orden")),
+        sa.PrimaryKeyConstraint("id", name=conv("items_campana_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "uq_items_campana_orden_activo",
+    sa.text("materia_id"),
+    sa.text("orden"),
+    _table=BaseModelo.metadata.tables["esart.items_campana"],
+    unique=True,
+    postgresql_where=sa.text("activo"),
+)
+
+
+class ItemEntrega(BaseModelo):
+    """p0026 (S2-16): ítem aprobado o no de un alumno en una entrega de la fase de campaña."""
+
+    __table__ = sa.Table(
+        "items_entrega",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("entrega_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("item_id", sa.BigInteger(), nullable=False),
+        sa.Column("aprobado", sa.Boolean(), nullable=False),
+        sa.Column("puntaje", sa.Numeric(6, 4), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["entrega_id"],
+            ["esart.entregas_notas.id"],
+            name=conv("fk_items_entrega_entrega_id"),
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_items_entrega_personal_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["item_id"], ["esart.items_campana.id"], name=conv("fk_items_entrega_item_id")
+        ),
+        sa.UniqueConstraint(
+            "entrega_id", "personal_id", "item_id", name=conv("uq_items_entrega_alumno_item")
+        ),
+        sa.PrimaryKeyConstraint("id", name=conv("items_entrega_pkey")),
+        schema="esart",
+    )
+
+
 class Materias(BaseModelo):
     __table__ = sa.Table(
         "materias",

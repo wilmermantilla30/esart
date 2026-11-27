@@ -152,6 +152,11 @@
                   <td class="py-2 px-3">
                     @if (!materia.evaluable) {
                       <span class="text-azul-pizarra/50">No lleva instructor</span>
+                    } @else if (materia.por_items) {
+                      <span class="text-azul-pizarra">{{ datos.comandante }}</span>
+                      <span class="block text-[10px] text-azul-pizarra/60"
+                        >Comandante del curso · registra la fase de campaña por ítems</span
+                      >
                     } @else if (puedeEditar()) {
                       <select
                         [attr.aria-label]="'Instructor de ' + materia.materia"

@@ -27,6 +27,8 @@ export interface MateriaDelCurso {
   area: string | null;
   modulo: string | null;
   evaluable: boolean;
+  /** S2-16: fase de campaña por ítems; la registra el comandante (sin instructor). */
+  por_items: boolean;
   instructor_id: number | null;
   instructor: string | null;
   tipo_instructor: 'MILITAR' | 'CIVIL' | null;

@@ -30,6 +30,8 @@ class MateriaDelCurso(BaseModel):
     area: str | None
     modulo: str | None
     evaluable: bool
+    # S2-16: fase de campaña por ítems; la registra el comandante del curso (sin instructor).
+    por_items: bool
     instructor_id: int | None
     instructor: str | None
     tipo_instructor: str | None
