@@ -19,7 +19,10 @@ def ejecutar(conexion):
         raise RuntimeError("Alembic operativo solo admite esart_db")
     # La tabla de versiones vive en el esquema esart: en una base vacía hay que crearlo
     # antes de que Alembic la cree (p0000 instala el resto de la estructura).
-    conexion.execute(text("CREATE SCHEMA IF NOT EXISTS esart"))
+    # PostgreSQL exige CREATE sobre la base antes de evaluar IF NOT EXISTS: si el esquema ya
+    # existe no se ejecuta, para que una base ya instalada no requiera ese privilegio.
+    if conexion.scalar(text("SELECT to_regnamespace('esart')")) is None:
+        conexion.execute(text("CREATE SCHEMA esart"))
     context.configure(
         connection=conexion,
         target_metadata=target_metadata,

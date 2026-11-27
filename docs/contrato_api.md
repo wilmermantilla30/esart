@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.15 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.23 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -132,11 +132,16 @@ Datos del usuario en sesión. El front lo llama al cargar cada página para **ar
         { "codigo": "PERSONAL_HABILITADOS", "nombre": "Habilitados", "ruta": "/personal/habilitados", "operaciones": ["leer"], "hijos": [] }
       ] }
   ],
+  "operaciones": { "DASHBOARD": ["leer"], "PERSONAL_MILITAR": ["leer"], "VER_DOCUMENTO_COMPLETO": ["leer"] },
   "expira_por_inactividad_segundos": 1800
 }
 ```
 `permisos`: códigos de los componentes a los que puede acceder (incluye permisos sin menú).
-`menu`: módulos del sidebar con sus pestañas (`hijos`), ya filtrados por la malla (HU-09).
+`menu`: módulos del sidebar con sus pestañas (`hijos`), ya filtrados por la malla (HU-09). Un permiso
+especial (sin ruta) que es hijo de un módulo da entrada a ese módulo aunque el usuario no tenga el padre
+(S2-09: `MALLAS_CURRICULARES` abre Parámetros, donde solo se ve la pestaña de mallas).
+`operaciones` (S2-09): lo que puede hacer en cada componente accesible, incluidos los permisos sin menú;
+el front lo usa para mostrar u ocultar botones.
 Las respuestas autenticadas traen `X-Sesion-Expira-En` (HU-08).
 
 ### `POST /api/auth/cerrar-sesion`
@@ -316,7 +321,9 @@ no la tiene) y la contraseña que pone el administrador es **temporal**:
   "intentos_fallidos", "documento_identidad", "nombre_completo", "requiere_cambio_contrasena", "ultimo_acceso_en" }]`.
   `texto` busca en el usuario o la cédula.
 - `GET /api/administracion/usuarios/militar/{cedula}` (crear) → `{ "documento_identidad", "grado", "nombres", "apellidos",
-  "unidad", "activo", "usuario_existente", "nombre_usuario_sugerido" }`. **404** si la cédula no está en Personal militar.
+  "unidad", "activo", "usuario_existente", "nombre_usuario_sugerido", "tipo_persona" }`. `tipo_persona`: `MILITAR` o
+  `CIVIL` (S2-11: instructor civil activo del panel de Instructores; llega `grado: "Civil"` y `unidad: null`; el civil no
+  entra a Personal militar). **404** si la cédula no está en Personal militar ni en los instructores civiles.
   Sugerencia: inicial del primer nombre + primer apellido, sin tildes, + `.esart` (con número si ya existe).
 - `POST /api/administracion/usuarios` (crear) `{ "documento_identidad", "nombre_usuario", "rol": "USUARIO|ADMINISTRADOR",
   "contrasena_temporal" }` → **201** con la fila. **409** `USUARIO_EXISTENTE` (nombre repetido o militar con usuario);
@@ -330,7 +337,7 @@ Auditoría (componente `AUDITORIA`, solo lectura):
 - `GET /api/administracion/auditoria?accion=&usuario=&documento=&desde=AAAA-MM-DD&hasta=AAAA-MM-DD` → paginado (§1.3) con
   `{ "id", "fecha", "usuario_id", "nombre_usuario", "accion", "numero_documento_consultado", "resultado", "direccion_ip", "detalle" }`.
 
-## 5c. Parámetros (regla de habilitación, plantillas y seguridad)
+## 5c. Parámetros (regla de habilitación, nota mínima, mallas curriculares, plantillas y seguridad)
 Todo bajo el componente `PARAMETROS_HABILITACION` de la malla (leer, crear, actualizar, eliminar según la ruta).
 Las rutas que cambian datos exigen CSRF.
 
@@ -344,6 +351,33 @@ Cursos y Capacitaciones — regla APTO / NO APTO:
   **409** `TOTP_REQUERIDO` sin código (política `PARAMETROS_MODIFICAR`), **422** `TOTP_INVALIDO`, **409** `PARAMETROS_DESACTUALIZADOS`
   si otro administrador guardó antes, **422** `SIN_CAMBIOS` o `DATOS_INVALIDOS` (vigencia 1–60 meses, alerta 1–365 días y menor que la
   vigencia, cursos existentes y activos). Éxito: la regla guardada (misma forma del GET); auditoría `PARAMETROS_ACTUALIZADOS` con antes y después.
+
+Cursos y Capacitaciones — nota mínima de aprobación (S2-10):
+- `GET /api/parametros/nota-minima` (leer) → `{ "valor": 3.0, "actualizado_en", "actualizado_por", "cursos_en_curso" }`.
+  `cursos_en_curso` = cursos `EN_CURSO` que ya tienen su nota guardada (no cambian al guardar otra).
+- `PUT /api/parametros/nota-minima` (actualizar) cuerpo `{ "valor": 3.5, "version": <actualizado_en leído>, "codigo_totp" }`:
+  mismos errores que la regla (**409** `TOTP_REQUERIDO`, **422** `TOTP_INVALIDO`, **409** `PARAMETROS_DESACTUALIZADOS`,
+  **422** `SIN_CAMBIOS`) y **422** `DATOS_INVALIDOS` si no está entre 1,00 y 5,00 o tiene más de 2 decimales.
+  Solo aplica a los cursos que se creen después (cada curso guarda la nota vigente al crearse). Auditoría
+  `PARAMETROS_ACTUALIZADOS` con `cambios.NOTA_MINIMA_APROBACION = { "anterior", "nuevo" }` (texto con 2 decimales).
+  Cambiar la nota no altera la `version` de la regla de habilitación ni al revés.
+
+Mallas curriculares (S2-09) — componente propio `MALLAS_CURRICULARES` (hijo de Parámetros; se puede dar por excepción):
+- `GET /api/parametros/mallas` (leer) → `[{ "codigo", "nombre", "tipo", "modalidad", "duracion_semanas", "activo", "version", "anio",
+  "materias", "evaluables" }]` (`version` null = sin malla, como TECNICA).
+- `GET /api/parametros/mallas/materias` (leer) → `[{ "codigo", "nombre" }]`: catálogo para sugerir nombres.
+- `GET /api/parametros/mallas/{tipo}?version=N` (leer) → `{ "tipo_curso", "version": { "numero", "anio", "estado", "observacion",
+  "creado_en", "creado_por", "materias", "cursos" } | null, "filas": [{ "orden", "codigo_materia", "materia", "area", "modulo",
+  "evaluable" }], "versiones": [...] }`. Sin `version`, la vigente. **404** `TIPO_CURSO_NO_ENCONTRADO` / `VERSION_NO_ENCONTRADA`.
+- `PUT /api/parametros/mallas/{tipo}` (actualizar) cuerpo `{ "anio", "filas": [{ "orden", "materia", "evaluable", "area", "modulo" }],
+  "observacion", "version": <número vigente editado o null>, "codigo_totp" }` → crea la **versión nueva** (la anterior queda HISTORICA;
+  los cursos ya creados conservan la suya). Antes de pedir el código: **422** `MALLA_INVALIDA` (vacía, materia repetida, sin materias con
+  nota...), **422** `SIN_CAMBIOS`, **409** `MALLA_DESACTUALIZADA` (otro usuario guardó antes). Luego **409** `TOTP_REQUERIDO`
+  (política `MALLAS_MODIFICAR`) y **422** `TOTP_INVALIDO`. Éxito: el detalle nuevo; auditoría `MALLA_CURRICULAR_CARGADA` con
+  `origen: PARAMETROS`, `antes`, `despues` y `cambios` (agregadas, quitadas, cambian_evaluable, orden_cambiado).
+- `POST /api/parametros/mallas` (crear) cuerpo `{ "codigo", "nombre", "tipo": EDUCACION_MILITAR|ESPECIALIZACION|EDUCACION_SUPERIOR,
+  "modalidad": PRESENCIAL|VIRTUAL|MIXTA, "duracion_semanas": 1–104, "codigo_totp" }` → **201** el detalle (sin malla). **409**
+  `TIPO_CURSO_DUPLICADO`, **422** `DATOS_INVALIDOS`, TOTP igual que arriba. Auditoría `TIPO_CURSO_CREADO`.
 
 Plantillas y Formatos:
 - `GET /api/parametros/plantillas?formato=XLSX|XLS|PDF|DOCX` (leer) → `[{ "id", "nombre_oficial", "nombre_archivo", "formato", "version",
@@ -378,10 +412,11 @@ Del MILITAR, nombre, grado y unidad salen de Personal militar; el CIVIL guarda l
   máximo 800 px y sin metadatos; **422** `FOTO_INVALIDA`. `DELETE /api/instructores/{id}/foto` (actualizar) la quita.
 - `GET /api/instructores/{id}/foto` (leer) → `image/jpeg` (`Cache-Control: private`); **404** `FOTO_NO_ENCONTRADA`. El front agrega `?v=<version>`.
 - `POST /api/instructores/{id}/activar` y `/desactivar` (actualizar) → Instructor. Los instructores no se borran.
-- `GET /api/instructores/{id}/cursos` (leer) → `{ "comandante": [Curso], "participa": [Curso + "rol_en_curso"] }` con
+- `GET /api/instructores/{id}/cursos` (leer) → `{ "comandante": [Curso], "participa": [Curso + "rol_en_curso"], "materias": [...] }` con
   Curso = `{ "id", "codigo", "nombre", "tipo_curso", "fecha_inicio", "fecha_fin", "estado", "alumnos" }` (más recientes primero).
-  `comandante` sale de `cursos.comandante_id` (cargue por Excel); `participa`, de `cursos_instructores`. Las materias que dicta quedan
-  para cuando exista la malla curricular (segunda entrega). Migración p0014 (solo permisos de lectura).
+  `comandante` sale de `cursos.comandante_id` (cargue por Excel); `participa`, de `cursos_instructores`. Migración p0014.
+  `materias` (S2-02): `[{ "curso_id", "curso", "nombre_curso", "estado", "tipo_curso", "materia", "fecha_inicio" }]`, las que dicta
+  como titular (se asignan en §5f).
 
 ## 5e. Registro manual de personal militar
 
@@ -391,6 +426,135 @@ Componente `PERSONAL_CARGUE_MANUAL`, operación **crear** (sesión + CSRF). Deta
 - `POST /api/personal` con `{ "documento_identidad", "nombres", "apellidos", "grado", "genero": "M"|"F", "categoria", "unidad_actual_id"?, "especialidad_actual"?, "activo" }`
   → **201** con el registro + `"nombre_completo"`, `"unidad_nombre"`. **409** `DOCUMENTO_EXISTENTE`, **422** `DATOS_INVALIDOS`
   (grado fuera de la categoría, unidad inexistente o inactiva), **503** `REGISTRO_NO_DISPONIBLE` (falta p0015). Auditoría `PERSONAL_REGISTRADO`.
+
+## 5f. Cursos (S2-02)
+
+Componente `CURSOS` (ruta `/cursos`, activado en p0021): **leer** para ver; **actualizar** para asignar. Al Inspector de Estudios
+se le da por excepción. Las rutas que cambian datos exigen CSRF; los cursos CULMINADO o CANCELADO no se modifican (**409**
+`CURSO_NO_EDITABLE`).
+
+- `GET /api/cursos?estado=EN_CURSO|APLAZADO|CULMINADO|CANCELADO&tipo=SACLI&texto=…` (leer) → `[{ "id", "codigo", "nombre", "tipo_curso",
+  "fecha_inicio", "fecha_fin", "estado", "alumnos", "comandante", "version_malla", "materias_con_nota", "asignadas" }]` (máximo 500,
+  más recientes primero). `version_malla` null = curso creado sin malla.
+- `GET /api/cursos/{id}` (leer) → el curso con `nombre_tipo_curso`, `nota_minima_aprobacion`, `version_malla`, `anio_malla`,
+  `estado_malla`, `editable`, `version_vigente_disponible` y `materias: [{ "malla_id", "orden", "codigo_materia", "materia", "area",
+  "modulo", "evaluable", "instructor_id", "instructor", "tipo_instructor", "asignado_en", "asignado_por" }]`. **404** `CURSO_NO_ENCONTRADO`.
+- `GET /api/cursos/instructores-disponibles` (actualizar) → `[{ "id", "tipo", "nombre" }]`: instructores activos para el selector.
+- `PUT /api/cursos/{id}/materias/{malla_id}/instructor` (actualizar) cuerpo `{ "instructor_id": 7 | null }`: pone, cambia o quita
+  (null) el instructor **titular** (uno por materia). **404** `MATERIA_NO_ENCONTRADA` (no es de la malla del curso), **422**
+  `MATERIA_SIN_NOTA`, `INSTRUCTOR_NO_DISPONIBLE` (inactivo o inexistente) o `SIN_CAMBIOS`. Éxito: el detalle; auditoría
+  `INSTRUCTOR_MATERIA_ASIGNADO` con `curso`, `materia`, `anterior` y `nuevo`.
+- `POST /api/cursos/{id}/malla` (actualizar): liga la versión VIGENTE de su tipo a un curso EN_CURSO o APLAZADO creado sin malla y
+  le copia la nota mínima vigente si no tenía. **409** `CURSO_CON_MALLA`, **422** `TIPO_SIN_MALLA`. Auditoría `CURSO_MALLA_ASIGNADA`.
+
+## 5g. Carga de notas del instructor (S2-12)
+
+Componente `NOTAS_CARGA` (ruta `/notas/mis-materias` desde p0022; se da por excepción al instructor): **leer** para ver sus
+materias, descargar la plantilla y ver su entrega; **crear** para subir. Además del permiso, el usuario debe ser el instructor
+**titular** de la materia en ese curso (§5f), reconocido por su cédula: si no, **403** `NO_ES_INSTRUCTOR` o `MATERIA_NO_ASIGNADA`.
+Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
+
+- `GET /api/notas/mis-materias` → `{ "es_instructor", "materias": [{ "curso_id", "codigo_curso", "nombre_curso", "tipo_curso",
+  "estado_curso", "fecha_inicio", "fecha_fin", "malla_id", "orden", "codigo_materia", "materia", "nota_minima", "alumnos",
+  "estado_entrega" (null | EN_REVISION | APROBADA | DEVUELTA), "subido_en", "revisado_en", "observacion_revision",
+  "notas_entregadas", "tiene_notas_oficiales", "alumnos_a_habilitar", "estado_habilitacion",
+  "observacion_habilitacion", "puede_subir" }] }` (los tres últimos campos de habilitación desde S2-14, §5i).
+- `GET /api/notas/plantilla/{curso_id}/{malla_id}` → XLSX como adjunto: hoja "Notas" (alumnos del curso, columna Nota editable con
+  validación 0–5) y hoja oculta "control" con la **firma** HMAC del curso, la materia y los alumnos. **409** `CURSO_SIN_ALUMNOS`.
+- `POST /api/notas/entregas/{curso_id}/{malla_id}` (CSRF, multipart `archivo`) → la entrega (`EntregaDeMateria`, abajo), estado
+  **EN_REVISION**. No guarda nada si algo falla:
+  **422** `ARCHIVO_INVALIDO` (no es XLSX seguro), `PLANTILLA_ALTERADA` (sin firma o firma que no coincide), `PLANTILLA_DE_OTRA_MATERIA`,
+  `NOTAS_INVALIDAS` con `detalle.errores: [{ "fila", "mensaje" }]` (falta la nota, no es número, fuera de 0–5, más de 2 decimales,
+  cédula ajena al curso, alumno repetido o faltante: se exige la nota de **todos** los alumnos); **409** `PLANTILLA_DESACTUALIZADA`
+  (cambió la lista de alumnos) y `ENTREGA_APROBADA` (ya aprobada por el Inspector: solo cambia si la reabre, §5h).
+  En revisión o devuelta, una nueva carga **reemplaza** la anterior. Auditoría `NOTAS_ENTREGADAS` (curso, materia, alumnos,
+  promedio, cuántas por debajo de la mínima, a qué estado reemplazó y sha256 del archivo).
+- `GET /api/notas/entregas/{curso_id}/{malla_id}` → `{ "curso_id", "codigo_curso", "materia", "nota_minima", "entrega": null |
+  { "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "observacion_revision", "notas": [{ "cedula", "grado",
+  "apellidos", "nombres", "nota" }] } }`.
+
+## 5h. Revisión de notas por el Inspector de Estudios (S2-13)
+
+Componente `NOTAS_REVISION` (ruta `/notas/revision` desde p0023; se da por excepción al Inspector): **leer** para la bandeja y
+el detalle; **actualizar** para aprobar, devolver o reabrir. **Reabrir** exige el código del autenticador (política
+`NOTAS_APROBAR`: sin código **409** `TOTP_REQUERIDO`, inválido **422** `TOTP_INVALIDO`); **aprobar no** lo pide desde 0.23
+(decisión de la Escuela: es la tarea más repetida del Inspector; la sesión ya exige TOTP y todo queda auditado). Las notas **oficiales** (las que cuentan
+para la habilitación y la nota final) son las de la última entrega aprobada de cada curso y materia.
+
+- `GET /api/notas/revision/entregas?estado=EN_REVISION|DEVUELTA|APROBADA|TODAS` (por defecto EN_REVISION; otro valor **422**) →
+  `[EntregaEnBandeja]`: `{ "id", "tipo" (ORDINARIA | HABILITACION, §5i), "estado", "nombre_archivo", "subido_en", "subido_por", "revisado_en", "revisado_por",
+  "observacion_revision", "curso_id", "codigo_curso", "nombre_curso", "estado_curso", "tipo_curso", "malla_id", "orden",
+  "codigo_materia", "materia", "nota_minima", "instructor", "alumnos", "promedio", "por_debajo_de_la_minima",
+  "tiene_notas_oficiales" }`, de la más antigua a la más reciente.
+- `GET /api/notas/revision/entregas/{id}` → `EntregaEnBandeja` + `"notas": [{ "cedula", "grado", "apellidos", "nombres", "nota",
+  "nota_oficial" }]` (`nota_oficial` = la vigente, null si no había). **404** `ENTREGA_NO_ENCONTRADA`.
+- `POST /api/notas/revision/entregas/{id}/aprobar` (CSRF) `{ "version" }` → el detalle, estado **APROBADA**; sus notas
+  reemplazan a las oficiales. `version` es el `subido_en` revisado: si el instructor subió otra planilla, **409** `ENTREGA_CAMBIO`.
+  Solo EN_REVISION (si no, **409** `ESTADO_NO_PERMITE`); curso CANCELADO **409** `CURSO_NO_EDITABLE`; si cambió la lista de alumnos
+  del curso **409** `ENTREGA_DESACTUALIZADA`. Auditoría `NOTAS_APROBADAS` (curso, materia, instructor, alumnos, promedio, cuántas
+  por debajo de la mínima, `es_correccion` y, en una corrección, `cambios: [{ "cedula", "antes", "despues" }]`).
+- `POST /api/notas/revision/entregas/{id}/devolver` (CSRF) `{ "version", "observacion" }` → estado **DEVUELTA** con la observación
+  (5 a 1000 caracteres; si no, **422** `DATOS_INVALIDOS`). Solo EN_REVISION. Auditoría `NOTAS_DEVUELTAS`.
+- `POST /api/notas/revision/entregas/{id}/reabrir` (CSRF) `{ "observacion", "codigo_totp" }` → una entrega **APROBADA** queda
+  DEVUELTA para que el instructor suba la corrección; las notas oficiales **siguen vigentes** hasta la nueva aprobación.
+  Auditoría `NOTAS_REABIERTAS`.
+
+## 5i. Habilitación y Consejo Académico (S2-14)
+
+Debe **habilitar** el alumno cuya nota oficial **ordinaria** de una materia quedó por debajo de la nota mínima del curso; una
+sola habilitación por materia. La nota que cuenta para el promedio queda en `notas_oficiales.nota` con su `origen`: ORDINARIA,
+HABILITACION (alcanzó la mínima en la habilitación: materia "Habilitada") o CONSEJO ("Aprueba la materia": la nota mínima).
+
+**Instructor** (componente `NOTAS_CARGA`, titular de la materia, §5g):
+- `GET /api/notas/habilitaciones/{curso_id}/{malla_id}` → `{ "curso_id", "codigo_curso", "materia", "nota_minima", "alumnos": [{
+  "cedula", "grado", "apellidos", "nombres", "nota_ordinaria", "nota_habilitacion" }], "estado", "subido_en", "revisado_en",
+  "observacion_revision" }` (`estado` null si aún no se registró).
+- `POST /api/notas/habilitaciones/{curso_id}/{malla_id}` (CSRF, **crear**) `{ "notas": [{ "cedula", "nota" }] }` → lo mismo, con la
+  entrega de tipo **HABILITACION** EN_REVISION (pasa por la revisión del Inspector, §5h). Exige la nota de **todos** los alumnos a
+  habilitar (0–5, 2 decimales, número o texto con coma): si no, **422** `NOTAS_INVALIDAS` con `detalle.errores`. Sin alumnos a
+  habilitar (o sin notas ordinarias aprobadas) **409** `SIN_HABILITACIONES`; ya aprobada **409** `ENTREGA_APROBADA`. Auditoría
+  `NOTAS_ENTREGADAS` con `"tipo": "HABILITACION"`.
+
+**Inspector** (§5h): al **aprobar** una entrega HABILITACION, quien alcanza la mínima queda con la nota de habilitación y quien no,
+pasa al Consejo; la auditoría `NOTAS_APROBADAS` agrega `habilitaron` y `al_consejo_academico`. El detalle trae además
+`"nota_ordinaria"` por alumno y, en una habilitación, `nota_oficial` es la de la habilitación anterior. **Reabrir**: la ordinaria
+de una materia con habilitación **409** `MATERIA_CON_HABILITACION`; una habilitación con decisiones del Consejo **409**
+`HABILITACION_CON_DECISION`. Aprobar de nuevo una habilitación reabierta deshace la anterior y aplica la nueva.
+
+**Consejo Académico** (componente `CONSEJO_ACADEMICO`, ruta `/notas/consejo`: **leer** para los casos, **crear** para decidir):
+- `GET /api/notas/consejo/casos?filtro=PENDIENTES|DECIDIDOS|TODOS` (por defecto PENDIENTES; otro valor **422**) → `[{ "id",
+  "curso_id", "codigo_curso", "nombre_curso", "estado_curso", "tipo_curso", "malla_id", "codigo_materia", "materia",
+  "nota_minima", "cedula", "grado", "apellidos", "nombres", "nota_ordinaria", "nota_habilitacion", "habilitacion_aprobada_en",
+  "decision", "numero_acta", "fecha_acta", "observacion", "registrado_en", "registrado_por" }]` (alumnos que perdieron la
+  habilitación; `id` es el de la habilitación).
+- `POST /api/notas/consejo/casos/{id}/decision` (CSRF) `{ "decision": APRUEBA_MATERIA | REPITE_CURSO | PIERDE_CURSO | OTRA,
+  "numero_acta", "fecha_acta", "observacion", "codigo_totp" }` → el caso con su decisión. Política TOTP `CONSEJO_REGISTRAR`.
+  Acta obligatoria (máx. 50) y fecha no futura; `OTRA` exige observación (**422** `DATOS_INVALIDOS`). Una sola decisión por caso
+  (**409** `CASO_DECIDIDO`; no se edita); **404** `CASO_NO_ENCONTRADO`; curso cancelado **409** `CURSO_NO_EDITABLE`.
+  `APRUEBA_MATERIA` deja la materia con la nota mínima del curso (origen CONSEJO); las demás no cambian la nota (las aplica el
+  cierre del curso, S2-15). Auditoría `CONSEJO_DECISION_REGISTRADA`.
+
+## 5j. Nota final, puesto y cierre del curso (S2-15)
+
+Componente `CURSOS` (§5f): **leer** para ver los resultados, **actualizar** para cerrar el curso.
+
+- **Nota final** = promedio de las notas oficiales (`notas_oficiales.nota`) de las materias **evaluables** de la malla del curso,
+  con 2 decimales; si el alumno perdió la habilitación y el Consejo no aprobó la materia, cuenta la nota de habilitación.
+  **Aprueba** con nota final ≥ nota mínima del curso. "Repite el curso" o "Pierde el curso" del Consejo lo dejan **REPROBADO**.
+- **Puesto** solo para los aprobados: primero quienes no habilitaron ninguna materia; en cada grupo, por la nota final con todos
+  sus decimales, luego menos materias habilitadas y luego el promedio del área "Profesional Específica". Si aún empatan,
+  comparten el puesto (1, 2, 2, 4).
+- `GET /api/cursos/{id}/resultados` → `{ "curso_id", "codigo_curso", "estado_curso", "nota_minima", "cerrado", "cerrado_en",
+  "cerrado_por", "materias_evaluables", "completo", "puede_cerrar", "pendientes": [texto], "alumnos": [{ "cedula", "grado",
+  "apellidos", "nombres", "nota_final", "materias_evaluadas", "materias_habilitadas", "pendientes": [texto], "resultado"
+  (APROBADO | REPROBADO | null), "motivo", "puesto" }] }`. Sin cerrar, **provisionales** con las notas oficiales de hoy (lo que
+  falta: notas sin aprobar, entregas en revisión o devueltas, habilitaciones o decisiones del Consejo pendientes); cerrado, los
+  **guardados**. Sin malla o nota mínima **409** `CURSO_SIN_MALLA`; **404** `CURSO_NO_ENCONTRADO`.
+- `POST /api/cursos/{id}/cerrar` (CSRF) `{ "codigo_totp" }` → los resultados ya guardados. Política TOTP `CURSO_CERRAR`. Solo
+  EN_CURSO (**409** `CURSO_NO_EDITABLE`), con alumnos (**409** `CURSO_SIN_ALUMNOS`) y completo (**409** `RESULTADOS_INCOMPLETOS`
+  con `detalle.pendientes`). El curso pasa a **CULMINADO**, se guardan los resultados y el curso de los aprobados queda
+  `aprobado` en su historial (`artillero_cursos`), que alimenta APTO / NO APTO. Auditoría `CURSO_CERRADO` (alumnos, aprobados,
+  reprobados, primer puesto e historial actualizado).
 
 ---
 
@@ -431,3 +595,11 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.13 | 2026-11-18 | §5e registro manual de personal militar y accesos a Instructores / Usuarios con `?cedula=`. Migración p0015 |
 | 0.14 | 2026-11-18 | §3 documentos PDF del artillero (diploma, oficio remisorio, certificación) con ReportLab |
 | 0.15 | 2026-11-18 | §3b estadísticas del panel principal (cursos por año y semestre, grados y género por curso, egresados, seguimiento de cursos en curso) |
+| 0.16 | 2026-11-21 | S2-11: §5b usuario para instructores civiles (`tipo_persona`); permisos especiales MALLAS_CURRICULARES, NOTAS_CARGA, NOTAS_REVISION y CONSEJO_ACADEMICO en la malla (sin menú hasta sus pantallas). Migración p0018 |
+| 0.17 | 2026-11-21 | S2-10: §5c nota mínima de aprobación (leer y guardar con TOTP), solo para cursos nuevos. Migración p0019 |
+| 0.18 | 2026-11-21 | S2-09: §5c mallas curriculares y tipos de curso en Parámetros (versiones con TOTP y auditoría); §2 `operaciones` por componente en `/auth/yo` y permiso especial hijo que abre su módulo. Migración p0020 |
+| 0.19 | 2026-11-21 | S2-02: §5f módulo Cursos (lista, detalle, instructor titular por materia con nota, malla vigente para cursos sin malla); §5d materias que dicta el instructor. Migración p0021 |
+| 0.20 | 2026-11-24 | S2-12: §5g carga de notas del instructor (mis materias, plantilla firmada, entrega EN_REVISION con validación completa y reemplazo). Migración p0022 |
+| 0.21 | 2026-11-26 | S2-13: §5h revisión de notas (bandeja, aprobar con TOTP, devolver con observación, reabrir una aprobada; notas oficiales con antes y después en la auditoría). Migración p0023 |
+| 0.22 | 2026-11-26 | S2-14: §5i habilitación (formulario del instructor, revisión del Inspector) y decisiones del Consejo Académico; tipo de entrega en §5h. Migración p0024 |
+| 0.23 | 2026-11-26 | S2-15: §5j nota final, puesto (reglas de desempate) y cierre del curso con TOTP; aprobar notas (§5h) ya no pide TOTP. Migración p0025 |

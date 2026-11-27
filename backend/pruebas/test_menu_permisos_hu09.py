@@ -66,6 +66,20 @@ def test_construir_menu_oculta_lo_no_accesible_y_lo_que_no_es_menu():
     assert "USUARIOS" not in resultado.permisos
 
 
+def test_un_permiso_especial_hijo_da_entrada_al_modulo_padre():
+    """S2-09: MALLAS_CURRICULARES (sin ruta, hijo de Parámetros) abre Parámetros sin ser pestaña."""
+    resultado = construir_menu(
+        [
+            permiso("DASHBOARD"),
+            permiso("PARAMETROS", acceder=False, leer=False),
+            permiso("MALLAS", padre="PARAMETROS", ruta=None),
+        ]
+    )
+    assert [e.codigo for e in resultado.menu] == ["DASHBOARD", "PARAMETROS"]
+    assert resultado.menu[1].hijos == [] and resultado.menu[1].operaciones == []
+    assert "PARAMETROS" not in resultado.permisos and "MALLAS" in resultado.permisos
+
+
 # --- Con PostgreSQL (malla inicial de p0005) ---------------------------------------
 
 
@@ -100,6 +114,10 @@ async def test_menu_de_administrador_incluye_cargue_y_administracion(cliente_api
     assert [e["codigo"] for e in menu] == [
         "DASHBOARD",
         "PERSONAL_MILITAR",
+        "CURSOS",  # S2-02 (p0021)
+        "NOTAS_CARGA",  # S2-12 (p0022)
+        "NOTAS_REVISION",  # S2-13 (p0023)
+        "CONSEJO_ACADEMICO",  # S2-14 (p0024)
         "INSTRUCTORES",
         "USUARIOS",
         "PARAMETROS_HABILITACION",

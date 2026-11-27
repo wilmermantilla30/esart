@@ -389,6 +389,19 @@ class Cursos(BaseModelo):
         sa.Column("observaciones", sa.Text(), nullable=True),
         sa.Column("creado_por_id", sa.BigInteger(), nullable=False),
         sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        # p0017: versión de la malla que usa el curso; la asigna un trigger al crearlo (NULL en
+        # los cursos anteriores a la malla en la plataforma).
+        sa.Column("malla_version_id", sa.BigInteger(), nullable=True),
+        # p0019: nota mínima vigente al crear el curso (la copia un trigger desde Parámetros). Un
+        # cambio posterior del parámetro no la altera. NULL en los cursos anteriores a la malla.
+        sa.Column("nota_minima_aprobacion", sa.Numeric(3, 2), nullable=True),
+        sa.ForeignKeyConstraint(
+            ["malla_version_id"], ["esart.versiones_malla.id"], name=conv("fk_cursos_malla_version_id")
+        ),
+        sa.CheckConstraint(
+            "nota_minima_aprobacion >= 0 AND nota_minima_aprobacion <= 5",
+            name=conv("ck_cursos_nota_minima_aprobacion"),
+        ),
         sa.CheckConstraint(
             ("estado IN ('EN_CURSO', 'CULMINADO', 'CANCELADO', 'APLAZADO')"),
             name=conv("ck_cursos_estado"),
@@ -517,7 +530,7 @@ class EgresadosCurso(BaseModelo):
         ),
         sa.CheckConstraint("((dias_en_curso >= 0))", name=conv("egresados_curso_dias_en_curso_check")),
         sa.CheckConstraint(
-            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))",
+            "nota_final >= 0 AND nota_final <= 5",
             name=conv("egresados_curso_nota_final_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("egresados_curso_pkey")),
@@ -586,11 +599,11 @@ class Habilitaciones(BaseModelo):
             ["registrado_por_id"], ["esart_ref.usuarios.id"], name=conv("fk_habilitaciones_registrado_por_id")
         ),
         sa.CheckConstraint(
-            "(((nota_obtenida >= (0)::numeric) AND (nota_obtenida <= (100)::numeric)))",
+            "nota_obtenida >= 0 AND nota_obtenida <= 5",
             name=conv("habilitaciones_nota_obtenida_check"),
         ),
         sa.CheckConstraint(
-            "(((numero_habilitacion >= 1) AND (numero_habilitacion <= 2)))",
+            "numero_habilitacion = 1",
             name=conv("habilitaciones_numero_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("habilitaciones_pkey")),
@@ -659,7 +672,7 @@ class InscripcionesCurso(BaseModelo):
             ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_inscripciones_curso_personal_id")
         ),
         sa.CheckConstraint(
-            "(((nota_final >= (0)::numeric) AND (nota_final <= (100)::numeric)))",
+            "nota_final >= 0 AND nota_final <= 5",
             name=conv("inscripciones_curso_nota_final_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("inscripciones_curso_pkey")),
@@ -735,22 +748,413 @@ class MallaCurricular(BaseModelo):
         sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
         sa.Column("tipo_curso_id", sa.BigInteger(), nullable=False),
         sa.Column("materia_id", sa.BigInteger(), nullable=False),
-        sa.Column("nota_minima_aprobacion", sa.Numeric(4, 2), nullable=False),
         sa.Column("orden", sa.Integer(), nullable=False),
         sa.Column("activo", sa.Boolean(), server_default=sa.text("true"), nullable=False),
+        # p0017: versión de la malla, área y módulo del documento de la Escuela, y si lleva nota.
+        sa.Column("version_id", sa.BigInteger(), nullable=False),
+        sa.Column("area", sa.String(100), nullable=True),
+        sa.Column("modulo", sa.String(100), nullable=True),
+        sa.Column("evaluable", sa.Boolean(), server_default=sa.text("true"), nullable=False),
         sa.ForeignKeyConstraint(
             ["materia_id"], ["esart.materias.id"], name=conv("fk_malla_curricular_materia_id")
         ),
         sa.ForeignKeyConstraint(
             ["tipo_curso_id"], ["esart.tipos_curso.id"], name=conv("fk_malla_curricular_tipo_curso_id")
         ),
-        sa.CheckConstraint(
-            "(((nota_minima_aprobacion >= (0)::numeric) AND (nota_minima_aprobacion <= (100)::numeric)))",
-            name=conv("malla_curricular_nota_minima_aprobacion_check"),
+        sa.ForeignKeyConstraint(
+            ["version_id"], ["esart.versiones_malla.id"], name=conv("fk_malla_curricular_version_id")
         ),
+        sa.CheckConstraint("orden >= 1", name=conv("ck_malla_curricular_orden")),
         sa.PrimaryKeyConstraint("id", name=conv("malla_curricular_pkey")),
         schema="esart",
     )
+
+
+class VersionMalla(BaseModelo):
+    """p0017: versión de la malla de un tipo de curso. Solo una VIGENTE por tipo; las anteriores
+    quedan HISTORICA y los cursos que ya la usaban la conservan."""
+
+    __table__ = sa.Table(
+        "versiones_malla",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("tipo_curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("numero", sa.Integer(), nullable=False),
+        sa.Column("anio", sa.Integer(), nullable=False),
+        sa.Column(
+            "estado", sa.String(20), server_default=sa.text("'VIGENTE'::character varying"), nullable=False
+        ),
+        sa.Column("observacion", sa.Text(), nullable=True),
+        sa.Column("creado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("creado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["tipo_curso_id"], ["esart.tipos_curso.id"], name=conv("fk_versiones_malla_tipo_curso_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["creado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_versiones_malla_creado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint("estado IN ('VIGENTE', 'HISTORICA')", name=conv("ck_versiones_malla_estado")),
+        sa.CheckConstraint("numero >= 1", name=conv("ck_versiones_malla_numero")),
+        sa.CheckConstraint("anio BETWEEN 2000 AND 2100", name=conv("ck_versiones_malla_anio")),
+        sa.PrimaryKeyConstraint("id", name=conv("versiones_malla_pkey")),
+        schema="esart",
+    )
+
+
+class CursoMateriaInstructor(BaseModelo):
+    """p0021 (S2-02): instructor titular de una materia con nota en un curso (uno por materia)."""
+
+    __table__ = sa.Table(
+        "cursos_materias_instructor",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("instructor_id", sa.BigInteger(), nullable=False),
+        sa.Column("asignado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("asignado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["curso_id"], ["esart.cursos.id"], name=conv("fk_cursos_materias_instructor_curso_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_cursos_materias_instructor_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["instructor_id"],
+            ["esart.instructores.id"],
+            name=conv("fk_cursos_materias_instructor_instructor_id"),
+        ),
+        sa.ForeignKeyConstraint(
+            ["asignado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_cursos_materias_instructor_asignado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.UniqueConstraint("curso_id", "malla_id", name=conv("uq_cursos_materias_instructor")),
+        sa.PrimaryKeyConstraint("id", name=conv("cursos_materias_instructor_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_cursos_materias_instructor_instructor_id",
+    sa.text("instructor_id"),
+    _table=BaseModelo.metadata.tables["esart.cursos_materias_instructor"],
+    unique=False,
+)
+
+
+class EntregaNotas(BaseModelo):
+    """p0022 (S2-12): planilla de notas de una materia en un curso, subida por su instructor.
+    EN_REVISION no cuenta para nada hasta que el Inspector la apruebe (S2-13)."""
+
+    __table__ = sa.Table(
+        "entregas_notas",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("instructor_id", sa.BigInteger(), nullable=False),
+        sa.Column(
+            "estado",
+            sa.String(20),
+            server_default=sa.text("'EN_REVISION'::character varying"),
+            nullable=False,
+        ),
+        sa.Column("nombre_archivo", sa.String(200), nullable=False),
+        sa.Column("sha256", sa.CHAR(64), nullable=False),
+        sa.Column("subido_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("subido_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.Column("revisado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("revisado_en", sa.DateTime(timezone=True), nullable=True),
+        sa.Column("observacion_revision", sa.Text(), nullable=True),
+        # p0024 (S2-14): ORDINARIA (planilla de S2-12) o HABILITACION (formulario de S2-14).
+        sa.Column(
+            "tipo", sa.String(15), server_default=sa.text("'ORDINARIA'::character varying"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_entregas_notas_curso_id")),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_entregas_notas_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["instructor_id"], ["esart.instructores.id"], name=conv("fk_entregas_notas_instructor_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["subido_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_entregas_notas_subido_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.ForeignKeyConstraint(
+            ["revisado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_entregas_notas_revisado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint(
+            "estado IN ('EN_REVISION', 'APROBADA', 'DEVUELTA')", name=conv("ck_entregas_notas_estado")
+        ),
+        sa.CheckConstraint("tipo IN ('ORDINARIA', 'HABILITACION')", name=conv("ck_entregas_notas_tipo")),
+        sa.UniqueConstraint("curso_id", "malla_id", "tipo", name=conv("uq_entregas_notas_curso_malla_tipo")),
+        sa.PrimaryKeyConstraint("id", name=conv("entregas_notas_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_entregas_notas_estado",
+    sa.text("estado"),
+    _table=BaseModelo.metadata.tables["esart.entregas_notas"],
+    unique=False,
+)
+sa.Index(
+    "ix_entregas_notas_instructor_id",
+    sa.text("instructor_id"),
+    _table=BaseModelo.metadata.tables["esart.entregas_notas"],
+    unique=False,
+)
+
+
+class NotaEntrega(BaseModelo):
+    """p0022 (S2-12): nota (0 a 5) de un alumno del curso dentro de una entrega."""
+
+    __table__ = sa.Table(
+        "notas_entrega",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("entrega_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota", sa.Numeric(3, 2), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["entrega_id"],
+            ["esart.entregas_notas.id"],
+            name=conv("fk_notas_entrega_entrega_id"),
+            ondelete="CASCADE",
+        ),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_notas_entrega_personal_id")
+        ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("ck_notas_entrega_nota")),
+        sa.UniqueConstraint("entrega_id", "personal_id", name=conv("uq_notas_entrega_alumno")),
+        sa.PrimaryKeyConstraint("id", name=conv("notas_entrega_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_notas_entrega_personal_id",
+    sa.text("personal_id"),
+    _table=BaseModelo.metadata.tables["esart.notas_entrega"],
+    unique=False,
+)
+
+
+class NotaOficial(BaseModelo):
+    """p0023 (S2-13): nota aprobada por el Inspector; la que cuenta para habilitación y nota final.
+    Se reemplaza completa (por curso y materia) en cada nueva aprobación."""
+
+    __table__ = sa.Table(
+        "notas_oficiales",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota", sa.Numeric(3, 2), nullable=False),
+        sa.Column("entrega_id", sa.BigInteger(), nullable=False),
+        sa.Column("aprobado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("aprobado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        # p0024 (S2-14): la nota ordinaria aprobada y de dónde sale "nota" (la que cuenta).
+        sa.Column("nota_ordinaria", sa.Numeric(3, 2), nullable=False),
+        sa.Column(
+            "origen", sa.String(15), server_default=sa.text("'ORDINARIA'::character varying"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_notas_oficiales_curso_id")),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_notas_oficiales_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_notas_oficiales_personal_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["entrega_id"], ["esart.entregas_notas.id"], name=conv("fk_notas_oficiales_entrega_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["aprobado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_notas_oficiales_aprobado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("ck_notas_oficiales_nota")),
+        sa.CheckConstraint(
+            "nota_ordinaria >= 0 AND nota_ordinaria <= 5", name=conv("ck_notas_oficiales_nota_ordinaria")
+        ),
+        sa.CheckConstraint(
+            "origen IN ('ORDINARIA', 'HABILITACION', 'CONSEJO')", name=conv("ck_notas_oficiales_origen")
+        ),
+        sa.UniqueConstraint("curso_id", "malla_id", "personal_id", name=conv("uq_notas_oficiales_alumno")),
+        sa.PrimaryKeyConstraint("id", name=conv("notas_oficiales_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_notas_oficiales_personal_id",
+    sa.text("personal_id"),
+    _table=BaseModelo.metadata.tables["esart.notas_oficiales"],
+    unique=False,
+)
+
+
+class HabilitacionMateria(BaseModelo):
+    """p0024 (S2-14): resultado de la habilitación aprobada de un alumno en una materia del curso.
+    APROBADA: su nota es la que cuenta (materia "Habilitada"); REPROBADA: pasa al Consejo."""
+
+    __table__ = sa.Table(
+        "habilitaciones_materia",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("malla_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("entrega_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota", sa.Numeric(3, 2), nullable=False),
+        sa.Column("resultado", sa.String(10), nullable=False),
+        sa.Column("aprobado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("aprobado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(
+            ["curso_id"], ["esart.cursos.id"], name=conv("fk_habilitaciones_materia_curso_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_habilitaciones_materia_malla_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_habilitaciones_materia_personal_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["entrega_id"], ["esart.entregas_notas.id"], name=conv("fk_habilitaciones_materia_entrega_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["aprobado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_habilitaciones_materia_aprobado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("ck_habilitaciones_materia_nota")),
+        sa.CheckConstraint(
+            "resultado IN ('APROBADA', 'REPROBADA')", name=conv("ck_habilitaciones_materia_resultado")
+        ),
+        sa.UniqueConstraint(
+            "curso_id", "malla_id", "personal_id", name=conv("uq_habilitaciones_materia_alumno")
+        ),
+        sa.PrimaryKeyConstraint("id", name=conv("habilitaciones_materia_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_habilitaciones_materia_resultado",
+    sa.text("resultado"),
+    _table=BaseModelo.metadata.tables["esart.habilitaciones_materia"],
+    unique=False,
+)
+
+
+class DecisionConsejo(BaseModelo):
+    """p0024 (S2-14): decisión del Consejo Académico sobre una habilitación perdida (una sola)."""
+
+    __table__ = sa.Table(
+        "decisiones_consejo",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("habilitacion_id", sa.BigInteger(), nullable=False),
+        sa.Column("decision", sa.String(20), nullable=False),
+        sa.Column("numero_acta", sa.String(50), nullable=False),
+        sa.Column("fecha_acta", sa.Date(), nullable=False),
+        sa.Column("observacion", sa.Text(), nullable=True),
+        sa.Column("registrado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column(
+            "registrado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False
+        ),
+        sa.ForeignKeyConstraint(
+            ["habilitacion_id"],
+            ["esart.habilitaciones_materia.id"],
+            name=conv("fk_decisiones_consejo_habilitacion_id"),
+        ),
+        sa.ForeignKeyConstraint(
+            ["registrado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_decisiones_consejo_registrado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint(
+            "decision IN ('APRUEBA_MATERIA', 'REPITE_CURSO', 'PIERDE_CURSO', 'OTRA')",
+            name=conv("ck_decisiones_consejo_decision"),
+        ),
+        sa.CheckConstraint(
+            "decision <> 'OTRA' OR length(trim(coalesce(observacion, ''))) > 0",
+            name=conv("ck_decisiones_consejo_observacion_otra"),
+        ),
+        sa.UniqueConstraint("habilitacion_id", name=conv("uq_decisiones_consejo_habilitacion")),
+        sa.PrimaryKeyConstraint("id", name=conv("decisiones_consejo_pkey")),
+        schema="esart",
+    )
+
+
+class ResultadoCurso(BaseModelo):
+    """p0025 (S2-15): nota final, resultado y puesto de un alumno al cerrar el curso."""
+
+    __table__ = sa.Table(
+        "resultados_curso",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota_final", sa.Numeric(3, 2), nullable=False),
+        sa.Column("nota_exacta", sa.Numeric(12, 8), nullable=False),
+        sa.Column("materias_evaluadas", sa.Integer(), nullable=False),
+        sa.Column("materias_habilitadas", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("promedio_area_especifica", sa.Numeric(12, 8), nullable=True),
+        sa.Column("resultado", sa.String(10), nullable=False),
+        sa.Column("motivo", sa.Text(), nullable=True),
+        sa.Column("puesto", sa.Integer(), nullable=True),
+        sa.Column("cerrado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("cerrado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_resultados_curso_curso_id")),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_resultados_curso_personal_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["cerrado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_resultados_curso_cerrado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint(
+            "nota_final >= 0 AND nota_final <= 5", name=conv("ck_resultados_curso_nota_final")
+        ),
+        sa.CheckConstraint(
+            "resultado IN ('APROBADO', 'REPROBADO')", name=conv("ck_resultados_curso_resultado")
+        ),
+        sa.CheckConstraint(
+            "(resultado = 'APROBADO' AND puesto >= 1) OR (resultado = 'REPROBADO' AND puesto IS NULL)",
+            name=conv("ck_resultados_curso_puesto"),
+        ),
+        sa.UniqueConstraint("curso_id", "personal_id", name=conv("uq_resultados_curso_alumno")),
+        sa.PrimaryKeyConstraint("id", name=conv("resultados_curso_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_resultados_curso_personal_id",
+    sa.text("personal_id"),
+    _table=BaseModelo.metadata.tables["esart.resultados_curso"],
+    unique=False,
+)
 
 
 class Materias(BaseModelo):
@@ -785,11 +1189,11 @@ class NotasFinalesEgresado(BaseModelo):
             ["materia_id"], ["esart.materias.id"], name=conv("fk_notas_finales_egresado_materia_id")
         ),
         sa.CheckConstraint(
-            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric)))",
+            "nota >= 0 AND nota <= 5",
             name=conv("notas_finales_egresado_nota_check"),
         ),
         sa.CheckConstraint(
-            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))",
+            "nota_habilitacion >= 0 AND nota_habilitacion <= 5",
             name=conv("notas_finales_egresado_nota_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("notas_finales_egresado_pkey")),
@@ -817,11 +1221,9 @@ class NotasMateria(BaseModelo):
         sa.ForeignKeyConstraint(
             ["malla_id"], ["esart.malla_curricular.id"], name=conv("fk_notas_materia_malla_id")
         ),
+        sa.CheckConstraint("nota >= 0 AND nota <= 5", name=conv("notas_materia_nota_check")),
         sa.CheckConstraint(
-            "(((nota >= (0)::numeric) AND (nota <= (100)::numeric)))", name=conv("notas_materia_nota_check")
-        ),
-        sa.CheckConstraint(
-            "(((nota_habilitacion >= (0)::numeric) AND (nota_habilitacion <= (100)::numeric)))",
+            "nota_habilitacion >= 0 AND nota_habilitacion <= 5",
             name=conv("notas_materia_nota_habilitacion_check"),
         ),
         sa.PrimaryKeyConstraint("id", name=conv("notas_materia_pkey")),
@@ -1503,12 +1905,47 @@ sa.Index(
     _table=BaseModelo.metadata.tables["esart.instructores_especialidades"],
     unique=True,
 )
+# p0017: una materia una sola vez por versión, con un orden único; nombres de materia únicos;
+# una sola versión VIGENTE por tipo de curso.
 sa.Index(
-    "uq_malla_tipo_materia",
-    sa.text("tipo_curso_id"),
+    "uq_malla_version_materia",
+    sa.text("version_id"),
     sa.text("materia_id"),
     _table=BaseModelo.metadata.tables["esart.malla_curricular"],
     unique=True,
+)
+sa.Index(
+    "uq_malla_version_orden",
+    sa.text("version_id"),
+    sa.text("orden"),
+    _table=BaseModelo.metadata.tables["esart.malla_curricular"],
+    unique=True,
+)
+sa.Index(
+    "uq_materias_nombre",
+    sa.text("upper(nombre)"),
+    _table=BaseModelo.metadata.tables["esart.materias"],
+    unique=True,
+)
+sa.Index(
+    "uq_versiones_malla_numero",
+    sa.text("tipo_curso_id"),
+    sa.text("numero"),
+    _table=BaseModelo.metadata.tables["esart.versiones_malla"],
+    unique=True,
+)
+sa.Index(
+    "uq_versiones_malla_vigente",
+    sa.text("tipo_curso_id"),
+    _table=BaseModelo.metadata.tables["esart.versiones_malla"],
+    unique=True,
+    postgresql_where=sa.text("estado = 'VIGENTE'"),
+)
+sa.Index(
+    "ix_cursos_malla_version_id",
+    sa.text("malla_version_id"),
+    _table=BaseModelo.metadata.tables["esart.cursos"],
+    unique=False,
 )
 sa.Index(
     "ix_notas_finales_egresado_egresado_id",

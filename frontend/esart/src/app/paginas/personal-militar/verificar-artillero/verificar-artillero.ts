@@ -4,6 +4,7 @@ import { NonNullableFormBuilder, ReactiveFormsModule, Validators } from '@angula
 import { ActivatedRoute, Router } from '@angular/router';
 
 import { InsigniaEstado } from '../../../compartido/insignia-estado/insignia-estado';
+import { guardarArchivo } from '../../../nucleo/descargas';
 import { ErrorApi, leerErrorApi } from '../../../nucleo/modelos/error-api';
 import {
   DOCUMENTOS_ARTILLERO,
@@ -118,11 +119,7 @@ export class VerificarArtillero {
     this.errorDocumento.set(null);
     this.verificacion.generarDocumento(this.cedulaConsultada, this.tipoDocumento()).subscribe({
       next: ({ nombre, contenido }) => {
-        const enlace = document.createElement('a');
-        enlace.href = URL.createObjectURL(contenido);
-        enlace.download = nombre;
-        enlace.click();
-        URL.revokeObjectURL(enlace.href);
+        guardarArchivo(nombre, contenido);
         this.generando.set(false);
       },
       error: (error: unknown) => {
@@ -137,7 +134,11 @@ export class VerificarArtillero {
     this.formulario.reset();
     this.resultado.set(null);
     this.error.set(null);
-    void this.enrutador.navigate([], { relativeTo: this.rutaActual, queryParams: {}, replaceUrl: true });
+    void this.enrutador.navigate([], {
+      relativeTo: this.rutaActual,
+      queryParams: {},
+      replaceUrl: true,
+    });
   }
 
   /** Fecha AAAA-MM-DD del backend en formato legible (16-nov-2027), sin desfase por zona horaria. */

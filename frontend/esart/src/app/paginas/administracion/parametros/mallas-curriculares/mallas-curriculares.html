@@ -1,0 +1,556 @@
+<div class="space-y-5">
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg flex flex-wrap items-center gap-2.5 text-body-md"
+      role="alert"
+    >
+      <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+      <span class="flex-1">{{ fallo.mensaje }}</span>
+      @if (fallo.codigo === 'MALLA_DESACTUALIZADA') {
+        <button
+          type="button"
+          (click)="cancelarEdicion(); cargarTipos()"
+          class="px-3 py-1.5 rounded-lg border border-error/40 text-label-lg font-headline text-error bg-white"
+        >
+          Recargar malla
+        </button>
+      }
+    </div>
+  }
+
+  <!-- Tipos de curso -->
+  <section class="bg-white rounded-2xl border border-gris-bordes p-5 space-y-4">
+    <div class="flex flex-wrap items-start justify-between gap-3">
+      <div class="space-y-1">
+        <h2 class="font-headline font-bold text-negro-institucional">Tipos de curso</h2>
+        <p class="text-body-md text-azul-pizarra/80">
+          Cada tipo de curso tiene su malla. Al guardar cambios se crea una
+          <strong>versión nueva</strong>: los cursos ya creados conservan la suya.
+        </p>
+      </div>
+      @if (puedeCrear() && !creandoTipo()) {
+        <button
+          type="button"
+          (click)="abrirNuevoTipo()"
+          class="px-4 py-2 rounded-lg bg-azul-institucional hover:opacity-90 text-white text-xs font-bold shadow-sm flex items-center gap-2"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+          Nuevo tipo de curso
+        </button>
+      }
+    </div>
+
+    @if (creandoTipo()) {
+      <form
+        class="rounded-xl border border-azul-claro bg-azul-hielo/40 p-4 space-y-3"
+        (ngSubmit)="crearTipo()"
+        autocomplete="off"
+      >
+        <h3 class="font-headline font-bold text-sm text-negro-institucional">
+          Nuevo tipo de curso
+        </h3>
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <div class="space-y-1">
+            <label for="tipo-codigo" class="block font-headline text-label-md">Código</label>
+            <input
+              id="tipo-codigo"
+              name="codigo"
+              maxlength="20"
+              placeholder="CAPFU"
+              [ngModel]="nuevoTipo().codigo"
+              (ngModelChange)="cambiarNuevoTipo('codigo', $event)"
+              class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md uppercase"
+            />
+          </div>
+          <div class="space-y-1 md:col-span-2">
+            <label for="tipo-nombre" class="block font-headline text-label-md">Nombre</label>
+            <input
+              id="tipo-nombre"
+              name="nombre"
+              maxlength="200"
+              [ngModel]="nuevoTipo().nombre"
+              (ngModelChange)="cambiarNuevoTipo('nombre', $event)"
+              class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+            />
+          </div>
+          <div class="space-y-1">
+            <label for="tipo-tipo" class="block font-headline text-label-md">Tipo</label>
+            <select
+              id="tipo-tipo"
+              name="tipo"
+              [ngModel]="nuevoTipo().tipo"
+              (ngModelChange)="cambiarNuevoTipo('tipo', $event)"
+              class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md bg-white"
+            >
+              @for (opcion of tiposDeCurso; track opcion.valor) {
+                <option [value]="opcion.valor">{{ opcion.texto }}</option>
+              }
+            </select>
+          </div>
+          <div class="grid grid-cols-2 gap-2">
+            <div class="space-y-1">
+              <label for="tipo-modalidad" class="block font-headline text-label-md"
+                >Modalidad</label
+              >
+              <select
+                id="tipo-modalidad"
+                name="modalidad"
+                [ngModel]="nuevoTipo().modalidad"
+                (ngModelChange)="cambiarNuevoTipo('modalidad', $event)"
+                class="w-full py-2 px-2 border border-gris-bordes rounded-sm text-body-md bg-white"
+              >
+                @for (modalidad of modalidades; track modalidad) {
+                  <option [value]="modalidad">{{ modalidad }}</option>
+                }
+              </select>
+            </div>
+            <div class="space-y-1">
+              <label for="tipo-semanas" class="block font-headline text-label-md">Semanas</label>
+              <input
+                id="tipo-semanas"
+                name="semanas"
+                type="number"
+                min="1"
+                max="104"
+                [ngModel]="nuevoTipo().duracion_semanas"
+                (ngModelChange)="cambiarNuevoTipo('duracion_semanas', $event)"
+                class="w-full py-2 px-2 border border-gris-bordes rounded-sm text-body-md"
+              />
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-azul-pizarra/60">
+          Código de 2 a 20 letras, números o guion bajo (queda en mayúsculas). El tipo se crea sin
+          malla; luego se carga aquí mismo. Se pedirá el código del autenticador.
+        </p>
+        <div class="flex justify-end gap-2">
+          <button
+            type="button"
+            (click)="creandoTipo.set(false)"
+            class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline bg-white"
+          >
+            Cancelar
+          </button>
+          <button
+            type="submit"
+            [disabled]="!nuevoTipoValido() || guardando()"
+            class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+          >
+            {{ guardando() ? 'Creando…' : 'Crear tipo de curso' }}
+          </button>
+        </div>
+      </form>
+    }
+
+    @if (cargando()) {
+      <p class="text-body-md text-azul-pizarra/70" role="status">Cargando tipos de curso…</p>
+    } @else {
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2" role="list">
+        @for (tipo of tipos(); track tipo.codigo) {
+          <button
+            type="button"
+            role="listitem"
+            (click)="seleccionar(tipo.codigo)"
+            [attr.aria-pressed]="seleccionado() === tipo.codigo"
+            [class]="
+              'text-left rounded-xl border p-3 transition-colors ' +
+              (seleccionado() === tipo.codigo
+                ? 'border-azul-institucional bg-azul-hielo'
+                : 'border-gris-bordes hover:bg-gris-claro')
+            "
+          >
+            <span class="block font-headline font-bold text-sm text-negro-institucional">{{
+              tipo.codigo
+            }}</span>
+            @if (tipo.version) {
+              <span class="block text-xs text-azul-pizarra/70"
+                >v{{ tipo.version }} · {{ tipo.evaluables }}/{{ tipo.materias }} con nota</span
+              >
+            } @else {
+              <span class="block text-xs text-warning font-semibold">Sin malla</span>
+            }
+            @if (!tipo.activo) {
+              <span class="block text-[10px] text-azul-pizarra/60">Inactivo</span>
+            }
+          </button>
+        }
+      </div>
+    }
+  </section>
+
+  <!-- Malla del tipo seleccionado -->
+  @if (cargandoDetalle()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Cargando la malla…</p>
+  } @else if (detalle(); as malla) {
+    <section class="bg-white rounded-2xl border border-gris-bordes p-5 space-y-4">
+      <div class="flex flex-wrap items-start justify-between gap-3">
+        <div class="space-y-1">
+          <h2 class="font-headline font-bold text-negro-institucional">
+            {{ malla.tipo_curso.codigo }} — {{ malla.tipo_curso.nombre }}
+          </h2>
+          @if (malla.version; as version) {
+            <p class="text-xs text-azul-pizarra/70">
+              Versión <strong>{{ version.numero }}</strong> ({{ version.anio }}) ·
+              <span
+                [class]="
+                  version.estado === 'VIGENTE'
+                    ? 'text-success font-semibold'
+                    : 'text-warning font-semibold'
+                "
+                >{{ version.estado === 'VIGENTE' ? 'Vigente' : 'Histórica' }}</span
+              >
+              · creada {{ version.creado_en | date: 'd MMM y, h:mm a' }}
+              @if (version.creado_por) {
+                por <span class="font-mono">{{ version.creado_por }}</span>
+              }
+              · {{ version.cursos }} {{ version.cursos === 1 ? 'curso la usa' : 'cursos la usan' }}
+            </p>
+            @if (version.observacion) {
+              <p class="text-xs text-azul-pizarra/70">Observación: {{ version.observacion }}</p>
+            }
+          } @else {
+            <p class="text-body-md text-warning">
+              Este tipo de curso todavía no tiene malla curricular.
+            </p>
+          }
+        </div>
+        @if (puedeEditar() && !editando()) {
+          @if (viendoHistorica()) {
+            <button
+              type="button"
+              (click)="seleccionar(malla.tipo_curso.codigo)"
+              class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+            >
+              Volver a la vigente
+            </button>
+          } @else {
+            <button
+              type="button"
+              (click)="editar()"
+              class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline flex items-center gap-2"
+            >
+              <span class="material-symbols-outlined text-[18px]" aria-hidden="true">edit</span>
+              {{ malla.version ? 'Editar malla' : 'Cargar malla' }}
+            </button>
+          }
+        }
+      </div>
+
+      @if (!editando()) {
+        @if (malla.filas.length) {
+          <div class="overflow-x-auto">
+            <table class="w-full text-body-md">
+              <thead class="bg-gris-claro">
+                <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                  <th class="py-2 px-3 w-12">#</th>
+                  <th class="py-2 px-3">Materia</th>
+                  <th class="py-2 px-3">Área</th>
+                  <th class="py-2 px-3">Módulo</th>
+                  <th class="py-2 px-3">Nota</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (fila of malla.filas; track fila.orden) {
+                  <tr class="border-t border-gris-bordes">
+                    <td class="py-2 px-3 text-azul-pizarra/60">{{ fila.orden }}</td>
+                    <td class="py-2 px-3">
+                      {{ fila.materia }}
+                      <span class="block text-[10px] font-mono text-azul-pizarra/50">{{
+                        fila.codigo_materia
+                      }}</span>
+                    </td>
+                    <td class="py-2 px-3 text-azul-pizarra/80">{{ fila.area || '—' }}</td>
+                    <td class="py-2 px-3 text-azul-pizarra/80">{{ fila.modulo || '—' }}</td>
+                    <td class="py-2 px-3">
+                      @if (fila.evaluable) {
+                        <span class="text-success font-semibold">Con nota</span>
+                      } @else {
+                        <span class="text-azul-pizarra/60">Sin nota</span>
+                      }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        @if (malla.versiones.length > 1) {
+          <div class="space-y-2">
+            <h3 class="font-headline font-bold text-sm text-negro-institucional">
+              Historial de versiones
+            </h3>
+            <ul class="divide-y divide-gris-bordes border border-gris-bordes rounded-xl">
+              @for (version of malla.versiones; track version.numero) {
+                <li class="flex flex-wrap items-center gap-3 px-3 py-2 text-body-md">
+                  <span class="font-headline font-semibold">v{{ version.numero }}</span>
+                  <span class="text-xs text-azul-pizarra/70">
+                    {{ version.anio }} · {{ version.materias }} materias ·
+                    {{ version.cursos }} cursos · {{ version.creado_en | date: 'd MMM y' }}
+                  </span>
+                  <span
+                    [class]="
+                      'text-[10px] px-1.5 rounded-full font-bold ' +
+                      (version.estado === 'VIGENTE'
+                        ? 'bg-success/10 text-success'
+                        : 'bg-gris-claro text-azul-pizarra/70')
+                    "
+                    >{{ version.estado === 'VIGENTE' ? 'Vigente' : 'Histórica' }}</span
+                  >
+                  @if (malla.version?.numero !== version.numero) {
+                    <button
+                      type="button"
+                      (click)="seleccionar(malla.tipo_curso.codigo, version.numero)"
+                      class="ml-auto text-xs text-azul-institucional font-semibold underline"
+                    >
+                      Ver
+                    </button>
+                  }
+                </li>
+              }
+            </ul>
+          </div>
+        }
+      } @else {
+        <!-- Editor de la versión nueva -->
+        <datalist id="catalogo-materias">
+          @for (materia of materias(); track materia.codigo) {
+            <option [value]="materia.nombre"></option>
+          }
+        </datalist>
+        <div class="overflow-x-auto">
+          <table class="w-full text-body-md">
+            <thead class="bg-gris-claro">
+              <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+                <th class="py-2 px-2 w-12">#</th>
+                <th class="py-2 px-2 min-w-56">Materia</th>
+                <th class="py-2 px-2 min-w-32">Área</th>
+                <th class="py-2 px-2 min-w-32">Módulo</th>
+                <th class="py-2 px-2">Con nota</th>
+                <th class="py-2 px-2 w-32"><span class="sr-only">Acciones</span></th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (
+                fila of filas();
+                track fila.clave;
+                let posicion = $index, primera = $first, ultima = $last
+              ) {
+                <tr class="border-t border-gris-bordes">
+                  <td class="py-1.5 px-2 text-azul-pizarra/60">{{ posicion + 1 }}</td>
+                  <td class="py-1.5 px-2">
+                    <input
+                      list="catalogo-materias"
+                      maxlength="200"
+                      [attr.aria-label]="'Materia ' + (posicion + 1)"
+                      [ngModel]="fila.materia"
+                      (ngModelChange)="cambiarFila(fila.clave, 'materia', $event)"
+                      class="w-full py-1.5 px-2 border border-gris-bordes rounded-sm text-body-md"
+                    />
+                  </td>
+                  <td class="py-1.5 px-2">
+                    <input
+                      maxlength="100"
+                      [attr.aria-label]="'Área ' + (posicion + 1)"
+                      [ngModel]="fila.area"
+                      (ngModelChange)="cambiarFila(fila.clave, 'area', $event)"
+                      class="w-full py-1.5 px-2 border border-gris-bordes rounded-sm text-body-md"
+                    />
+                  </td>
+                  <td class="py-1.5 px-2">
+                    <input
+                      maxlength="100"
+                      [attr.aria-label]="'Módulo ' + (posicion + 1)"
+                      [ngModel]="fila.modulo"
+                      (ngModelChange)="cambiarFila(fila.clave, 'modulo', $event)"
+                      class="w-full py-1.5 px-2 border border-gris-bordes rounded-sm text-body-md"
+                    />
+                  </td>
+                  <td class="py-1.5 px-2 text-center">
+                    <input
+                      type="checkbox"
+                      [attr.aria-label]="'Con nota ' + (posicion + 1)"
+                      [checked]="fila.evaluable"
+                      (change)="alternarEvaluable(fila.clave)"
+                    />
+                  </td>
+                  <td class="py-1.5 px-2">
+                    <div class="flex justify-end gap-1">
+                      <button
+                        type="button"
+                        (click)="mover(posicion, -1)"
+                        [disabled]="primera"
+                        [attr.aria-label]="'Subir materia ' + (posicion + 1)"
+                        class="p-1 rounded border border-gris-bordes disabled:opacity-30"
+                      >
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                          >arrow_upward</span
+                        >
+                      </button>
+                      <button
+                        type="button"
+                        (click)="mover(posicion, 1)"
+                        [disabled]="ultima"
+                        [attr.aria-label]="'Bajar materia ' + (posicion + 1)"
+                        class="p-1 rounded border border-gris-bordes disabled:opacity-30"
+                      >
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                          >arrow_downward</span
+                        >
+                      </button>
+                      <button
+                        type="button"
+                        (click)="quitarFila(fila.clave)"
+                        [attr.aria-label]="'Quitar materia ' + (posicion + 1)"
+                        class="p-1 rounded border border-error/40 text-error"
+                      >
+                        <span class="material-symbols-outlined text-[18px]" aria-hidden="true"
+                          >delete</span
+                        >
+                      </button>
+                    </div>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+        <button
+          type="button"
+          (click)="agregarFila()"
+          class="py-1.5 px-3 border border-azul-institucional text-azul-institucional rounded-sm text-label-lg font-headline flex items-center gap-1"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">add</span>
+          Agregar materia
+        </button>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+          <div class="space-y-1">
+            <label for="malla-anio" class="block font-headline text-label-md"
+              >Año de la versión</label
+            >
+            <input
+              id="malla-anio"
+              type="number"
+              min="2000"
+              max="2100"
+              [ngModel]="anio()"
+              (ngModelChange)="anio.set($event)"
+              class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+            />
+          </div>
+          <div class="space-y-1 md:col-span-3">
+            <label for="malla-observacion" class="block font-headline text-label-md"
+              >Observación (opcional)</label
+            >
+            <input
+              id="malla-observacion"
+              maxlength="500"
+              placeholder="Por ejemplo: acta del Consejo Académico que aprobó el cambio"
+              [ngModel]="observacion()"
+              (ngModelChange)="observacion.set($event)"
+              class="w-full py-2 px-3 border border-gris-bordes rounded-sm text-body-md"
+            />
+          </div>
+        </div>
+
+        @if (problemas().length) {
+          <ul
+            class="p-3 bg-warning/10 border border-warning/40 rounded-lg text-body-md list-disc pl-6"
+            role="status"
+          >
+            @for (problema of problemas(); track problema) {
+              <li>{{ problema }}</li>
+            }
+          </ul>
+        }
+
+        <div class="flex flex-wrap justify-end gap-2">
+          <button
+            type="button"
+            (click)="cancelarEdicion()"
+            [disabled]="guardando()"
+            class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+          >
+            Cancelar
+          </button>
+          <button
+            type="button"
+            (click)="pedirConfirmacion()"
+            [disabled]="problemas().length > 0 || guardando()"
+            class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline disabled:opacity-50"
+          >
+            {{ guardando() ? 'Guardando…' : 'Guardar como versión nueva' }}
+          </button>
+        </div>
+      }
+    </section>
+
+    <!-- Confirmación antes de pedir el código del autenticador -->
+    @if (confirmando()) {
+      <div
+        class="fixed inset-0 z-40 bg-negro-institucional/40 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-confirmar-malla"
+      >
+        <div
+          class="w-full max-w-md bg-white rounded-2xl border border-gris-bordes shadow-xl p-6 space-y-4"
+        >
+          <h2 id="titulo-confirmar-malla" class="font-headline font-bold text-negro-institucional">
+            ¿Guardar la versión nueva de {{ malla.tipo_curso.codigo }}?
+          </h2>
+          <p class="text-body-md text-azul-pizarra">
+            Se creará la versión <strong>{{ (malla.version?.numero ?? 0) + 1 }}</strong> con
+            <strong>{{ filas().length }}</strong> materias. Los cursos ya creados conservan su
+            versión; los que se creen desde ahora usarán esta. Se le pedirá el código de su
+            autenticador y el cambio quedará en la auditoría.
+          </p>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              (click)="confirmando.set(false)"
+              class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              (click)="guardar()"
+              class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</div>
+
+<dialog #ventanaTotp class="ventana-totp" (cancel)="$event.preventDefault()">
+  @if (operacionTotp(); as operacion) {
+    <app-totp
+      modo="CODIGO_OPERACION"
+      [operacionEtiqueta]="
+        operacion === 'tipo'
+          ? 'Creación de un tipo de curso'
+          : 'Nueva versión de la malla curricular'
+      "
+      moduloEtiqueta="Parámetros"
+      [verificarCodigo]="verificarCodigoTotp"
+      [errorInicial]="errorTotp()"
+      (cancelar)="cancelarTotp()"
+      (completado)="cerrarTotp()"
+    />
+  }
+</dialog>

@@ -245,6 +245,20 @@ describe('SesionService', () => {
     expect(sesion.puede('AUDITORIA', 'leer')).toBe(false);
   });
 
+  it('puede() también conoce las operaciones de los permisos especiales sin menú (S2-09)', () => {
+    sesion.comprobarSesion().subscribe();
+    backend.expectOne('/api/auth/yo').flush({
+      ...usuarioDePrueba,
+      permisos: ['MALLAS_CURRICULARES'],
+      menu: [],
+      operaciones: { MALLAS_CURRICULARES: ['leer', 'actualizar'] },
+      expira_por_inactividad_segundos: 1800,
+    });
+    expect(sesion.puede('MALLAS_CURRICULARES', 'actualizar')).toBe(true);
+    expect(sesion.puede('MALLAS_CURRICULARES', 'crear')).toBe(false);
+    expect(sesion.puede('USUARIOS', 'leer')).toBe(false);
+  });
+
   it('comprobarSesion responde false (sin lanzar error) si no hay sesión', () => {
     let resultado: boolean | undefined;
     sesion.comprobarSesion().subscribe((valor) => (resultado = valor));

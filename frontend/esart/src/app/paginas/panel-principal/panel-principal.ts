@@ -84,6 +84,17 @@ export function gruposDeGrados(
   return grupos;
 }
 
+/**
+ * Años del selector, del más reciente al más antiguo y sin saltarse ninguno: desde el año
+ * presente (o uno posterior si ya hay cursos programados) hasta el del curso más antiguo. Así
+ * todos los años aparecen, aunque todavía no tengan cursos cargados.
+ */
+export function aniosDelSelector(disponibles: number[], anioPresente: number): number[] {
+  const desde = Math.max(anioPresente, ...disponibles);
+  const hasta = Math.min(anioPresente, ...disponibles);
+  return Array.from({ length: desde - hasta + 1 }, (_, posicion) => desde - posicion);
+}
+
 /** Información del cuadro emergente que acompaña al puntero sobre una gráfica. */
 interface CuadroEmergente {
   titulo: string;
@@ -99,7 +110,7 @@ const PORCION_MAXIMA_ESCALA = 0.4;
 /**
  * Panel principal (componente DASHBOARD): lo primero que ve el Comandante.
  *
- * - Filtros por año y semestre (por fecha de inicio del curso).
+ * - Filtros por año (lista desplegable con todos los años) y semestre (por fecha de inicio).
  * - Indicadores: cursos en curso hoy, cursos y alumnos del período, egresados y habilitación.
  * - Seguimiento de los cursos en curso con su avance por fechas.
  * - Gráficas: cursos por año y semestre, género por curso y mapa de calor de grados por curso.
@@ -135,11 +146,16 @@ export class PanelPrincipal {
   /** Vista en tabla de las gráficas (accesible y para copiar cifras). */
   protected readonly verTablas = signal(false);
 
-  /** "Todos" más los años que tienen cursos. */
-  protected readonly opcionesAnio = computed<(number | null)[]>(() => [
-    null,
-    ...(this.datos()?.anios_disponibles ?? []),
-  ]);
+  /** Años de la lista desplegable ("Todos" va aparte, al comienzo de la lista). */
+  protected readonly opcionesAnio = computed(() => {
+    const hoy = this.datos()?.hoy;
+    const anioPresente = hoy ? Number(hoy.slice(0, 4)) : new Date().getFullYear();
+    return aniosDelSelector(this.datos()?.anios_disponibles ?? [], anioPresente);
+  });
+  /** Años que sí tienen cursos: en la lista los demás se marcan "sin cursos". */
+  protected readonly aniosConCursos = computed(
+    () => new Set(this.datos()?.anios_disponibles ?? []),
+  );
 
   protected readonly textoPeriodo = computed(() => {
     const anio = this.anio();
@@ -193,6 +209,11 @@ export class PanelPrincipal {
           this.cargando.set(false);
         },
       });
+  }
+
+  /** Cambio en la lista desplegable de año ('' = todos). */
+  protected elegirAnioDeLista(valor: string): void {
+    this.elegirAnio(valor === '' ? null : Number(valor));
   }
 
   protected elegirAnio(anio: number | null): void {

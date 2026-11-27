@@ -117,9 +117,10 @@ export interface UsuarioGestion {
   ultimo_acceso_en: string | null;
 }
 
-/** Militar encontrado al buscar una cédula para crearle usuario. */
+/** Persona encontrada al buscar una cédula para crearle usuario (militar o instructor civil). */
 export interface MilitarParaUsuario {
   documento_identidad: string;
+  /** Grado del militar; para el instructor civil llega "Civil". */
   grado: string;
   nombres: string;
   apellidos: string;
@@ -128,6 +129,8 @@ export interface MilitarParaUsuario {
   /** Si ya tiene usuario, su nombre: no se le puede crear otro. */
   usuario_existente: string | null;
   nombre_usuario_sugerido: string;
+  /** S2-11: MILITAR (Personal militar) o CIVIL (instructor civil del panel de Instructores). */
+  tipo_persona?: 'MILITAR' | 'CIVIL';
 }
 
 export interface SolicitudCrearUsuario {

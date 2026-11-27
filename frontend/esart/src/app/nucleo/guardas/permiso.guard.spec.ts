@@ -8,7 +8,12 @@ import { exigirPermiso } from './permiso.guard';
 describe('exigirPermiso (HU-09)', () => {
   const crearArbol = vi.fn((comandos: string[]) => ({ comandos }) as unknown as UrlTree);
 
-  function evaluar(haySesion: boolean, permisos: string[], componente?: string) {
+  function evaluar(
+    haySesion: boolean,
+    permisos: string[],
+    componente?: string,
+    componentes?: string[],
+  ) {
     TestBed.configureTestingModule({
       providers: [
         { provide: Router, useValue: { createUrlTree: crearArbol } },
@@ -21,7 +26,8 @@ describe('exigirPermiso (HU-09)', () => {
         },
       ],
     });
-    const ruta = { data: componente ? { componente } : {} } as unknown as ActivatedRouteSnapshot;
+    const datos = componentes ? { componentes } : componente ? { componente } : {};
+    const ruta = { data: datos } as unknown as ActivatedRouteSnapshot;
     return TestBed.runInInjectionContext(() =>
       firstValueFrom(
         exigirPermiso(ruta, {} as RouterStateSnapshot) as Observable<boolean | UrlTree>,
@@ -33,6 +39,19 @@ describe('exigirPermiso (HU-09)', () => {
 
   it('deja pasar si el usuario tiene el permiso del componente', async () => {
     expect(await evaluar(true, ['PERSONAL_VERIFICAR'], 'PERSONAL_VERIFICAR')).toBe(true);
+  });
+
+  it('con una lista de componentes basta con tener uno (S2-09)', async () => {
+    const lista = ['PARAMETROS_HABILITACION', 'MALLAS_CURRICULARES'];
+    expect(await evaluar(true, ['MALLAS_CURRICULARES'], undefined, lista)).toBe(true);
+  });
+
+  it('con una lista de componentes y ninguno, lleva al Panel principal (S2-09)', async () => {
+    await evaluar(true, ['DASHBOARD'], undefined, [
+      'PARAMETROS_HABILITACION',
+      'MALLAS_CURRICULARES',
+    ]);
+    expect(crearArbol).toHaveBeenCalledWith(['/', 'dashboard']);
   });
 
   it('sin el permiso, lleva al Panel principal', async () => {

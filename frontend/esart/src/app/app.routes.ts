@@ -134,6 +134,45 @@ export const routes: Routes = [
         ],
       },
       {
+        path: 'cursos',
+        title: 'Cursos — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'CURSOS' },
+        loadComponent: () => import('./paginas/cursos/cursos').then((m) => m.Cursos),
+      },
+      {
+        path: 'cursos/:id',
+        title: 'Detalle del curso — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'CURSOS' },
+        loadComponent: () =>
+          import('./paginas/cursos/detalle-curso/detalle-curso').then((m) => m.DetalleCursoPagina),
+      },
+      {
+        path: 'notas/mis-materias',
+        title: 'Carga de notas — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'NOTAS_CARGA' },
+        loadComponent: () =>
+          import('./paginas/notas/mis-materias/mis-materias').then((m) => m.MisMateriasPagina),
+      },
+      {
+        path: 'notas/revision',
+        title: 'Revisión de notas — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'NOTAS_REVISION' },
+        loadComponent: () =>
+          import('./paginas/notas/revision/revision').then((m) => m.RevisionNotasPagina),
+      },
+      {
+        path: 'notas/consejo',
+        title: 'Consejo Académico — ESART',
+        canActivate: [exigirPermiso],
+        data: { componente: 'CONSEJO_ACADEMICO' },
+        loadComponent: () =>
+          import('./paginas/notas/consejo/consejo').then((m) => m.ConsejoAcademicoPagina),
+      },
+      {
         path: 'instructores',
         title: 'Instructores — ESART',
         canActivate: [exigirPermiso],
@@ -155,7 +194,8 @@ export const routes: Routes = [
         path: 'administracion/parametros',
         title: 'Parámetros — ESART',
         canActivate: [exigirPermiso],
-        data: { componente: 'PARAMETROS_HABILITACION' },
+        // S2-09: quien solo tiene MALLAS_CURRICULARES entra y ve únicamente esa pestaña.
+        data: { componentes: ['PARAMETROS_HABILITACION', 'MALLAS_CURRICULARES'] },
         loadComponent: () =>
           import('./paginas/administracion/parametros/parametros').then((m) => m.Parametros),
       },

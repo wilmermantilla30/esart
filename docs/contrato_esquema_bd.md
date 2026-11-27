@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.4 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.12 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -237,13 +237,61 @@ Si falla cualquiera, es **NO APTO** y se devuelve cada motivo, por ejemplo:
 `id`, `personal_militar_id` (FK, nulo — puede ser instructor externo), `numero_documento`,
 `nombre_completo`, `grado`, `activo`.
 
-### 6.4 `materias_curso` *(segunda entrega)*
-`id`, `tipo_curso_id` (FK), `codigo`, `nombre`, `intensidad_horaria` (INTEGER), `activa`.
-Único: `(tipo_curso_id, codigo)`.
-
-### 6.5 `artillero_notas_materia` *(segunda entrega)*
-`id`, `artillero_curso_id` (FK), `materia_curso_id` (FK), `instructor_id` (FK, nulo),
-`nota` (NUMERIC(4,2)), `observaciones`. Único: `(artillero_curso_id, materia_curso_id)`.
+### 6.4 Malla curricular *(segunda entrega, S2-01, migración `p0017_malla_curricular`)*
+Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las tablas reales de la fase 1.
+- `materias`: catálogo único. `codigo` (`MAT-001`...), `nombre` único sin distinguir mayúsculas
+  (`uq_materias_nombre`). Una materia se reutiliza en todas las mallas que la tengan.
+- `versiones_malla`: `tipo_curso_id`, `numero` (1, 2...), `anio`, `estado` `VIGENTE` | `HISTORICA`,
+  `observacion`, `creado_por_id`. Solo una `VIGENTE` por tipo de curso (`uq_versiones_malla_vigente`).
+- `malla_curricular`: `version_id`, `tipo_curso_id`, `materia_id`, `orden` (≥ 1, único en la versión),
+  `area`, `modulo`, `evaluable` (Tiempo del comandante y Entrenamiento físico = `false`: no cuentan en el
+  promedio). Se eliminó `nota_minima_aprobacion`: la nota mínima es un parámetro general (S2-10).
+- `cursos.malla_version_id`: la asigna el trigger `tg_cursos_asignar_malla` al crear el curso (versión
+  vigente de su tipo) y rechaza una versión de otro tipo de curso. Los cursos anteriores quedan en `NULL`.
+- Escala de notas **0 a 5 con 2 decimales** en `notas_materia`, `habilitaciones`, `notas_finales_egresado`,
+  `egresados_curso` e `inscripciones_curso`. Una sola habilitación por materia (`numero_habilitacion = 1`).
+- Carga inicial: `python -m herramientas.cargar_malla_curricular cargar <Excel> --anio 2026 --ejecutar`
+  (formato de `docs/backlog_sprint2_esart.xlsx`, hojas *Materias* y *Malla por curso*).
+- Nota mínima de aprobación *(S2-10, migración `p0019_nota_minima_aprobacion`)*: parámetro
+  `NOTA_MINIMA_APROBACION` en `parametros_habilitacion` (0 a 5, inicial `3.00`, editable en Parámetros con TOTP).
+  `cursos.nota_minima_aprobacion` (`NUMERIC(3,2)`, 0 a 5) la copia el trigger `tg_cursos_asignar_nota_minima`
+  al crear el curso: un cambio del parámetro solo aplica a los cursos nuevos. Los cursos anteriores a la malla
+  quedan en `NULL` (solo aprobado / no aprobado).
+- Edición desde Parámetros *(S2-09, migración `p0020_mallas_en_parametros`)*: el componente `MALLAS_CURRICULARES`
+  pasa a ser hijo de `PARAMETROS_HABILITACION`; política TOTP `MALLAS_MODIFICAR`; acción de auditoría
+  `TIPO_CURSO_CREADO`; la cuenta de la API puede insertar en `tipos_curso` (`codigo`, `nombre`, `tipo`,
+  `modalidad`, `duracion_semanas`), no editarlos ni borrarlos.
+- Instructor por materia *(S2-02, migración `p0021_instructor_por_materia`)*: `cursos_materias_instructor` (`curso_id`,
+  `malla_id` → fila de `malla_curricular`, `instructor_id`, `asignado_por_id`, `asignado_en`), única por (`curso_id`,
+  `malla_id`): un instructor titular por materia. El servicio exige que la fila sea de la malla del curso y con nota, y
+  que el instructor esté activo. Se activa el componente `CURSOS`; acciones de auditoría `INSTRUCTOR_MATERIA_ASIGNADO` y
+  `CURSO_MALLA_ASIGNADA`; la API puede actualizar `cursos.malla_version_id` y `nota_minima_aprobacion` (asignar la malla
+  vigente a un curso que no tenía).
+- Entregas de notas *(S2-12, migración `p0022_entregas_notas`)*: `entregas_notas` (una por `curso_id` + `malla_id`;
+  `instructor_id`, `estado` EN_REVISION | APROBADA | DEVUELTA, `nombre_archivo`, `sha256`, `subido_por_id`, `subido_en`
+  y los campos de revisión `revisado_por_id`, `revisado_en`, `observacion_revision` para S2-13) y `notas_entrega`
+  (`entrega_id` con borrado en cascada, `personal_id` del alumno, `nota` NUMERIC(3,2) de 0 a 5; única por entrega y
+  alumno). Los alumnos de un curso son los de `hoja_vida_artillero.curso_id`; `notas_materia` y `alumnos_activos`
+  (fase 1) no se usan. `NOTAS_CARGA` tiene ruta `/notas/mis-materias`; acción de auditoría `NOTAS_ENTREGADAS`.
+- Notas oficiales *(S2-13, migración `p0023_revision_notas`)*: `notas_oficiales` (una por `curso_id` + `malla_id` +
+  `personal_id`; `nota` NUMERIC(3,2) de 0 a 5, `entrega_id` aprobada, `aprobado_por_id`, `aprobado_en`). Se reemplazan
+  completas en cada aprobación del Inspector; mientras una entrega reabierta se corrige, siguen vigentes. Son las que
+  usarán la habilitación (S2-14) y la nota final (S2-15). `NOTAS_REVISION` tiene ruta `/notas/revision`; política TOTP
+  `NOTAS_APROBAR`; acciones de auditoría `NOTAS_APROBADAS`, `NOTAS_DEVUELTAS` y `NOTAS_REABIERTAS`.
+- Habilitación y Consejo Académico *(S2-14, migración `p0024_habilitacion_consejo`)*: `entregas_notas.tipo`
+  (ORDINARIA | HABILITACION; única por `curso_id` + `malla_id` + `tipo`); `notas_oficiales.nota_ordinaria` (la nota
+  ordinaria aprobada) y `.origen` (ORDINARIA | HABILITACION | CONSEJO: de dónde sale `nota`, la que cuenta);
+  `habilitaciones_materia` (resultado de cada habilitación aprobada: `nota`, `resultado` APROBADA | REPROBADA,
+  `entrega_id`; única por curso, materia y alumno) y `decisiones_consejo` (una por habilitación perdida:
+  `decision` APRUEBA_MATERIA | REPITE_CURSO | PIERDE_CURSO | OTRA, `numero_acta`, `fecha_acta`, `observacion`
+  obligatoria en OTRA). La tabla `habilitaciones` de la fase 1 no se usa. `CONSEJO_ACADEMICO` tiene ruta
+  `/notas/consejo`; política TOTP `CONSEJO_REGISTRAR`; acción de auditoría `CONSEJO_DECISION_REGISTRADA`.
+- Resultados del curso *(S2-15, migración `p0025_resultados_curso`)*: `resultados_curso` (uno por `curso_id` +
+  `personal_id`, guardado al cerrar el curso: `nota_final` NUMERIC(3,2), `nota_exacta` con todos los decimales para
+  el desempate, `materias_evaluadas`, `materias_habilitadas`, `promedio_area_especifica`, `resultado` APROBADO |
+  REPROBADO, `motivo`, `puesto` solo para aprobados). Al cerrar, `cursos.estado` pasa a CULMINADO y
+  `artillero_cursos.aprobado` queda en true para los aprobados. Las tablas `egresados_curso` e `inscripciones_curso`
+  de la fase 1 no se usan. Política TOTP `CURSO_CERRAR`; acción de auditoría `CURSO_CERRADO`.
 
 ---
 
@@ -363,3 +411,11 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.2 | 2026-11-15 | Punto 7 cerrado: códigos de rol `ADMINISTRADOR` y `USUARIO` (§7.1) |
 | 1.3 | 2026-11-15 | Modelo vigente de HU-04 y cadena Alembic p0000→p0001→p0002 (§10 punto 6). Login: usuario por `esart_ref.usuarios.usuario`; rol informado ADMINISTRADOR si lo tiene, si no USUARIO; nombre visible desde `personal_militar` |
 | 1.4 | 2026-11-16 | Punto 8 cerrado: permisos por componente. `p0005`: componentes (Personal militar con pestañas hijas), módulos de segunda entrega inactivos y malla inicial ADMINISTRADOR/USUARIO (USUARIO ve la cédula completa) |
+| 1.5 | 2026-11-21 | §6.4: malla curricular versionada por tipo de curso, escala de notas 0 a 5 y una sola habilitación (S2-01, `p0017`) |
+| 1.6 | 2026-11-21 | §6.4: nota mínima de aprobación como parámetro general y copiada en cada curso al crearse (S2-10, `p0019`) |
+| 1.7 | 2026-11-21 | §6.4: mallas y tipos de curso editables desde Parámetros (S2-09, `p0020`) |
+| 1.8 | 2026-11-21 | §6.4: instructor titular por materia en cada curso y módulo Cursos (S2-02, `p0021`) |
+| 1.9 | 2026-11-24 | §6.4: entregas de notas por curso y materia con la nota de cada alumno (S2-12, `p0022`) |
+| 1.10 | 2026-11-26 | §6.4: notas oficiales aprobadas por el Inspector de Estudios (S2-13, `p0023`) |
+| 1.11 | 2026-11-26 | §6.4: habilitación de materias y decisiones del Consejo Académico (S2-14, `p0024`) |
+| 1.12 | 2026-11-26 | §6.4: resultados finales y cierre del curso (S2-15, `p0025`) |

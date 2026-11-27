@@ -47,6 +47,23 @@ INSTRUCTOR_ACTIVADO = "INSTRUCTOR_ACTIVADO"
 INSTRUCTOR_DESACTIVADO = "INSTRUCTOR_DESACTIVADO"
 # Registro manual de personal militar (migración p0015).
 PERSONAL_REGISTRADO = "PERSONAL_REGISTRADO"
+# Malla curricular versionada (migración p0017, S2-01).
+MALLA_CURRICULAR_CARGADA = "MALLA_CURRICULAR_CARGADA"
+# Tipos de curso creados desde el panel de Parámetros (migración p0020, S2-09).
+TIPO_CURSO_CREADO = "TIPO_CURSO_CREADO"
+# Módulo Cursos: instructor por materia y malla de un curso existente (migración p0021, S2-02).
+INSTRUCTOR_MATERIA_ASIGNADO = "INSTRUCTOR_MATERIA_ASIGNADO"
+CURSO_MALLA_ASIGNADA = "CURSO_MALLA_ASIGNADA"
+# Planilla de notas subida por el instructor (migración p0022, S2-12).
+NOTAS_ENTREGADAS = "NOTAS_ENTREGADAS"
+# Revisión de las entregas por el Inspector de Estudios (migración p0023, S2-13).
+NOTAS_APROBADAS = "NOTAS_APROBADAS"
+NOTAS_DEVUELTAS = "NOTAS_DEVUELTAS"
+NOTAS_REABIERTAS = "NOTAS_REABIERTAS"
+# Decisión del Consejo Académico sobre una habilitación perdida (migración p0024, S2-14).
+CONSEJO_DECISION_REGISTRADA = "CONSEJO_DECISION_REGISTRADA"
+# Cierre del curso con sus resultados finales (migración p0025, S2-15).
+CURSO_CERRADO = "CURSO_CERRADO"
 
 # Fragmentos de clave que jamás pueden aparecer en el detalle de un evento.
 FRAGMENTOS_PROHIBIDOS = ("contrasena", "password", "token", "hash", "secreto", "clave", "captcha_respuesta")

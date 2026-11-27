@@ -97,5 +97,7 @@ export interface RespuestaUsuarioActual extends UsuarioEnSesion {
   /** Códigos de los componentes a los que puede acceder (incluye permisos sin menú). */
   permisos: string[];
   menu: ElementoMenu[];
+  /** Operaciones de cada componente accesible, incluidos los permisos sin menú (S2-09). */
+  operaciones?: Record<string, string[]>;
   expira_por_inactividad_segundos: number;
 }
