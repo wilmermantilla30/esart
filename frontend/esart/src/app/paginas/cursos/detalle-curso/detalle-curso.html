@@ -195,6 +195,9 @@
           </table>
         </div>
       </section>
+
+      <!-- S2-15: nota final, puesto y cierre del curso -->
+      <esart-resultados-curso [cursoId]="cursoId" (cerrado)="cursoCerrado()" />
     }
   }
 </div>

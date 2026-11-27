@@ -6,8 +6,10 @@ Flujo:
    promedio y cuántas notas quedan por debajo de la mínima del curso.
 2. Detalle: la nota de cada alumno y, si la materia ya tenía notas oficiales, la anterior.
 3. Acciones (permiso "actualizar"):
-   - Aprobar (TOTP): las notas de la entrega pasan a esart.notas_oficiales, que son las que
-     cuentan. Si ya había oficiales (corrección), la auditoría guarda el antes y el después.
+   - Aprobar (confirmación, sin TOTP: decisión de la Escuela, 2026-11-27, por ser la tarea más
+     repetida del Inspector; la sesión ya exige TOTP y todo queda auditado): las notas de la
+     entrega pasan a esart.notas_oficiales, que son las que cuentan. Si ya había oficiales
+     (corrección), la auditoría guarda el antes y el después.
    - Devolver (observación): el instructor corrige y vuelve a subir (S2-12).
    - Reabrir una entrega APROBADA (TOTP y observación): queda DEVUELTA para que el instructor
      suba la corrección; las notas oficiales siguen vigentes hasta la nueva aprobación.
@@ -41,6 +43,7 @@ from aplicacion.servicios.notas import (
     alumnos_del_curso,
 )
 
+# Política TOTP de REABRIR notas aprobadas (el código conserva el nombre de la migración p0023).
 POLITICA_TOTP = "NOTAS_APROBAR"
 ESTADOS = (ESTADO_EN_REVISION, ESTADO_DEVUELTA, ESTADO_APROBADA)
 LONGITUD_MINIMA_OBSERVACION = 5
@@ -295,24 +298,9 @@ async def aprobar(
     version: datetime | None,
     *,
     actor: Actor,
-    codigo_totp: str | None,
 ) -> dict:
-    """Aprueba la entrega: sus notas pasan a ser las oficiales de la materia en el curso."""
-    fila = await _fila_entrega(sesion, entrega_id)
-    _verificar_estado(fila, ESTADO_EN_REVISION, "aprobar")
-    _verificar_version(fila, version)
-    await _notas_completas(sesion, fila)
-    # El código va antes de escribir: si es inválido, exigir_codigo_totp confirma su auditoría.
-    await exigir_codigo_totp(
-        sesion,
-        actor.usuario_id,
-        POLITICA_TOTP,
-        codigo_totp,
-        actor.request,
-        prefijo_auditoria="NOTAS",
-        mensaje_requerido="Ingrese el código del autenticador para aprobar las notas.",
-    )
-    # Se vuelve a leer con la fila reservada: nadie la cambia entre la revisión y la aprobación.
+    """Aprueba la entrega (sin TOTP): sus notas pasan a ser las oficiales de la materia en el curso."""
+    # Con la fila reservada: nadie la cambia entre la revisión y la aprobación.
     fila = await _fila_entrega(sesion, entrega_id, bloquear=True)
     _verificar_estado(fila, ESTADO_EN_REVISION, "aprobar")
     _verificar_version(fila, version)

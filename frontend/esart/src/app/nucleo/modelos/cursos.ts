@@ -67,3 +67,42 @@ export interface FiltrosCursos {
   tipo: string;
   texto: string;
 }
+
+// --- Nota final, puesto y cierre (S2-15, §5j) -----------------------------------------------
+
+export type ResultadoFinal = 'APROBADO' | 'REPROBADO';
+
+export interface ResultadoAlumno {
+  cedula: string;
+  grado: string | null;
+  apellidos: string;
+  nombres: string;
+  /** Promedio de las materias evaluables con nota (provisional si faltan). */
+  nota_final: number | null;
+  materias_evaluadas: number;
+  materias_habilitadas: number;
+  /** Lo que falta para el resultado definitivo (vacío si está completo). */
+  pendientes: string[];
+  /** null mientras esté incompleto. */
+  resultado: ResultadoFinal | null;
+  motivo: string | null;
+  /** Solo los aprobados; los empates comparten el puesto. */
+  puesto: number | null;
+}
+
+export interface ResultadosCurso {
+  curso_id: number;
+  codigo_curso: string;
+  estado_curso: string;
+  nota_minima: number | null;
+  /** El curso ya se cerró: los resultados están guardados y no cambian. */
+  cerrado: boolean;
+  cerrado_en: string | null;
+  cerrado_por: string | null;
+  materias_evaluables: number;
+  completo: boolean;
+  puede_cerrar: boolean;
+  /** Pendientes del curso (entregas de notas sin aprobar). */
+  pendientes: string[];
+  alumnos: ResultadoAlumno[];
+}

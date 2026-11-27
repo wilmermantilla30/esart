@@ -13,6 +13,7 @@ import {
 import { ErrorApi, leerErrorApi } from '../../../nucleo/modelos/error-api';
 import { CursosService } from '../../../nucleo/servicios/cursos.service';
 import { SesionService } from '../../../nucleo/servicios/sesion.service';
+import { ResultadosCursoSeccion } from './resultados-curso/resultados-curso';
 
 const COMPONENTE = 'CURSOS';
 
@@ -33,10 +34,12 @@ export function resumenAsignacion(materias: ReadonlyArray<MateriaDelCurso>): {
  * materia con nota. Quien tiene CURSOS "actualizar" (el Inspector de Estudios, por excepción)
  * asigna, cambia o quita instructores y, si el curso se creó sin malla, le asigna la vigente.
  * Cada cambio queda en la auditoría.
+ *
+ * S2-15: debajo de la malla, los resultados del curso (nota final y puesto) y su cierre.
  */
 @Component({
   selector: 'esart-detalle-curso',
-  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink],
+  imports: [DatePipe, DecimalPipe, FormsModule, RouterLink, ResultadosCursoSeccion],
   templateUrl: './detalle-curso.html',
 })
 export class DetalleCursoPagina {
@@ -65,7 +68,7 @@ export class DetalleCursoPagina {
     () => this.puedeAsignar() && (this.curso()?.editable ?? false),
   );
 
-  private readonly cursoId = Number(this.ruta.snapshot.paramMap.get('id'));
+  protected readonly cursoId = Number(this.ruta.snapshot.paramMap.get('id'));
 
   constructor() {
     this.cargar();
@@ -96,6 +99,14 @@ export class DetalleCursoPagina {
           this.cargando.set(false);
         },
       });
+  }
+
+  /** El curso se cerró (S2-15): se actualiza su estado sin volver a dibujar los resultados. */
+  protected cursoCerrado(): void {
+    this.servicio
+      .detalle(this.cursoId)
+      .pipe(takeUntilDestroyed(this.destruir))
+      .subscribe({ next: (curso) => this.curso.set(curso) });
   }
 
   /** El selector cambió: '' quita al instructor; un id lo pone o lo cambia. */

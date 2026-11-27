@@ -18,7 +18,7 @@ from aplicacion.servicios.revision_notas import validar_observacion
 from pruebas.test_auditoria_y_malla import cabecera_csrf, conceder_por_excepcion
 from pruebas.test_carga_notas import descargar, llenar, preparar, subir
 from pruebas.test_login_hu05 import crear_usuario, iniciar_sesion, requiere_postgresql, sesion_bd  # noqa: F401
-from pruebas.test_panel_parametros import codigo_siguiente, ultimo_evento
+from pruebas.test_panel_parametros import ultimo_evento
 
 pytestmark = pytest.mark.anyio
 
@@ -149,14 +149,14 @@ async def test_devolver_aprobar_y_corregir_una_nota_oficial(cliente_api, sesion_
     sin_carga = await accion(cliente_api, entrega_id, "aprobar", {"version": version})
     assert sin_carga.status_code == 409 and codigo_error(sin_carga) == "ESTADO_NO_PERMITE"
 
-    # El instructor la sube de nuevo; el Inspector la aprueba con TOTP.
+    # El instructor la sube de nuevo; el Inspector la aprueba (sin TOTP desde 2026-11-27).
     await simular_nueva_carga(sesion_bd, entrega_id, {segunda: 2.9})
     version = (await cliente_api.get(f"{RUTA}/{entrega_id}")).json()["subido_en"]
-    sin_codigo = await accion(cliente_api, entrega_id, "aprobar", {"version": version})
-    assert sin_codigo.status_code == 409 and codigo_error(sin_codigo) == "TOTP_REQUERIDO"
-    aprobada = await accion(
-        cliente_api, entrega_id, "aprobar", {"version": version, "codigo_totp": codigo_siguiente(cliente_api)}
+    con_codigo = await accion(
+        cliente_api, entrega_id, "aprobar", {"version": version, "codigo_totp": "123456"}
     )
+    assert con_codigo.status_code == 422  # el campo ya no existe
+    aprobada = await accion(cliente_api, entrega_id, "aprobar", {"version": version})
     assert aprobada.status_code == 200, aprobada.text
     assert aprobada.json()["estado"] == "APROBADA" and aprobada.json()["revisado_por"]
     assert await notas_oficiales(sesion_bd, curso) == {primera: "4.25", segunda: "2.90"}
@@ -164,9 +164,13 @@ async def test_devolver_aprobar_y_corregir_una_nota_oficial(cliente_api, sesion_
     assert (evento.detalle["es_correccion"], evento.detalle["cambios"]) == (False, [])
     assert evento.detalle["promedio"] == "3.58" and evento.detalle["por_debajo_de_la_minima"] == 1
 
-    # Reabrir una aprobada exige TOTP (el código del intervalo ya se usó: se prueba solo que lo pide).
+    # Reabrir una aprobada sí exige TOTP.
     sin_codigo = await accion(cliente_api, entrega_id, "reabrir", {"observacion": "Error en la segunda."})
     assert sin_codigo.status_code == 409 and codigo_error(sin_codigo) == "TOTP_REQUERIDO"
+    errado = await accion(
+        cliente_api, entrega_id, "reabrir", {"observacion": "Error en la segunda.", "codigo_totp": "000000"}
+    )
+    assert errado.status_code == 422 and codigo_error(errado) == "TOTP_INVALIDO"
     # Para las acciones siguientes no se pide código (la sesión sigue exigiendo TOTP).
     monkeypatch.setattr(
         confirmacion_totp, "obtener_configuracion", lambda: SimpleNamespace(totp_habilitado=False)
@@ -214,7 +218,7 @@ async def test_un_alumno_nuevo_impide_aprobar_la_entrega(cliente_api, sesion_bd)
         cliente_api,
         entrega["id"],
         "aprobar",
-        {"version": entrega["subido_en"], "codigo_totp": codigo_siguiente(cliente_api)},
+        {"version": entrega["subido_en"]},
     )
     assert respuesta.status_code == 409 and codigo_error(respuesta) == "ENTREGA_DESACTUALIZADA"
     assert await notas_oficiales(sesion_bd, curso) == {}

@@ -2,7 +2,7 @@
 
 **Proyecto:** ESART — Verificación de habilitación de artilleros (Escuela de Artillería)
 **Base de datos:** `esart_db` (PostgreSQL, independiente de Vulcano)
-**Versión del contrato:** 1.11 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
+**Versión del contrato:** 1.12 — aprobada por SS.Mantilla y SV.Valbuena (HU-02); actualizada tras HU-04 y HU-05
 **Fecha:** 2026-11-14
 
 > **Propósito de este documento.** Fijar *antes de programar* los nombres de tablas, columnas,
@@ -286,6 +286,12 @@ Reemplaza la propuesta `materias_curso` / `artillero_notas_materia`: se usan las
   `decision` APRUEBA_MATERIA | REPITE_CURSO | PIERDE_CURSO | OTRA, `numero_acta`, `fecha_acta`, `observacion`
   obligatoria en OTRA). La tabla `habilitaciones` de la fase 1 no se usa. `CONSEJO_ACADEMICO` tiene ruta
   `/notas/consejo`; política TOTP `CONSEJO_REGISTRAR`; acción de auditoría `CONSEJO_DECISION_REGISTRADA`.
+- Resultados del curso *(S2-15, migración `p0025_resultados_curso`)*: `resultados_curso` (uno por `curso_id` +
+  `personal_id`, guardado al cerrar el curso: `nota_final` NUMERIC(3,2), `nota_exacta` con todos los decimales para
+  el desempate, `materias_evaluadas`, `materias_habilitadas`, `promedio_area_especifica`, `resultado` APROBADO |
+  REPROBADO, `motivo`, `puesto` solo para aprobados). Al cerrar, `cursos.estado` pasa a CULMINADO y
+  `artillero_cursos.aprobado` queda en true para los aprobados. Las tablas `egresados_curso` e `inscripciones_curso`
+  de la fase 1 no se usan. Política TOTP `CURSO_CERRAR`; acción de auditoría `CURSO_CERRADO`.
 
 ---
 
@@ -412,3 +418,4 @@ reflejan esa aprobación; cualquier cambio posterior se hace por Pull Request a 
 | 1.9 | 2026-11-24 | §6.4: entregas de notas por curso y materia con la nota de cada alumno (S2-12, `p0022`) |
 | 1.10 | 2026-11-26 | §6.4: notas oficiales aprobadas por el Inspector de Estudios (S2-13, `p0023`) |
 | 1.11 | 2026-11-26 | §6.4: habilitación de materias y decisiones del Consejo Académico (S2-14, `p0024`) |
+| 1.12 | 2026-11-26 | §6.4: resultados finales y cierre del curso (S2-15, `p0025`) |

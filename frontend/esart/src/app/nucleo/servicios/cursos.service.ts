@@ -1,10 +1,16 @@
 import { Injectable, inject } from '@angular/core';
 import { Observable } from 'rxjs';
 
-import { CursoListado, DetalleCurso, FiltrosCursos, InstructorDisponible } from '../modelos/cursos';
+import {
+  CursoListado,
+  DetalleCurso,
+  FiltrosCursos,
+  InstructorDisponible,
+  ResultadosCurso,
+} from '../modelos/cursos';
 import { ClienteApiService } from './cliente-api.service';
 
-/** Módulo Cursos (S2-02): lista, detalle e instructor titular de cada materia. */
+/** Módulo Cursos (S2-02): lista, detalle e instructor titular de cada materia; resultados (S2-15). */
 @Injectable({ providedIn: 'root' })
 export class CursosService {
   private readonly api = inject(ClienteApiService);
@@ -43,5 +49,17 @@ export class CursosService {
   /** Liga la malla vigente de su tipo a un curso en curso que se creó sin malla. */
   asignarMallaVigente(cursoId: number): Observable<DetalleCurso> {
     return this.api.enviar<DetalleCurso>(`/cursos/${cursoId}/malla`);
+  }
+
+  /** Nota final y puesto: guardados si el curso se cerró, si no provisionales. */
+  resultados(cursoId: number): Observable<ResultadosCurso> {
+    return this.api.obtener<ResultadosCurso>(`/cursos/${cursoId}/resultados`);
+  }
+
+  /** Cierra el curso. Sin código responde TOTP_REQUERIDO. */
+  cerrar(cursoId: number, codigoTotp = ''): Observable<ResultadosCurso> {
+    return this.api.enviar<ResultadosCurso>(`/cursos/${cursoId}/cerrar`, {
+      codigo_totp: codigoTotp,
+    });
   }
 }

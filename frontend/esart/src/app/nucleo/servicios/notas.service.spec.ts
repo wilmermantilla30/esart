@@ -43,14 +43,11 @@ describe('NotasService (S2-12)', () => {
     peticion.flush([]);
   });
 
-  it('aprueba con la versión revisada y el código del autenticador', () => {
-    servicio.aprobar(6, '2026-11-26T10:00:00Z', '123456').subscribe();
+  it('aprueba con la versión revisada, sin código del autenticador', () => {
+    servicio.aprobar(6, '2026-11-26T10:00:00Z').subscribe();
     const peticion = backend.expectOne('/api/notas/revision/entregas/6/aprobar');
     expect(peticion.request.method).toBe('POST');
-    expect(peticion.request.body).toEqual({
-      version: '2026-11-26T10:00:00Z',
-      codigo_totp: '123456',
-    });
+    expect(peticion.request.body).toEqual({ version: '2026-11-26T10:00:00Z' });
     peticion.flush({});
   });
 
