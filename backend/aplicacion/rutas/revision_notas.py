@@ -2,8 +2,8 @@
 Rutas de la revisión de notas por el Inspector de Estudios: /api/notas/revision (S2-13, §5h).
 
 Componente NOTAS_REVISION (se da por excepción al Inspector): leer para ver la bandeja y el
-detalle de cada entrega; actualizar para aprobar (TOTP), devolver (observación) o reabrir una
-entrega aprobada (TOTP y observación).
+detalle de cada entrega; actualizar para aprobar (con confirmación en pantalla, sin TOTP),
+devolver (observación) o reabrir una entrega aprobada (TOTP y observación).
 """
 
 from typing import Annotated
@@ -64,13 +64,9 @@ async def ver_entrega(entrega_id: int, sesion: Sesion) -> DetalleEntrega:
 async def aprobar(
     entrega_id: int, datos: SolicitudAprobarEntrega, request: Request, sesion: Sesion, usuario: UsuarioActual
 ) -> DetalleEntrega:
-    """Aprueba la entrega (con TOTP): sus notas pasan a ser las oficiales."""
+    """Aprueba la entrega: sus notas pasan a ser las oficiales."""
     resultado = await revision_notas.aprobar(
-        sesion,
-        entrega_id,
-        datos.version,
-        actor=Actor.web(usuario, request),
-        codigo_totp=datos.codigo_totp,
+        sesion, entrega_id, datos.version, actor=Actor.web(usuario, request)
     )
     return DetalleEntrega(**resultado)
 

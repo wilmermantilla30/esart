@@ -124,8 +124,8 @@ class DetalleEntrega(EntregaEnBandeja):
 class SolicitudAprobarEntrega(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
+    # subido_en de la entrega revisada (aprobar no pide TOTP desde 2026-11-27).
     version: datetime
-    codigo_totp: str = Field(default="", max_length=6, repr=False)
 
 
 class SolicitudDevolverEntrega(BaseModel):

@@ -61,7 +61,8 @@ export function notaCambiada(nota: NotaEnRevision, hayOficiales: boolean): boole
  *
  * Bandeja de entregas por estado. Al abrir una se ve la nota de cada alumno (y la oficial
  * vigente si es una corrección). Con permiso "actualizar":
- * - Aprobar (con el autenticador): las notas pasan a ser las oficiales.
+ * - Aprobar (con confirmación, sin autenticador desde 2026-11-27): las notas pasan a ser las
+ *   oficiales.
  * - Devolver (con observación): el instructor corrige y vuelve a subir.
  * - Reabrir una aprobada (observación y autenticador): el instructor sube la corrección; las
  *   notas oficiales siguen vigentes hasta la nueva aprobación.
@@ -189,7 +190,7 @@ export class RevisionNotasPagina {
     this.observacion.set('');
   }
 
-  /** Primer envío sin código: aprobar y reabrir responden TOTP_REQUERIDO y se abre el autenticador. */
+  /** Primer envío sin código: reabrir responde TOTP_REQUERIDO y se abre el autenticador. */
   protected confirmar(): void {
     const accion = this.accion();
     if (!accion || this.enviando()) return;
@@ -248,7 +249,7 @@ export class RevisionNotasPagina {
 
   /** Etiqueta de la operación que muestra la ventana del autenticador. */
   protected etiquetaTotp(): string {
-    return this.accion() === 'reabrir' ? 'Reabrir notas aprobadas' : 'Aprobar entrega de notas';
+    return 'Reabrir notas aprobadas';
   }
 
   private ejecutar(accion: AccionRevision, codigo: string): Observable<DetalleEntrega> {
@@ -257,7 +258,7 @@ export class RevisionNotasPagina {
     const observacion = this.observacion().trim();
     switch (accion) {
       case 'aprobar':
-        return this.notas.aprobar(entrega.id, entrega.subido_en, codigo);
+        return this.notas.aprobar(entrega.id, entrega.subido_en);
       case 'devolver':
         return this.notas.devolver(entrega.id, entrega.subido_en, observacion);
       case 'reabrir':

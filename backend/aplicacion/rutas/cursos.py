@@ -4,6 +4,9 @@ Rutas del módulo Cursos: /api/cursos (S2-02, contrato de API §5f).
 Componente CURSOS de la malla: leer para ver la lista y el detalle; actualizar para asignar el
 instructor titular de cada materia con nota y la malla vigente a un curso que no tenía. Al
 Inspector de Estudios se le da por excepción (no hay roles nuevos).
+
+S2-15 (§5j): leer también muestra la nota final y el puesto (provisionales hasta el cierre);
+actualizar cierra el curso con TOTP.
 """
 
 from typing import Annotated, Literal
@@ -16,11 +19,13 @@ from aplicacion.esquemas.cursos import (
     CursoListado,
     DetalleCurso,
     InstructorDisponible,
+    ResultadosCurso,
     SolicitudAsignarInstructor,
+    SolicitudCerrarCurso,
 )
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual, verificar_csrf
-from aplicacion.servicios import cursos
+from aplicacion.servicios import cursos, resultados_curso
 from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 
@@ -94,3 +99,29 @@ async def asignar_malla(
     return DetalleCurso(
         **await cursos.asignar_malla_vigente(sesion, curso_id, actor=Actor.web(usuario, request))
     )
+
+
+# --- Nota final, puesto y cierre (S2-15) --------------------------------------------------------
+
+
+@enrutador_cursos.get(
+    "/{curso_id}/resultados", response_model=ResultadosCurso, dependencies=[Depends(puede_leer)]
+)
+async def ver_resultados(curso_id: int, sesion: Sesion) -> ResultadosCurso:
+    """Nota final y puesto de cada alumno: guardados si el curso se cerró, si no provisionales."""
+    return ResultadosCurso(**await resultados_curso.resultados(sesion, curso_id))
+
+
+@enrutador_cursos.post(
+    "/{curso_id}/cerrar",
+    response_model=ResultadosCurso,
+    dependencies=[Depends(verificar_csrf), Depends(puede_actualizar)],
+)
+async def cerrar_curso(
+    curso_id: int, datos: SolicitudCerrarCurso, request: Request, sesion: Sesion, usuario: UsuarioActual
+) -> ResultadosCurso:
+    """Cierra el curso (con TOTP): quedan los resultados, pasa a CULMINADO y se actualiza el historial."""
+    resultado = await resultados_curso.cerrar(
+        sesion, curso_id, actor=Actor.web(usuario, request), codigo_totp=datos.codigo_totp
+    )
+    return ResultadosCurso(**resultado)

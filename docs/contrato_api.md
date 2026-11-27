@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.22 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.23 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -476,8 +476,9 @@ Curso CANCELADO: **409** `CURSO_NO_EDITABLE`.
 ## 5h. Revisión de notas por el Inspector de Estudios (S2-13)
 
 Componente `NOTAS_REVISION` (ruta `/notas/revision` desde p0023; se da por excepción al Inspector): **leer** para la bandeja y
-el detalle; **actualizar** para aprobar, devolver o reabrir. Aprobar y reabrir exigen el código del autenticador (política
-`NOTAS_APROBAR`: sin código **409** `TOTP_REQUERIDO`, inválido **422** `TOTP_INVALIDO`). Las notas **oficiales** (las que cuentan
+el detalle; **actualizar** para aprobar, devolver o reabrir. **Reabrir** exige el código del autenticador (política
+`NOTAS_APROBAR`: sin código **409** `TOTP_REQUERIDO`, inválido **422** `TOTP_INVALIDO`); **aprobar no** lo pide desde 0.23
+(decisión de la Escuela: es la tarea más repetida del Inspector; la sesión ya exige TOTP y todo queda auditado). Las notas **oficiales** (las que cuentan
 para la habilitación y la nota final) son las de la última entrega aprobada de cada curso y materia.
 
 - `GET /api/notas/revision/entregas?estado=EN_REVISION|DEVUELTA|APROBADA|TODAS` (por defecto EN_REVISION; otro valor **422**) →
@@ -487,7 +488,7 @@ para la habilitación y la nota final) son las de la última entrega aprobada de
   "tiene_notas_oficiales" }`, de la más antigua a la más reciente.
 - `GET /api/notas/revision/entregas/{id}` → `EntregaEnBandeja` + `"notas": [{ "cedula", "grado", "apellidos", "nombres", "nota",
   "nota_oficial" }]` (`nota_oficial` = la vigente, null si no había). **404** `ENTREGA_NO_ENCONTRADA`.
-- `POST /api/notas/revision/entregas/{id}/aprobar` (CSRF) `{ "version", "codigo_totp" }` → el detalle, estado **APROBADA**; sus notas
+- `POST /api/notas/revision/entregas/{id}/aprobar` (CSRF) `{ "version" }` → el detalle, estado **APROBADA**; sus notas
   reemplazan a las oficiales. `version` es el `subido_en` revisado: si el instructor subió otra planilla, **409** `ENTREGA_CAMBIO`.
   Solo EN_REVISION (si no, **409** `ESTADO_NO_PERMITE`); curso CANCELADO **409** `CURSO_NO_EDITABLE`; si cambió la lista de alumnos
   del curso **409** `ENTREGA_DESACTUALIZADA`. Auditoría `NOTAS_APROBADAS` (curso, materia, instructor, alumnos, promedio, cuántas
@@ -532,6 +533,28 @@ de una materia con habilitación **409** `MATERIA_CON_HABILITACION`; una habilit
   (**409** `CASO_DECIDIDO`; no se edita); **404** `CASO_NO_ENCONTRADO`; curso cancelado **409** `CURSO_NO_EDITABLE`.
   `APRUEBA_MATERIA` deja la materia con la nota mínima del curso (origen CONSEJO); las demás no cambian la nota (las aplica el
   cierre del curso, S2-15). Auditoría `CONSEJO_DECISION_REGISTRADA`.
+
+## 5j. Nota final, puesto y cierre del curso (S2-15)
+
+Componente `CURSOS` (§5f): **leer** para ver los resultados, **actualizar** para cerrar el curso.
+
+- **Nota final** = promedio de las notas oficiales (`notas_oficiales.nota`) de las materias **evaluables** de la malla del curso,
+  con 2 decimales; si el alumno perdió la habilitación y el Consejo no aprobó la materia, cuenta la nota de habilitación.
+  **Aprueba** con nota final ≥ nota mínima del curso. "Repite el curso" o "Pierde el curso" del Consejo lo dejan **REPROBADO**.
+- **Puesto** solo para los aprobados: primero quienes no habilitaron ninguna materia; en cada grupo, por la nota final con todos
+  sus decimales, luego menos materias habilitadas y luego el promedio del área "Profesional Específica". Si aún empatan,
+  comparten el puesto (1, 2, 2, 4).
+- `GET /api/cursos/{id}/resultados` → `{ "curso_id", "codigo_curso", "estado_curso", "nota_minima", "cerrado", "cerrado_en",
+  "cerrado_por", "materias_evaluables", "completo", "puede_cerrar", "pendientes": [texto], "alumnos": [{ "cedula", "grado",
+  "apellidos", "nombres", "nota_final", "materias_evaluadas", "materias_habilitadas", "pendientes": [texto], "resultado"
+  (APROBADO | REPROBADO | null), "motivo", "puesto" }] }`. Sin cerrar, **provisionales** con las notas oficiales de hoy (lo que
+  falta: notas sin aprobar, entregas en revisión o devueltas, habilitaciones o decisiones del Consejo pendientes); cerrado, los
+  **guardados**. Sin malla o nota mínima **409** `CURSO_SIN_MALLA`; **404** `CURSO_NO_ENCONTRADO`.
+- `POST /api/cursos/{id}/cerrar` (CSRF) `{ "codigo_totp" }` → los resultados ya guardados. Política TOTP `CURSO_CERRAR`. Solo
+  EN_CURSO (**409** `CURSO_NO_EDITABLE`), con alumnos (**409** `CURSO_SIN_ALUMNOS`) y completo (**409** `RESULTADOS_INCOMPLETOS`
+  con `detalle.pendientes`). El curso pasa a **CULMINADO**, se guardan los resultados y el curso de los aprobados queda
+  `aprobado` en su historial (`artillero_cursos`), que alimenta APTO / NO APTO. Auditoría `CURSO_CERRADO` (alumnos, aprobados,
+  reprobados, primer puesto e historial actualizado).
 
 ---
 
@@ -579,3 +602,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.20 | 2026-11-24 | S2-12: §5g carga de notas del instructor (mis materias, plantilla firmada, entrega EN_REVISION con validación completa y reemplazo). Migración p0022 |
 | 0.21 | 2026-11-26 | S2-13: §5h revisión de notas (bandeja, aprobar con TOTP, devolver con observación, reabrir una aprobada; notas oficiales con antes y después en la auditoría). Migración p0023 |
 | 0.22 | 2026-11-26 | S2-14: §5i habilitación (formulario del instructor, revisión del Inspector) y decisiones del Consejo Académico; tipo de entrega en §5h. Migración p0024 |
+| 0.23 | 2026-11-26 | S2-15: §5j nota final, puesto (reglas de desempate) y cierre del curso con TOTP; aprobar notas (§5h) ya no pide TOTP. Migración p0025 |

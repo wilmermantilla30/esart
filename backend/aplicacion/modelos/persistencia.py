@@ -1104,6 +1104,59 @@ class DecisionConsejo(BaseModelo):
     )
 
 
+class ResultadoCurso(BaseModelo):
+    """p0025 (S2-15): nota final, resultado y puesto de un alumno al cerrar el curso."""
+
+    __table__ = sa.Table(
+        "resultados_curso",
+        BaseModelo.metadata,
+        sa.Column("id", sa.BigInteger(), sa.Identity(always=False), nullable=False),
+        sa.Column("curso_id", sa.BigInteger(), nullable=False),
+        sa.Column("personal_id", sa.BigInteger(), nullable=False),
+        sa.Column("nota_final", sa.Numeric(3, 2), nullable=False),
+        sa.Column("nota_exacta", sa.Numeric(12, 8), nullable=False),
+        sa.Column("materias_evaluadas", sa.Integer(), nullable=False),
+        sa.Column("materias_habilitadas", sa.Integer(), server_default=sa.text("0"), nullable=False),
+        sa.Column("promedio_area_especifica", sa.Numeric(12, 8), nullable=True),
+        sa.Column("resultado", sa.String(10), nullable=False),
+        sa.Column("motivo", sa.Text(), nullable=True),
+        sa.Column("puesto", sa.Integer(), nullable=True),
+        sa.Column("cerrado_por_id", sa.BigInteger(), nullable=True),
+        sa.Column("cerrado_en", sa.DateTime(timezone=True), server_default=sa.text("now()"), nullable=False),
+        sa.ForeignKeyConstraint(["curso_id"], ["esart.cursos.id"], name=conv("fk_resultados_curso_curso_id")),
+        sa.ForeignKeyConstraint(
+            ["personal_id"], ["esart.personal_militar.id"], name=conv("fk_resultados_curso_personal_id")
+        ),
+        sa.ForeignKeyConstraint(
+            ["cerrado_por_id"],
+            ["esart_ref.usuarios.id"],
+            name=conv("fk_resultados_curso_cerrado_por_id"),
+            ondelete="SET NULL",
+        ),
+        sa.CheckConstraint(
+            "nota_final >= 0 AND nota_final <= 5", name=conv("ck_resultados_curso_nota_final")
+        ),
+        sa.CheckConstraint(
+            "resultado IN ('APROBADO', 'REPROBADO')", name=conv("ck_resultados_curso_resultado")
+        ),
+        sa.CheckConstraint(
+            "(resultado = 'APROBADO' AND puesto >= 1) OR (resultado = 'REPROBADO' AND puesto IS NULL)",
+            name=conv("ck_resultados_curso_puesto"),
+        ),
+        sa.UniqueConstraint("curso_id", "personal_id", name=conv("uq_resultados_curso_alumno")),
+        sa.PrimaryKeyConstraint("id", name=conv("resultados_curso_pkey")),
+        schema="esart",
+    )
+
+
+sa.Index(
+    "ix_resultados_curso_personal_id",
+    sa.text("personal_id"),
+    _table=BaseModelo.metadata.tables["esart.resultados_curso"],
+    unique=False,
+)
+
+
 class Materias(BaseModelo):
     __table__ = sa.Table(
         "materias",

@@ -60,11 +60,10 @@ export class NotasService {
     return this.api.obtener<DetalleEntrega>(`/notas/revision/entregas/${entregaId}`);
   }
 
-  /** Aprueba la entrega revisada (versión = su subido_en). Sin código responde TOTP_REQUERIDO. */
-  aprobar(entregaId: number, version: string, codigoTotp = ''): Observable<DetalleEntrega> {
+  /** Aprueba la entrega revisada (versión = su subido_en). No pide código del autenticador. */
+  aprobar(entregaId: number, version: string): Observable<DetalleEntrega> {
     return this.api.enviar<DetalleEntrega>(`/notas/revision/entregas/${entregaId}/aprobar`, {
       version,
-      codigo_totp: codigoTotp,
     });
   }
 

@@ -39,6 +39,7 @@ from .persistencia import (
     ParticipantesReentrenamiento,
     PersonalMilitar,
     Reentrenamientos,
+    ResultadoCurso,
     Rol,
     RolPermiso,
     SemestresAcademicos,
@@ -110,6 +111,7 @@ __all__ = [
     "NotaOficial",
     "HabilitacionMateria",
     "DecisionConsejo",
+    "ResultadoCurso",
 ]
 
 MODELOS_PENDIENTES = {

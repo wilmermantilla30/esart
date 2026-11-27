@@ -20,7 +20,7 @@ from pruebas.test_auditoria_y_malla import cabecera_csrf, conceder_por_excepcion
 from pruebas.test_carga_notas import agregar_alumno, descargar, llenar, preparar, subir
 from pruebas.test_login_hu05 import crear_usuario, iniciar_sesion, requiere_postgresql, sesion_bd  # noqa: F401
 from pruebas.test_nota_minima import fijar_nota_inicial
-from pruebas.test_panel_parametros import codigo_siguiente, ultimo_evento
+from pruebas.test_panel_parametros import ultimo_evento
 from pruebas.test_revision_notas import accion, codigo_error, simular_nueva_carga
 
 pytestmark = pytest.mark.anyio
@@ -151,7 +151,7 @@ async def test_habilitar_aprobar_y_decidir_en_consejo(cliente_api, sesion_bd, mo
         cliente_api,
         habilitacion["id"],
         "aprobar",
-        {"version": habilitacion["subido_en"], "codigo_totp": codigo_siguiente(cliente_api)},
+        {"version": habilitacion["subido_en"]},
     )
     assert aprobada.status_code == 200, aprobada.text
     assert await oficiales(sesion_bd, curso) == {
@@ -171,7 +171,7 @@ async def test_habilitar_aprobar_y_decidir_en_consejo(cliente_api, sesion_bd, mo
     sin_codigo = await accion(cliente_api, ordinaria["id"], "reabrir", {"observacion": "Corregir una nota."})
     assert sin_codigo.status_code == 409 and codigo_error(sin_codigo) == "MATERIA_CON_HABILITACION"
 
-    # Consejo: el caso pendiente exige TOTP; el código de este intervalo ya se usó al aprobar.
+    # Consejo: el caso pendiente exige TOTP.
     casos = [c for c in (await cliente_api.get(RUTA_CONSEJO)).json() if c["curso_id"] == curso]
     assert [(c["cedula"], c["nota_habilitacion"]) for c in casos] == [(tercera, 2.0)]
     decision = {"decision": "APRUEBA_MATERIA", "numero_acta": "Acta 014", "fecha_acta": str(date.today())}

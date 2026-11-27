@@ -1,0 +1,249 @@
+<section
+  class="bg-white rounded-2xl border border-gris-bordes p-5 space-y-4"
+  aria-labelledby="titulo-resultados"
+>
+  <div class="flex flex-wrap items-start justify-between gap-3">
+    <div class="space-y-1">
+      <h2 id="titulo-resultados" class="font-headline font-bold text-negro-institucional">
+        Resultados del curso
+      </h2>
+      <p class="text-body-md text-azul-pizarra/80">
+        Nota final = promedio de las materias evaluables. El puesto es solo para los aprobados:
+        primero quienes no habilitaron; los empates se resuelven por los decimales.
+      </p>
+    </div>
+    @if (resultados(); as datos) {
+      <span
+        [class]="
+          'px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border ' +
+          (datos.cerrado
+            ? 'bg-success/10 text-success border-success/30'
+            : 'bg-warning/10 text-warning border-warning/40')
+        "
+        >{{ datos.cerrado ? 'Definitivos' : 'Provisionales' }}</span
+      >
+    }
+  </div>
+
+  @if (aviso(); as texto) {
+    <div
+      class="p-3 bg-success/10 border border-success/40 rounded-lg flex items-start gap-2.5 text-body-md"
+      role="status"
+    >
+      <span class="material-symbols-outlined text-success" aria-hidden="true">check_circle</span>
+      <span>{{ texto }}</span>
+    </div>
+  }
+  @if (error(); as fallo) {
+    <div
+      class="p-3 bg-error/10 border border-error/40 rounded-lg text-body-md space-y-1"
+      role="alert"
+    >
+      <p class="flex items-start gap-2.5">
+        <span class="material-symbols-outlined text-error" aria-hidden="true">error</span>
+        <span>{{ fallo.mensaje }}</span>
+      </p>
+    </div>
+  }
+
+  @if (cargando()) {
+    <p class="text-body-md text-azul-pizarra/70" role="status">Calculando resultados…</p>
+  } @else if (resultados(); as datos) {
+    <div class="flex flex-wrap items-center gap-x-4 gap-y-1 text-body-md text-azul-pizarra">
+      <span
+        ><strong>{{ resumen().aprobados }}</strong> aprobados</span
+      >
+      <span
+        ><strong>{{ resumen().reprobados }}</strong> reprobados</span
+      >
+      @if (resumen().pendientes) {
+        <span class="text-warning"
+          ><strong>{{ resumen().pendientes }}</strong> sin resultado</span
+        >
+      }
+      <span class="text-xs text-azul-pizarra/60">
+        {{ datos.materias_evaluables }} materias evaluables · nota mínima
+        {{ datos.nota_minima | number: '1.2-2' }}
+      </span>
+      @if (datos.cerrado) {
+        <span class="text-xs text-azul-pizarra/60">
+          Cerrado {{ datos.cerrado_en | date: 'd MMM y, h:mm a' }}
+          @if (datos.cerrado_por) {
+            por <span class="font-mono">{{ datos.cerrado_por }}</span>
+          }
+        </span>
+      }
+    </div>
+
+    @if (!datos.cerrado && listaPendientes().length) {
+      <div class="p-3 rounded-lg border border-warning/40 bg-warning/5 text-body-md space-y-2">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <span>
+            Faltan <strong>{{ listaPendientes().length }}</strong> cosas para el resultado
+            definitivo (notas, habilitaciones o decisiones del Consejo).
+          </span>
+          <button
+            type="button"
+            (click)="verPendientes.set(!verPendientes())"
+            [attr.aria-expanded]="verPendientes()"
+            class="py-1 px-2.5 border border-warning/60 rounded-sm text-label-lg font-headline bg-white"
+          >
+            {{ verPendientes() ? 'Ocultar' : 'Ver qué falta' }}
+          </button>
+        </div>
+        @if (verPendientes()) {
+          <ul class="list-disc pl-5 text-xs space-y-0.5 max-h-48 overflow-y-auto">
+            @for (pendiente of listaPendientes(); track $index) {
+              <li>{{ pendiente }}</li>
+            }
+          </ul>
+        }
+      </div>
+    }
+
+    @if (!datos.alumnos.length) {
+      <p class="text-body-md text-azul-pizarra/70">El curso no tiene alumnos registrados.</p>
+    } @else {
+      <div class="overflow-x-auto">
+        <table class="w-full text-body-md">
+          <thead class="bg-gris-claro">
+            <tr class="text-left text-label-md font-headline text-azul-pizarra/70">
+              <th class="py-2 px-3 text-center">Puesto</th>
+              <th class="py-2 px-3">Alumno</th>
+              <th class="py-2 px-3 text-right">Nota final</th>
+              <th class="py-2 px-3 text-center">Habilitadas</th>
+              <th class="py-2 px-3">Resultado</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (alumno of datos.alumnos; track alumno.cedula) {
+              <tr class="border-t border-gris-bordes">
+                <td class="py-1.5 px-3 text-center font-headline font-bold">
+                  {{ alumno.puesto ?? '—' }}
+                </td>
+                <td class="py-1.5 px-3">
+                  {{ alumno.grado }} {{ alumno.apellidos }} {{ alumno.nombres }}
+                  <span class="block font-mono text-[11px] text-azul-pizarra/60">{{
+                    alumno.cedula
+                  }}</span>
+                </td>
+                <td
+                  class="py-1.5 px-3 text-right font-semibold"
+                  [class.text-error]="
+                    alumno.nota_final !== null &&
+                    datos.nota_minima !== null &&
+                    alumno.nota_final < datos.nota_minima
+                  "
+                >
+                  {{ alumno.nota_final === null ? '—' : (alumno.nota_final | number: '1.2-2') }}
+                  @if (alumno.materias_evaluadas < datos.materias_evaluables) {
+                    <span class="block text-[10px] font-normal text-azul-pizarra/60"
+                      >{{ alumno.materias_evaluadas }} de
+                      {{ datos.materias_evaluables }} materias</span
+                    >
+                  }
+                </td>
+                <td class="py-1.5 px-3 text-center">{{ alumno.materias_habilitadas || '—' }}</td>
+                <td class="py-1.5 px-3">
+                  @switch (alumno.resultado) {
+                    @case ('APROBADO') {
+                      <span
+                        class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-success/10 text-success border-success/30"
+                        >Aprobado</span
+                      >
+                    }
+                    @case ('REPROBADO') {
+                      <span
+                        class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-error/10 text-error border-error/30"
+                        >Reprobado</span
+                      >
+                    }
+                    @default {
+                      <span
+                        class="px-2 py-0.5 rounded-full text-[10px] font-bold uppercase border bg-gris-claro text-azul-pizarra border-gris-bordes"
+                        >Pendiente</span
+                      >
+                    }
+                  }
+                  @if (alumno.motivo) {
+                    <span class="block text-xs text-azul-pizarra/70">{{ alumno.motivo }}</span>
+                  }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+    }
+
+    @if (puedeCerrarPermiso() && !datos.cerrado && datos.estado_curso === 'EN_CURSO') {
+      <div class="flex flex-wrap items-center justify-end gap-3">
+        @if (!datos.puede_cerrar) {
+          <p class="text-xs text-azul-pizarra/70">Podrá cerrar el curso cuando no falte nada.</p>
+        }
+        <button
+          type="button"
+          (click)="confirmando.set(true)"
+          [disabled]="!datos.puede_cerrar || cerrando()"
+          class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline flex items-center gap-1 disabled:opacity-50"
+        >
+          <span class="material-symbols-outlined text-[18px]" aria-hidden="true">flag</span>
+          {{ cerrando() ? 'Cerrando…' : 'Cerrar curso' }}
+        </button>
+      </div>
+    }
+
+    @if (confirmando()) {
+      <div
+        class="fixed inset-0 z-40 bg-negro-institucional/40 flex items-center justify-center p-4"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="titulo-confirmar-cierre"
+      >
+        <div
+          class="w-full max-w-md bg-white rounded-2xl border border-gris-bordes shadow-xl p-6 space-y-4"
+        >
+          <h2 id="titulo-confirmar-cierre" class="font-headline font-bold text-negro-institucional">
+            ¿Cerrar el curso {{ datos.codigo_curso }}?
+          </h2>
+          <p class="text-body-md text-azul-pizarra">
+            Quedarán guardados <strong>{{ resumen().aprobados }} aprobados</strong> y
+            <strong>{{ resumen().reprobados }} reprobados</strong> con su nota final y puesto. El
+            curso pasa a CULMINADO, los aprobados cuentan para la verificación APTO / NO APTO y ya
+            no se podrá cambiar. Se le pedirá el código de su autenticador.
+          </p>
+          <div class="flex justify-end gap-2">
+            <button
+              type="button"
+              (click)="confirmando.set(false)"
+              class="py-2 px-4 border border-gris-bordes rounded-sm text-label-lg font-headline"
+            >
+              Cancelar
+            </button>
+            <button
+              type="button"
+              (click)="cerrar()"
+              class="py-2 px-4 bg-azul-institucional text-white rounded-sm text-label-lg font-headline"
+            >
+              Continuar
+            </button>
+          </div>
+        </div>
+      </div>
+    }
+  }
+</section>
+
+<dialog #ventanaTotp class="ventana-totp" (cancel)="$event.preventDefault()">
+  @if (requiereTotp()) {
+    <app-totp
+      modo="CODIGO_OPERACION"
+      operacionEtiqueta="Cerrar el curso con sus resultados"
+      moduloEtiqueta="Cursos"
+      [verificarCodigo]="verificarCodigoTotp"
+      [errorInicial]="errorTotp()"
+      (cancelar)="cancelarTotp()"
+      (completado)="cerrarTotp()"
+    />
+  }
+</dialog>
