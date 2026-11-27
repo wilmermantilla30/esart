@@ -34,6 +34,8 @@ export interface MateriaDelInstructor {
   /** Estado de la entrega de habilitación (null = todavía no se registra). */
   estado_habilitacion: EstadoEntrega | null;
   observacion_habilitacion: string | null;
+  /** S2-16: fase de campaña por ítems (la registra el comandante del curso). */
+  por_items: boolean;
   /** Falso si el curso está cancelado o el Inspector ya aprobó la entrega. */
   puede_subir: boolean;
 }

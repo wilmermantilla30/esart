@@ -17,14 +17,16 @@ import { ResultadosCursoSeccion } from './resultados-curso/resultados-curso';
 
 const COMPONENTE = 'CURSOS';
 
-/** Cuántas materias con nota tienen instructor (las sin nota no llevan). */
+/** Cuántas materias con nota tienen instructor (las sin nota no llevan; la fase de campaña es del
+ * comandante y cuenta como asignada). */
 export function resumenAsignacion(materias: ReadonlyArray<MateriaDelCurso>): {
   asignadas: number;
   conNota: number;
 } {
   const conNota = materias.filter((materia) => materia.evaluable);
   return {
-    asignadas: conNota.filter((materia) => materia.instructor_id !== null).length,
+    asignadas: conNota.filter((materia) => materia.instructor_id !== null || materia.por_items)
+      .length,
     conNota: conNota.length,
   };
 }

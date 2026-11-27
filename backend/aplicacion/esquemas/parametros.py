@@ -73,6 +73,46 @@ class SolicitudGuardarNotaMinima(BaseModel):
     codigo_totp: str = Field(default="", max_length=6, repr=False)
 
 
+# --- Fase de campaña del CAPINTE: ítems y puntajes (S2-16) ----------------------------------------
+
+
+class ItemCampana(BaseModel):
+    id: int
+    orden: int
+    nombre: str
+    puntaje: float
+
+
+class ConfiguracionCampana(BaseModel):
+    codigo_materia: str
+    materia: str
+    items: list[ItemCampana]
+    # Suma de los puntajes (debe dar 5,00 al redondear).
+    total: float
+    # Versión para la concurrencia (null si no hay ítems).
+    actualizado_en: datetime | None
+    actualizado_por: str | None
+
+
+class ItemCampanaPropuesto(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    # null = ítem nuevo.
+    id: int | None = None
+    nombre: str = Field(max_length=250)
+    puntaje: Decimal = Field(max_digits=6, decimal_places=4)
+
+
+class SolicitudGuardarCampana(BaseModel):
+    """Ítems en el orden final, versión editada (concurrencia) y, si aplica, el código TOTP."""
+
+    model_config = ConfigDict(extra="forbid")
+
+    items: list[ItemCampanaPropuesto] = Field(max_length=60)
+    version: datetime | None
+    codigo_totp: str = Field(default="", max_length=6, repr=False)
+
+
 # --- Mallas curriculares (S2-09) -------------------------------------------------------------
 
 

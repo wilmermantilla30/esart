@@ -56,6 +56,10 @@
                 @if (materia.nota_minima !== null) {
                   · Nota mínima {{ materia.nota_minima | number: '1.2-2' }}
                 }
+                @if (materia.por_items) {
+                  · <strong>Fase de campaña por ítems</strong> (usted es el comandante): marque X en
+                  los ítems aprobados de la plantilla
+                }
               </p>
             </div>
             <div class="flex flex-wrap items-center gap-2">

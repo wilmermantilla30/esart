@@ -34,6 +34,8 @@ class MateriaDelInstructor(BaseModel):
     alumnos_a_habilitar: int
     estado_habilitacion: str | None
     observacion_habilitacion: str | None
+    # S2-16: fase de campaña calificada por ítems (la registra el comandante del curso).
+    por_items: bool
     # Falso si el curso está cancelado o el Inspector ya aprobó la entrega.
     puede_subir: bool
 

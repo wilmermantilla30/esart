@@ -171,3 +171,30 @@ export interface ParametrosSeguridad {
   horas_bloqueo: number;
   politicas: PoliticaSeguridad[];
 }
+
+// --- Fase de campaña del CAPINTE: ítems y puntajes (S2-16) ---------------------------------
+
+export interface ItemCampana {
+  id: number;
+  orden: number;
+  nombre: string;
+  puntaje: number;
+}
+
+export interface ConfiguracionCampana {
+  codigo_materia: string;
+  materia: string;
+  items: ItemCampana[];
+  /** Suma de los puntajes (debe dar 5,00 al redondear). */
+  total: number;
+  /** Versión para la concurrencia (null si no hay ítems). */
+  actualizado_en: string | null;
+  actualizado_por: string | null;
+}
+
+/** Ítem en el formulario (id null = nuevo); el puntaje como texto para no perder decimales. */
+export interface ItemCampanaPropuesto {
+  id: number | null;
+  nombre: string;
+  puntaje: string;
+}

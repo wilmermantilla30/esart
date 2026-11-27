@@ -26,6 +26,7 @@ describe('Carga de notas del instructor (S2-12)', () => {
     alumnos_a_habilitar: 0,
     estado_habilitacion: null,
     observacion_habilitacion: null,
+    por_items: false,
     puede_subir: true,
     ...cambios,
   });

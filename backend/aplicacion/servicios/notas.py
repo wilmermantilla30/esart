@@ -13,6 +13,8 @@ Flujo:
    - la lista de alumnos del curso no cambió desde la descarga;
    - cada fila: alumno del curso, sin repetir, nota de 0 a 5 con máximo 2 decimales;
    - no falta la nota de ningún alumno (decisión de la Escuela: si falta una, se rechaza todo).
+   S2-16: la fase de campaña (materia calificada por ítems) la registra el COMANDANTE del curso
+   con una columna por ítem donde marca "X" en los aprobados; la nota es la suma de los puntajes.
 4. La entrega queda EN_REVISION y no cuenta para nada hasta que el Inspector la apruebe (S2-13).
    Mientras esté en revisión o devuelta, volver a subir la reemplaza; aprobada, solo si el
    Inspector la reabre (las notas oficiales siguen vigentes hasta la nueva aprobación).
@@ -30,13 +32,14 @@ from decimal import Decimal, InvalidOperation
 
 from openpyxl import Workbook, load_workbook
 from openpyxl.styles import Alignment, Border, Font, PatternFill, Protection, Side
+from openpyxl.utils import get_column_letter
 from openpyxl.worksheet.datavalidation import DataValidation
 from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.configuracion import obtener_configuracion
 from aplicacion.nucleo.errores import ErrorAplicacion
-from aplicacion.servicios import auditoria
+from aplicacion.servicios import auditoria, campana
 from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 from aplicacion.servicios.instructores import NOMBRE_VISIBLE_INSTRUCTOR, instructor_del_usuario
@@ -57,6 +60,8 @@ FILA_ENCABEZADO = 8
 PRIMERA_FILA_ALUMNOS = FILA_ENCABEZADO + 1
 COLUMNA_CEDULA = 2
 COLUMNA_NOTA = 5
+# Fase de campaña (S2-16): los ítems van desde la columna de la nota en adelante.
+COLUMNA_PRIMER_ITEM = COLUMNA_NOTA
 ENCABEZADOS = ("N.º", "Cédula", "Grado", "Apellidos y nombres", "Nota (0 a 5)")
 VERSION_FIRMA = "v1"
 # Límite al descomprimir el libro subido (evita archivos "bomba").
@@ -81,6 +86,8 @@ class MateriaAsignada:
     materia: str
     nota_minima: Decimal | None
     instructor: str
+    # S2-16: la registra el comandante marcando ítems (fase de campaña).
+    por_items: bool = False
 
 
 # --- Quién es el instructor y qué materias dicta ------------------------------------------------
@@ -94,6 +101,20 @@ async def _instructor(sesion: AsyncSession, usuario: UsuarioAutenticado) -> int:
         )
     return instructor_id
 
+
+# Quién registra cada materia: su instructor titular (S2-02) o, si se califica por ítems (fase de
+# campaña, S2-16), el comandante del curso.
+ASIGNACIONES = f"""
+    SELECT cmi.curso_id, cmi.malla_id, cmi.instructor_id
+    FROM esart.cursos_materias_instructor cmi
+    JOIN esart.malla_curricular mm ON mm.id = cmi.malla_id
+    WHERE NOT {campana.condicion_por_items("mm.materia_id")}
+    UNION ALL
+    SELECT cc.id, mm.id, cc.comandante_id
+    FROM esart.cursos cc
+    JOIN esart.malla_curricular mm ON mm.version_id = cc.malla_version_id
+    WHERE mm.evaluable AND {campana.condicion_por_items("mm.materia_id")}
+"""  # noqa: S608 (texto fijo)
 
 CONSULTA_MATERIAS = f"""
     SELECT a.instructor_id, c.id AS curso_id, c.codigo AS codigo_curso, c.nombre AS nombre_curso,
@@ -111,8 +132,9 @@ CONSULTA_MATERIAS = f"""
            (SELECT count(*) FROM esart.notas_oficiales o
             WHERE o.curso_id = c.id AND o.malla_id = m.id
               AND o.nota_ordinaria < c.nota_minima_aprobacion) AS alumnos_a_habilitar,
-           h.estado AS estado_habilitacion, h.observacion_revision AS observacion_habilitacion
-    FROM esart.cursos_materias_instructor a
+           h.estado AS estado_habilitacion, h.observacion_revision AS observacion_habilitacion,
+           {campana.condicion_por_items("m.materia_id")} AS por_items
+    FROM ({ASIGNACIONES}) a
     JOIN esart.cursos c ON c.id = a.curso_id
     JOIN esart.tipos_curso tc ON tc.id = c.tipo_curso_id
     JOIN esart.malla_curricular m ON m.id = a.malla_id
@@ -158,7 +180,10 @@ async def materia_asignada(
     ).one_or_none()
     if fila is None:
         raise ErrorAplicacion(
-            403, "MATERIA_NO_ASIGNADA", "Usted no es el instructor de esa materia en ese curso."
+            403,
+            "MATERIA_NO_ASIGNADA",
+            "Usted no es el instructor de esa materia en ese curso "
+            "(la fase de campaña la registra el comandante).",
         )
     if fila.estado_curso == "CANCELADO":
         raise ErrorAplicacion(409, "CURSO_NO_EDITABLE", "El curso está cancelado: no recibe notas.")
@@ -174,6 +199,7 @@ async def materia_asignada(
         materia=fila.materia,
         nota_minima=fila.nota_minima,
         instructor=fila.instructor,
+        por_items=fila.por_items,
     )
 
 
@@ -201,9 +227,13 @@ def _clave_firma() -> bytes:
     return hmac.new(secreto, b"esart-plantilla-notas", hashlib.sha256).digest()
 
 
-def firmar(curso_id: int, malla_id: int, alumnos: list[int]) -> str:
-    """'v1.<datos en base64>.<firma>' con el curso, la materia y los ids de los alumnos."""
-    datos = json.dumps({"c": curso_id, "m": malla_id, "a": sorted(alumnos)}, separators=(",", ":"))
+def firmar(curso_id: int, malla_id: int, alumnos: list[int], items: list | None = None) -> str:
+    """'v1.<datos en base64>.<firma>' con el curso, la materia, los ids de los alumnos y (fase de
+    campaña) los ítems con su puntaje."""
+    contenido = {"c": curso_id, "m": malla_id, "a": sorted(alumnos)}
+    if items:
+        contenido["i"] = items
+    datos = json.dumps(contenido, separators=(",", ":"))
     datos_b64 = base64.urlsafe_b64encode(datos.encode()).decode()
     firma = hmac.new(_clave_firma(), datos_b64.encode(), hashlib.sha256).hexdigest()
     return f"{VERSION_FIRMA}.{datos_b64}.{firma}"
@@ -234,6 +264,7 @@ async def generar_plantilla(
     alumnos = await alumnos_del_curso(sesion, curso_id)
     if not alumnos:
         raise ErrorAplicacion(409, "CURSO_SIN_ALUMNOS", "El curso no tiene alumnos registrados.")
+    items = await campana.items_de_malla(sesion, malla_id) if materia.por_items else []
 
     libro = Workbook()
     hoja = libro.active
@@ -248,7 +279,13 @@ async def generar_plantilla(
         ("Nota mínima", f"{materia.nota_minima:.2f}" if materia.nota_minima is not None else "—"),
         (
             "Instrucciones",
-            "Escriba la nota de cada alumno de 0 a 5 con máximo 2 decimales. No cambie las demás celdas.",
+            (
+                f"Marque {campana.MARCA_APROBADO} en cada ítem aprobado y deje vacío el no aprobado. "
+                "La nota es la suma de los puntajes aprobados. No cambie las demás celdas."
+            )
+            if items
+            else "Escriba la nota de cada alumno de 0 a 5 con máximo 2 decimales. No cambie las demás "
+            "celdas.",
         ),
     )
     for numero, (etiqueta, valor) in enumerate(datos, start=2):
@@ -257,6 +294,17 @@ async def generar_plantilla(
 
     relleno = PatternFill("solid", start_color="1F3A5F")
     borde = Border(*(Side(style="thin", color="BFC7D5"),) * 4)
+    if items:
+        _hoja_de_items(hoja, alumnos, items, relleno, borde)
+        control = libro.create_sheet(HOJA_CONTROL)
+        control["A1"] = firmar(
+            curso_id, malla_id, [alumno["id"] for alumno in alumnos], campana.firma_de_items(items)
+        )
+        control.sheet_state = "veryHidden"
+        salida = io.BytesIO()
+        libro.save(salida)
+        nombre = limpiar_nombre_archivo(f"Campana_{materia.codigo_curso}_{materia.codigo_materia}.xlsx")
+        return nombre, salida.getvalue()
     for columna, titulo in enumerate(ENCABEZADOS, start=1):
         celda = hoja.cell(FILA_ENCABEZADO, columna, titulo)
         celda.font = Font(bold=True, color="FFFFFF")
@@ -307,6 +355,72 @@ async def generar_plantilla(
     return nombre, salida.getvalue()
 
 
+def _hoja_de_items(hoja, alumnos: list[dict], items: list[dict], relleno, borde) -> None:
+    """Fase de campaña: un alumno por fila y una columna por ítem (marca X), más la nota calculada."""
+    titulos = [
+        *ENCABEZADOS[:4],
+        *(f"{item['orden']}. {item['nombre']} ({Decimal(item['puntaje']):.4f})" for item in items),
+        "Nota (calculada)",
+    ]
+    for columna, titulo in enumerate(titulos, start=1):
+        celda = hoja.cell(FILA_ENCABEZADO, columna, titulo)
+        celda.font = Font(bold=True, color="FFFFFF")
+        celda.fill = relleno
+        celda.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+    hoja.row_dimensions[FILA_ENCABEZADO].height = 90
+    # Fila oculta con el puntaje de cada ítem: la usa la fórmula de la nota.
+    fila_puntajes = FILA_ENCABEZADO - 1
+    for posicion, item in enumerate(items):
+        hoja.cell(fila_puntajes, COLUMNA_PRIMER_ITEM + posicion, float(item["puntaje"]))
+    hoja.row_dimensions[fila_puntajes].hidden = True
+    editable = PatternFill("solid", start_color="FFF6D5")
+    primera = get_column_letter(COLUMNA_PRIMER_ITEM)
+    ultima_item = get_column_letter(COLUMNA_PRIMER_ITEM + len(items) - 1)
+    columna_nota = COLUMNA_PRIMER_ITEM + len(items)
+    for posicion, alumno in enumerate(alumnos):
+        fila = PRIMERA_FILA_ALUMNOS + posicion
+        valores = (
+            posicion + 1,
+            alumno["cedula"],
+            alumno["grado"],
+            f"{alumno['apellidos']} {alumno['nombres']}",
+        )
+        for columna, valor in enumerate(valores, start=1):
+            hoja.cell(fila, columna, valor).border = borde
+        for desplazamiento in range(len(items)):
+            celda = hoja.cell(fila, COLUMNA_PRIMER_ITEM + desplazamiento)
+            celda.fill = editable
+            celda.border = borde
+            celda.alignment = Alignment(horizontal="center")
+            celda.protection = Protection(locked=False)
+        # Solo para ver la nota mientras se marca; la plataforma la vuelve a calcular al subir.
+        nota = hoja.cell(
+            fila,
+            columna_nota,
+            f'=MIN(5,ROUND(SUMPRODUCT((UPPER(TRIM({primera}{fila}:{ultima_item}{fila}))="X")'
+            f"*{primera}${fila_puntajes}:{ultima_item}${fila_puntajes}),2))",
+        )
+        nota.number_format = "0.00"
+        nota.border = borde
+    ultima_fila = PRIMERA_FILA_ALUMNOS + len(alumnos) - 1
+    validacion = DataValidation(
+        type="list",
+        formula1=f'"{campana.MARCA_APROBADO}"',
+        allow_blank=True,
+        showErrorMessage=True,
+        errorTitle="Marca no válida",
+        error=f"Escriba {campana.MARCA_APROBADO} si aprobó o deje la celda vacía.",
+    )
+    hoja.add_data_validation(validacion)
+    validacion.add(f"{primera}{PRIMERA_FILA_ALUMNOS}:{ultima_item}{ultima_fila}")
+    for columna, ancho in zip("ABCD", (6, 16, 10, 38), strict=True):
+        hoja.column_dimensions[columna].width = ancho
+    for desplazamiento in range(len(items) + 1):
+        hoja.column_dimensions[get_column_letter(COLUMNA_PRIMER_ITEM + desplazamiento)].width = 14
+    hoja.freeze_panes = hoja.cell(PRIMERA_FILA_ALUMNOS, COLUMNA_PRIMER_ITEM)
+    hoja.protection.sheet = True
+
+
 # --- Carga ---------------------------------------------------------------------------------------
 
 
@@ -354,11 +468,16 @@ def _abrir_libro(contenido: bytes):
         raise ErrorAplicacion(422, "ARCHIVO_INVALIDO", "No fue posible leer el Excel.") from None
 
 
-def leer_planilla(contenido: bytes, curso_id: int, malla_id: int, alumnos: list[dict]) -> dict[int, Decimal]:
+def leer_planilla(
+    contenido: bytes, curso_id: int, malla_id: int, alumnos: list[dict], items: list[dict] | None = None
+) -> tuple[dict[int, Decimal], dict[int, set[int]]]:
     """
-    Lee y valida la plantilla subida. Devuelve {personal_id: nota} con TODOS los alumnos.
+    Lee y valida la plantilla subida. Devuelve ({personal_id: nota}, {personal_id: ítems aprobados})
+    con TODOS los alumnos (el segundo vacío si la materia no se califica por ítems).
     Si algo falla, 422 con la lista de filas a corregir (no se guarda nada).
     """
+    items = items or []
+    aprobados: dict[int, set[int]] = {}
     libro = _abrir_libro(contenido)
     try:
         if HOJA_CONTROL not in libro.sheetnames or HOJA_NOTAS not in libro.sheetnames:
@@ -378,6 +497,14 @@ def leer_planilla(contenido: bytes, curso_id: int, malla_id: int, alumnos: list[
                 "PLANTILLA_DESACTUALIZADA",
                 "La lista de alumnos del curso cambió desde que descargó la plantilla: descárguela de nuevo.",
             )
+        if (firmado.get("i") or []) != campana.firma_de_items(items):
+            raise ErrorAplicacion(
+                409,
+                "PLANTILLA_DESACTUALIZADA",
+                "Los ítems o puntajes de la fase de campaña cambiaron desde que descargó la plantilla: "
+                "descárguela de nuevo.",
+            )
+        ultima_columna = COLUMNA_PRIMER_ITEM + len(items) - 1 if items else COLUMNA_NOTA
         por_cedula = {re.sub(r"\D", "", alumno["cedula"]): alumno for alumno in alumnos}
         hoja = libro[HOJA_NOTAS]
         errores: list[dict] = []
@@ -385,14 +512,14 @@ def leer_planilla(contenido: bytes, curso_id: int, malla_id: int, alumnos: list[
         maxima = PRIMERA_FILA_ALUMNOS + len(alumnos) + 200  # filas extra: se revisan por si traen datos
         for numero, fila in enumerate(
             hoja.iter_rows(
-                min_row=PRIMERA_FILA_ALUMNOS, max_row=maxima, max_col=COLUMNA_NOTA, values_only=True
+                min_row=PRIMERA_FILA_ALUMNOS, max_row=maxima, max_col=ultima_columna, values_only=True
             ),
             start=PRIMERA_FILA_ALUMNOS,
         ):
-            fila = tuple(fila) + (None,) * (COLUMNA_NOTA - len(fila))
+            fila = tuple(fila) + (None,) * (ultima_columna - len(fila))
             cedula = re.sub(r"\D", "", _texto(fila[COLUMNA_CEDULA - 1]))
-            valor_nota = fila[COLUMNA_NOTA - 1]
-            if not cedula and (valor_nota is None or _texto(valor_nota) == ""):
+            valores = fila[COLUMNA_NOTA - 1 :] if items else (fila[COLUMNA_NOTA - 1],)
+            if not cedula and all(valor is None or _texto(valor) == "" for valor in valores):
                 continue
             alumno = por_cedula.get(cedula)
             if alumno is None:
@@ -401,8 +528,11 @@ def leer_planilla(contenido: bytes, curso_id: int, malla_id: int, alumnos: list[
             if alumno["id"] in notas:
                 errores.append({"fila": numero, "mensaje": "El alumno aparece dos veces."})
                 continue
+            if items:
+                notas[alumno["id"]] = _nota_por_items(fila, items, numero, errores, aprobados, alumno["id"])
+                continue
             try:
-                notas[alumno["id"]] = leer_nota(valor_nota)
+                notas[alumno["id"]] = leer_nota(fila[COLUMNA_NOTA - 1])
             except ValueError as motivo:
                 errores.append({"fila": numero, "mensaje": str(motivo)})
                 notas[alumno["id"]] = None  # visto, aunque con error
@@ -419,9 +549,28 @@ def leer_planilla(contenido: bytes, curso_id: int, malla_id: int, alumnos: list[
                 "no se guardó nada.",
                 {"errores": errores[:MAXIMO_ERRORES]},
             )
-        return notas
+        return notas, aprobados
     finally:
         libro.close()
+
+
+def _nota_por_items(
+    fila: tuple, items: list[dict], numero: int, errores: list[dict], aprobados: dict, personal_id: int
+) -> Decimal | None:
+    """Nota de la fase de campaña de una fila: suma de los puntajes de los ítems marcados con X."""
+    marcados: set[int] = set()
+    valida = True
+    for posicion, item in enumerate(items):
+        try:
+            if campana.leer_marca(fila[COLUMNA_PRIMER_ITEM - 1 + posicion]):
+                marcados.add(item["id"])
+        except ValueError as motivo:
+            errores.append({"fila": numero, "mensaje": f"Ítem {item['orden']}: {motivo}"})
+            valida = False
+    aprobados[personal_id] = marcados
+    if not valida:
+        return None
+    return campana.nota_de_items([Decimal(item["puntaje"]) for item in items if item["id"] in marcados])
 
 
 def _alterada() -> ErrorAplicacion:
@@ -451,9 +600,19 @@ async def subir_planilla(
             422, "ARCHIVO_INVALIDO", "Suba la plantilla descargada de la plataforma (.xlsx)."
         )
     alumnos = await alumnos_del_curso(sesion, curso_id)
-    notas = leer_planilla(archivo.contenido, curso_id, malla_id, alumnos)
+    items = await campana.items_de_malla(sesion, malla_id) if materia.por_items else []
+    notas, aprobados = leer_planilla(archivo.contenido, curso_id, malla_id, alumnos, items)
     await guardar_entrega(
-        sesion, materia, TIPO_ORDINARIA, anterior, archivo.nombre_archivo, archivo.sha256, notas, actor=actor
+        sesion,
+        materia,
+        TIPO_ORDINARIA,
+        anterior,
+        archivo.nombre_archivo,
+        archivo.sha256,
+        notas,
+        actor=actor,
+        items=items,
+        aprobados=aprobados,
     )
     return await entrega(sesion, usuario, curso_id, malla_id)
 
@@ -489,6 +648,8 @@ async def guardar_entrega(
     notas: dict[int, Decimal],
     *,
     actor: Actor,
+    items: list[dict] | None = None,
+    aprobados: dict[int, set[int]] | None = None,
 ) -> None:
     """Guarda la entrega (nueva o reemplazo) EN_REVISION con sus notas y la audita. Común a la planilla
     ordinaria (S2-12) y a la habilitación (S2-14)."""
@@ -531,6 +692,28 @@ async def guardar_entrega(
         text("INSERT INTO esart.notas_entrega (entrega_id, personal_id, nota) VALUES (:e, :p, :n)"),
         [{"e": entrega_id, "p": personal_id, "n": nota} for personal_id, nota in notas.items()],
     )
+    if items:
+        # Fase de campaña: qué ítem aprobó cada alumno y con qué puntaje se calificó.
+        await sesion.execute(
+            text("DELETE FROM esart.items_entrega WHERE entrega_id = :id"), {"id": entrega_id}
+        )
+        await sesion.execute(
+            text("""
+                INSERT INTO esart.items_entrega (entrega_id, personal_id, item_id, aprobado, puntaje)
+                VALUES (:e, :p, :i, :a, :puntaje)
+            """),
+            [
+                {
+                    "e": entrega_id,
+                    "p": personal_id,
+                    "i": item["id"],
+                    "a": item["id"] in (aprobados or {}).get(personal_id, set()),
+                    "puntaje": item["puntaje"],
+                }
+                for personal_id in notas
+                for item in items
+            ],
+        )
     promedio = sum(notas.values()) / len(notas)
     minima = materia.nota_minima
     # registrar_evento confirma: la entrega y su auditoría quedan juntas o no quedan.
@@ -552,6 +735,7 @@ async def guardar_entrega(
             ),
             "reemplaza": anterior.estado if anterior else None,
             "sha256": sha256,
+            "por_items": bool(items),
         },
     )
 

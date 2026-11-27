@@ -14,7 +14,7 @@ from sqlalchemy import text
 from sqlalchemy.ext.asyncio import AsyncSession
 
 from aplicacion.nucleo.errores import ErrorAplicacion
-from aplicacion.servicios import auditoria
+from aplicacion.servicios import auditoria, campana
 from aplicacion.servicios.administracion_usuarios import Actor
 from aplicacion.servicios.instructores import NOMBRE_VISIBLE_INSTRUCTOR
 
@@ -32,7 +32,12 @@ CONSULTA_LISTADO = f"""
            (SELECT count(*) FROM esart.malla_curricular m
             WHERE m.version_id = c.malla_version_id AND m.evaluable)
              AS materias_con_nota,
-           (SELECT count(*) FROM esart.cursos_materias_instructor a WHERE a.curso_id = c.id) AS asignadas
+           -- La fase de campaña (por ítems) cuenta como asignada: la registra el comandante (S2-16).
+           (SELECT count(*) FROM esart.malla_curricular m
+            WHERE m.version_id = c.malla_version_id AND m.evaluable
+              AND (EXISTS (SELECT 1 FROM esart.cursos_materias_instructor a
+                           WHERE a.curso_id = c.id AND a.malla_id = m.id)
+                   OR {campana.condicion_por_items("m.materia_id")})) AS asignadas
     FROM esart.cursos c
     JOIN esart.tipos_curso tc ON tc.id = c.tipo_curso_id
     LEFT JOIN esart.versiones_malla v ON v.id = c.malla_version_id
@@ -100,6 +105,7 @@ async def detalle(sesion: AsyncSession, curso_id: int) -> dict:
                 text(f"""
                     SELECT m.id AS malla_id, m.orden, mt.codigo AS codigo_materia, mt.nombre AS materia,
                            m.area, m.modulo, m.evaluable,
+                           {campana.condicion_por_items("m.materia_id")} AS por_items,
                            a.instructor_id, {NOMBRE_VISIBLE_INSTRUCTOR} AS instructor,
                            i.tipo AS tipo_instructor,
                            a.asignado_en, u.usuario AS asignado_por
@@ -167,11 +173,12 @@ async def asignar_instructor(
     _exigir_editable(curso)
     materia = (
         await sesion.execute(
-            text("""
-                SELECT m.id, m.evaluable, mt.nombre
+            text(f"""
+                SELECT m.id, m.evaluable, mt.nombre,
+                       {campana.condicion_por_items("m.materia_id")} AS por_items
                 FROM esart.malla_curricular m JOIN esart.materias mt ON mt.id = m.materia_id
                 WHERE m.id = :malla AND m.version_id = :version
-            """),
+            """),  # noqa: S608 (texto fijo)
             {"malla": malla_id, "version": curso.malla_version_id},
         )
     ).one_or_none()
@@ -184,6 +191,12 @@ async def asignar_instructor(
             422,
             "MATERIA_SIN_NOTA",
             "Las materias sin nota (por ejemplo, Tiempo del comandante) no llevan instructor.",
+        )
+    if materia.por_items:
+        raise ErrorAplicacion(
+            422,
+            "MATERIA_POR_ITEMS",
+            "La fase de campaña no lleva instructor: la registra el comandante del curso.",
         )
     nuevo = None
     if instructor_id is not None:
