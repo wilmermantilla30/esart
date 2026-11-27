@@ -178,6 +178,12 @@ def endpoint_simulado(monkeypatch):
     monkeypatch.setattr(verificacion.habilitacion, "verificar_artillero", verificar)
     monkeypatch.setattr(verificacion.auditoria, "registrar_evento", registrar)
     monkeypatch.setattr(verificacion, "puede_ver_cedula_completa", sin_cedula_completa)
+
+    async def sin_historial(_sesion, _personal_id):
+        # S2-17: sin base de datos no hay historial académico.
+        return []
+
+    monkeypatch.setattr(verificacion.historial_academico, "historial", sin_historial)
     aplicacion.dependency_overrides[verificacion.puede_verificar] = lambda: 7
     aplicacion.dependency_overrides[obtener_sesion_base_datos] = lambda: None
     aplicacion.dependency_overrides[obtener_usuario_actual] = lambda: UsuarioAutenticado(

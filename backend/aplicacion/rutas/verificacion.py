@@ -17,6 +17,7 @@ from aplicacion.base_datos.sesion import obtener_sesion_base_datos
 from aplicacion.esquemas.verificacion import (
     ArtilleroVerificado,
     CriterioVerificacion,
+    CursoAcademico,
     CursoVerificacion,
     ElementoHabilitacion,
     OpcionDocumentoArtillero,
@@ -32,12 +33,14 @@ from aplicacion.reportes.comun import (
     CursoDocumento,
     DatosDocumento,
     DocumentoNoDisponible,
+    HistorialCursoDocumento,
+    MateriaDocumento,
     ReentrenamientoDocumento,
 )
 from aplicacion.reportes.maestro import REPORTES, generar_documento
 from aplicacion.seguridad.permisos import OperacionCRUD, requerir_permiso_componente, tiene_permiso_componente
 from aplicacion.seguridad.sesion_http import obtener_id_usuario_actual, obtener_usuario_actual
-from aplicacion.servicios import auditoria, habilitacion
+from aplicacion.servicios import auditoria, habilitacion, historial_academico
 from aplicacion.servicios.autenticacion import UsuarioAutenticado
 
 enrutador_verificacion = APIRouter(prefix="/verificar", tags=["Verificación"])
@@ -151,6 +154,9 @@ async def verificar_artillero(
                 estado=_estado_certificado(certificado, fila.hoy, parametros),
             )
             for certificado in reentrenamientos
+        ],
+        historial_academico=[
+            CursoAcademico(**curso) for curso in await historial_academico.historial(sesion, fila.id)
         ],
     )
 
@@ -393,6 +399,24 @@ async def generar_documento_artillero(
                 estado=_estado_certificado(c, fila.hoy, parametros),
             )
             for c in reentrenamientos
+        ],
+        historial=[
+            HistorialCursoDocumento(
+                nombre=curso["nombre"],
+                codigo=curso["codigo"],
+                fecha_inicio=curso["fecha_inicio"],
+                fecha_fin=curso["fecha_fin"],
+                cerrado=curso["cerrado"],
+                nota_final=curso["nota_final"],
+                resultado=curso["resultado"],
+                puesto=curso["puesto"],
+                aprobados_del_curso=curso["aprobados_del_curso"],
+                materias=[
+                    MateriaDocumento(m["materia"], m["nota"], m["estado"], m["instructor"])
+                    for m in curso["materias"]
+                ],
+            )
+            for curso in await historial_academico.historial(sesion, fila.id)
         ],
     )
     try:

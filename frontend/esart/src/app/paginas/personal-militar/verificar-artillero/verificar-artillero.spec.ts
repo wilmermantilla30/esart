@@ -25,6 +25,7 @@ const APTO_POR_VENCER: RespuestaVerificacion = {
   motivos: [],
   alerta: 'El reentrenamiento vence el 16-dic-2026 (faltan 30 días). Planee el próximo reentrenamiento.',
   cursos: [],
+  historial_academico: [],
   reentrenamientos: [
     { numero_certificado: 'SIM-CERT-9900000004', tipo: 'OBUS', calibre: '105MM', fecha_expedicion: '2025-12-16', fecha_vencimiento: '2026-12-16', estado: 'POR_VENCER' },
   ],

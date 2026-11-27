@@ -1,6 +1,6 @@
 # Contrato de API (backend ↔ front) — ESART
 
-**Versión:** 0.24 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
+**Versión:** 0.25 (borrador para acordar entre SS.Mantilla y SV.Valbuena)
 **Fecha:** 2026-11-14
 
 > **Propósito.** Que el front se construya **en paralelo** al backend. El front programa contra
@@ -204,6 +204,14 @@ El backend quita puntos, espacios y guiones; exige de 5 a 15 dígitos.
 - Cuando un curso habilitante está aprobado, `detalle` dice desde cuándo ("SACLI aprobado el 16-mar-2024 (hace 2 años y 8 meses).").
 - `motivos`: por qué es `NO_APTO` (vacío si es `APTO`).
 - Estado de cada reentrenamiento: `VIGENTE`, `POR_VENCER`, `VENCIDO` o `ANULADO`.
+- `historial_academico` *(S2-17)*: cursos con notas en la plataforma, del más reciente al más antiguo: los **cerrados** (§5j) y
+  el **en curso o aplazado** con alguna nota oficial (parcial). `[{ "codigo", "nombre", "tipo_curso", "fecha_inicio",
+  "fecha_fin", "estado_curso", "cerrado", "nota_minima", "nota_final", "resultado", "motivo", "puesto", "aprobados_del_curso",
+  "materias_con_nota", "materias": [{ "orden", "materia", "nota", "estado" (HABILITADA | APROBADA_POR_CONSEJO |
+  HABILITACION_PERDIDA | null), "instructor" }] }]`. `nota` es la que cuenta en la nota final (la de habilitación si la
+  perdió sin aprobación del Consejo); null si aún no tiene nota aprobada. El puesto se lee "`puesto` de
+  `aprobados_del_curso`"; sin cerrar, `nota_final`, `resultado` y `puesto` van en null. Los cursos anteriores o cargados por
+  Excel no aparecen aquí: siguen en `cursos` solo con aprobado / no aprobado. La **Certificación** en PDF incluye esta sección.
 
 Errores: `ARTILLERO_NO_ENCONTRADO` (404), `DATOS_INVALIDOS` (422), `SIN_PERMISO` (403).
 
@@ -628,3 +636,4 @@ El front es **Angular** (detalle en `frontend/README.md`).
 | 0.22 | 2026-11-26 | S2-14: §5i habilitación (formulario del instructor, revisión del Inspector) y decisiones del Consejo Académico; tipo de entrega en §5h. Migración p0024 |
 | 0.23 | 2026-11-26 | S2-15: §5j nota final, puesto (reglas de desempate) y cierre del curso con TOTP; aprobar notas (§5h) ya no pide TOTP. Migración p0025 |
 | 0.24 | 2026-11-27 | S2-16: §5k fase de campaña del CAPINTE por ítems (plantilla del comandante, nota = suma de puntajes aprobados) e ítems editables en Parámetros con TOTP. Migración p0026 |
+| 0.25 | 2026-11-27 | S2-17: §3 `historial_academico` en la verificación (notas por materia, nota final y puesto) y sección en la Certificación PDF |

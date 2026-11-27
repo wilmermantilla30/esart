@@ -49,6 +49,39 @@ class ReentrenamientoVerificacion(BaseModel):
     estado: str
 
 
+class MateriaAcademica(BaseModel):
+    """S2-17: una materia evaluable del curso con la nota que cuenta."""
+
+    orden: int
+    materia: str
+    # null si todavía no tiene nota aprobada (curso en curso).
+    nota: float | None
+    # HABILITADA | APROBADA_POR_CONSEJO | HABILITACION_PERDIDA | null (no necesitó habilitar).
+    estado: str | None
+    instructor: str | None
+
+
+class CursoAcademico(BaseModel):
+    """S2-17: curso con notas en la plataforma (cerrado o en curso, parcial)."""
+
+    codigo: str
+    nombre: str
+    tipo_curso: str
+    fecha_inicio: date
+    fecha_fin: date
+    estado_curso: str
+    # Cerrado (S2-15): nota final, resultado y puesto definitivos. Si no, notas parciales.
+    cerrado: bool
+    nota_minima: float | None
+    nota_final: float | None
+    resultado: str | None
+    motivo: str | None
+    puesto: int | None
+    aprobados_del_curso: int | None
+    materias_con_nota: int
+    materias: list[MateriaAcademica]
+
+
 class RespuestaVerificacion(BaseModel):
     artillero: ArtilleroVerificado
     resultado: str  # APTO o NO_APTO
@@ -59,6 +92,8 @@ class RespuestaVerificacion(BaseModel):
     alerta: str | None
     cursos: list[CursoVerificacion]
     reentrenamientos: list[ReentrenamientoVerificacion]
+    # S2-17: notas por materia, nota final y puesto de los cursos con notas en la plataforma.
+    historial_academico: list[CursoAcademico] = []
 
 
 class ElementoHabilitacion(BaseModel):

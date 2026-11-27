@@ -32,6 +32,36 @@ export interface ReentrenamientoVerificacion {
   estado: EstadoReentrenamiento;
 }
 
+/** S2-17: materia evaluable de un curso con la nota que cuenta. */
+export interface MateriaAcademica {
+  orden: number;
+  materia: string;
+  /** null si todavía no tiene nota aprobada (curso en curso). */
+  nota: number | null;
+  /** Cómo terminó si pasó por habilitación (null si no la necesitó). */
+  estado: 'HABILITADA' | 'APROBADA_POR_CONSEJO' | 'HABILITACION_PERDIDA' | null;
+  instructor: string | null;
+}
+
+/** S2-17: curso con notas en la plataforma (cerrado o en curso, parcial). */
+export interface CursoAcademico {
+  codigo: string;
+  nombre: string;
+  tipo_curso: string;
+  fecha_inicio: string;
+  fecha_fin: string;
+  estado_curso: string;
+  cerrado: boolean;
+  nota_minima: number | null;
+  nota_final: number | null;
+  resultado: 'APROBADO' | 'REPROBADO' | null;
+  motivo: string | null;
+  puesto: number | null;
+  aprobados_del_curso: number | null;
+  materias_con_nota: number;
+  materias: MateriaAcademica[];
+}
+
 export interface RespuestaVerificacion {
   artillero: {
     numero_documento: string;
@@ -47,6 +77,8 @@ export interface RespuestaVerificacion {
   motivos: string[];
   alerta: string | null;
   cursos: CursoVerificacion[];
+  /** S2-17: notas por materia, nota final y puesto de los cursos con notas en la plataforma. */
+  historial_academico: CursoAcademico[];
   reentrenamientos: ReentrenamientoVerificacion[];
 }
 
